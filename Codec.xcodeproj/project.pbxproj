@@ -9,16 +9,15 @@
 /* Begin PBXBuildFile section */
 		0BB3083C2BE94A0000EB2494 /* CodecApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB3083B2BE94A0000EB2494 /* CodecApp.swift */; };
 		0BB3083E2BE94A0000EB2494 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB3083D2BE94A0000EB2494 /* ContentView.swift */; };
-		0BB308402BE94A0000EB2494 /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB3083F2BE94A0000EB2494 /* Item.swift */; };
 		0BB308422BE94A0100EB2494 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0BB308412BE94A0100EB2494 /* Assets.xcassets */; };
 		0BB308462BE94A0100EB2494 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0BB308452BE94A0100EB2494 /* Preview Assets.xcassets */; };
+		0BB3084E2BE95FB800EB2494 /* BigUIPaging in Frameworks */ = {isa = PBXBuildFile; productRef = 0BB3084D2BE95FB800EB2494 /* BigUIPaging */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0BB308382BE94A0000EB2494 /* Codec.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Codec.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0BB3083B2BE94A0000EB2494 /* CodecApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodecApp.swift; sourceTree = "<group>"; };
 		0BB3083D2BE94A0000EB2494 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		0BB3083F2BE94A0000EB2494 /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
 		0BB308412BE94A0100EB2494 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0BB308432BE94A0100EB2494 /* Codec.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Codec.entitlements; sourceTree = "<group>"; };
 		0BB308452BE94A0100EB2494 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -29,6 +28,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0BB3084E2BE95FB800EB2494 /* BigUIPaging in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -56,7 +56,6 @@
 			children = (
 				0BB3083B2BE94A0000EB2494 /* CodecApp.swift */,
 				0BB3083D2BE94A0000EB2494 /* ContentView.swift */,
-				0BB3083F2BE94A0000EB2494 /* Item.swift */,
 				0BB308412BE94A0100EB2494 /* Assets.xcassets */,
 				0BB308432BE94A0100EB2494 /* Codec.entitlements */,
 				0BB308442BE94A0100EB2494 /* Preview Content */,
@@ -88,6 +87,9 @@
 			dependencies = (
 			);
 			name = Codec;
+			packageProductDependencies = (
+				0BB3084D2BE95FB800EB2494 /* BigUIPaging */,
+			);
 			productName = Codec;
 			productReference = 0BB308382BE94A0000EB2494 /* Codec.app */;
 			productType = "com.apple.product-type.application";
@@ -116,6 +118,9 @@
 				Base,
 			);
 			mainGroup = 0BB3082F2BE94A0000EB2494;
+			packageReferences = (
+				0BB3084C2BE95FB800EB2494 /* XCRemoteSwiftPackageReference "BigUIPaging" */,
+			);
 			productRefGroup = 0BB308392BE94A0000EB2494 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -143,7 +148,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				0BB3083E2BE94A0000EB2494 /* ContentView.swift in Sources */,
-				0BB308402BE94A0000EB2494 /* Item.swift in Sources */,
 				0BB3083C2BE94A0000EB2494 /* CodecApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -274,6 +278,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Codec/Preview Content\"";
+				DEVELOPMENT_TEAM = PEQP2KEBXP;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -310,6 +315,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Codec/Preview Content\"";
+				DEVELOPMENT_TEAM = PEQP2KEBXP;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -359,6 +365,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0BB3084C2BE95FB800EB2494 /* XCRemoteSwiftPackageReference "BigUIPaging" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/notsobigcompany/BigUIPaging.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.0.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0BB3084D2BE95FB800EB2494 /* BigUIPaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0BB3084C2BE95FB800EB2494 /* XCRemoteSwiftPackageReference "BigUIPaging" */;
+			productName = BigUIPaging;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0BB308302BE94A0000EB2494 /* Project object */;
 }

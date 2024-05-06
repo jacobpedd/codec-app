@@ -7,60 +7,70 @@
 
 import SwiftUI
 import SwiftData
+import BigUIPaging
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @State private var selection: Int = 0
+    let colors: [Color] = [.red, .orange, .yellow, .green, .blue, .purple, .pink, .gray, .mint, .teal, .indigo]
 
+    
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+        GeometryReader { geometry in
+            VStack {
+                PageView(selection: $selection) {
+                    ForEach(0...10, id: \.self) { id in
+                        VStack {
+                            VStack {
+                                Spacer()
+                                Text("Page \(id)")
+                                    .font(.largeTitle)
+                                    .foregroundStyle(.white)
+                                
+                            }
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding()
+                        .background(colors[id % colors.count])
+                        .gesture(DragGesture())
                     }
                 }
-                .onDelete(perform: deleteItems)
-            }
-#if os(macOS)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-#endif
-            .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-#endif
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                .pageViewStyle(.cardDeck)
+                PageIndicator(selection: $selection, total: 11){ (page, selected) in
+                    if page == 0 {
+                        Image(systemName: "play.fill")
                     }
                 }
+                    .pageIndicatorColor(.gray)
+                    .pageIndicatorCurrentColor(.accentColor)
+                    .pageIndicatorBackgroundStyle(.prominent)
+                    .allowsContinuousInteraction(false)
             }
-        } detail: {
-            Text("Select an item")
-        }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
+            .padding(.bottom)
+            .frame(height: geometry.size.height * 0.7)
+            .edgesIgnoringSafeArea(.bottom)
+            .sheet(isPresented: .constant(true), onDismiss: {}) {
+                VStack(spacing: 15) {
+                    TextField("Search", text: .constant(""))
+                        .padding(.vertical, 10)
+                        .padding(.horizontal)
+                        .background {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(.ultraThickMaterial)
+                        }
+                    Spacer()
+                }
+                .padding()
+                .presentationDetents([.large, .fraction(0.3)])
+                .presentationDragIndicator(.visible)
+                .interactiveDismissDisabled()
+                .presentationBackgroundInteraction(.enabled)
+                
             }
+            
         }
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
 }
