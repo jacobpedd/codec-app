@@ -9,68 +9,106 @@ import SwiftUI
 import SwiftData
 import BigUIPaging
 
-struct ContentView: View {
-    @State private var selection: Int = 0
-    let colors: [Color] = [.red, .orange, .yellow, .green, .blue, .purple, .pink, .gray, .mint, .teal, .indigo]
+struct TopicView: View {
+    var topic: Topic
 
-    
     var body: some View {
-        GeometryReader { geometry in
+        VStack {
             VStack {
-                PageView(selection: $selection) {
-                    ForEach(0...10, id: \.self) { id in
-                        VStack {
-                            VStack {
-                                Spacer()
-                                Text("Page \(id)")
-                                    .font(.largeTitle)
-                                    .foregroundStyle(.white)
-                                
-                            }
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .padding()
-                        .background(colors[id % colors.count])
-                        .gesture(DragGesture())
-                    }
+                Spacer()
+                Text("Page \(topic.title)")
+                    .font(.largeTitle)
+                    .foregroundStyle(.white)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.blue)
+        .cornerRadius(10)
+    }
+}
+
+struct ContentView: View {
+    @Query(
+        filter: #Predicate<Topic> {
+            $0.viewedAt == nil &&
+            $0.dismissedAt == nil
+        },
+        sort: \Topic.addedAt
+    ) private var feed: [Topic]
+    @State private var isPlayerShowing: Bool = false
+    @State private var selectedId: String = "0"
+    var selectedIndex: Int {
+        feed.firstIndex(where: { $0.id == selectedId }) ?? 0
+    }
+
+    var body: some View {
+        VStack {
+            PageView(selection: $selectedId) {
+                ForEach(feed, id: \.id) { topic in
+                    TopicView(topic: topic)
                 }
-                .pageViewStyle(.cardDeck)
-                PageIndicator(selection: $selection, total: 11){ (page, selected) in
+            }
+            .pageViewStyle(.cardDeck)
+            
+            PageIndicator(selection: Binding(
+                get: { selectedIndex },
+                set: { newIndex in
+                    guard newIndex >= 0 && newIndex < feed.count else { return }
+                    selectedId = feed[newIndex].id}), total: feed.count) { (page, selected) in
                     if page == 0 {
                         Image(systemName: "play.fill")
                     }
                 }
-                    .pageIndicatorColor(.gray)
-                    .pageIndicatorCurrentColor(.accentColor)
-                    .pageIndicatorBackgroundStyle(.prominent)
-                    .allowsContinuousInteraction(false)
+                .pageIndicatorColor(.gray)
+                .pageIndicatorCurrentColor(.accentColor)
+                .pageIndicatorBackgroundStyle(.prominent)
+                .allowsContinuousInteraction(false)
+            
+            HStack {
+                Text("Now Playing")
+                    .font(.title2)
+                Spacer()
+                Image(systemName: "play.fill")
             }
-            .padding(.bottom)
-            .frame(height: geometry.size.height * 0.7)
-            .edgesIgnoringSafeArea(.bottom)
-            .sheet(isPresented: .constant(true), onDismiss: {}) {
+            .padding()
+            .background(.white)
+            .cornerRadius(10)
+            .frame(maxWidth: .infinity)
+            .shadow(color: .gray, radius: 10)
+            .padding()
+            .onTapGesture {
+                isPlayerShowing = true
+            }
+            .sheet(isPresented: $isPlayerShowing, onDismiss: {
+                isPlayerShowing = false
+            }) {
                 VStack(spacing: 15) {
-                    TextField("Search", text: .constant(""))
-                        .padding(.vertical, 10)
-                        .padding(.horizontal)
-                        .background {
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(.ultraThickMaterial)
-                        }
-                    Spacer()
+                    Text("Big Player Screen")
+                        .font(.largeTitle)
+                    Spacer() 
                 }
                 .padding()
-                .presentationDetents([.large, .fraction(0.3)])
                 .presentationDragIndicator(.visible)
-                .interactiveDismissDisabled()
-                .presentationBackgroundInteraction(.enabled)
-                
             }
-            
         }
     }
 }
 
 #Preview {
-    ContentView()
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: Topic.self, configurations: config)
+    
+    let feed = [
+        Topic(id: "0", title: "SwiftUI Introduction", preview: "Learn the basics of SwiftUI.", addedAt: Date()),
+        Topic(id: "1", title: "Advanced SwiftUI", preview: "Dive deeper into SwiftUI.", addedAt: Date()),
+        Topic(id: "2", title: "SwiftUI and Combine", preview: "Combine with SwiftUI for reactive programming.", addedAt: Date())
+    ]
+
+    for topic in feed {
+        container.mainContext.insert(topic)
+    }
+
+    return ContentView()
+        .modelContainer(container)
 }
