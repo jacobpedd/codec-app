@@ -6,21 +6,15 @@
 //
 
 import Foundation
-import SwiftData
 
-@Model
-class Topic {
-    var id: String
+class Topic: Codable, Identifiable {
+    var id: Int
     var title: String
-    var preview: String
-    var addedAt: Date
-    var viewedAt: Date? = nil
-    var dismissedAt: Date? = nil
+    var createdAt: Date
     
-    init(id: String, title: String = "", preview: String = "", addedAt: Date = .now) {
+    init(id: Int, title: String = "", createdAt: Date = .now) {
         self.id = id
         self.title = title
-        self.preview = preview
-        self.addedAt = addedAt
+        self.createdAt = createdAt
     }
 }

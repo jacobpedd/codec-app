@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SwiftData
 
 @main
 struct CodecApp: App {
@@ -14,6 +13,5 @@ struct CodecApp: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: Topic.self)
     }
 }
