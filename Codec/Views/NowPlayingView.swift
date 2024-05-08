@@ -23,8 +23,8 @@ class AudioPlayerViewModel: ObservableObject {
         playerItem = AVPlayerItem(asset: asset)
         audioPlayer = AVPlayer(playerItem: playerItem)
         
+        loadDuration()
         setupProgressListener()
-        setupObservers()
     }
 
     deinit {
@@ -34,18 +34,17 @@ class AudioPlayerViewModel: ObservableObject {
         NotificationCenter.default.removeObserver(self)
     }
 
-    private func setupObservers() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(playerItemDidReadyToPlay),
-            name: .AVPlayerItemNewAccessLogEntry,
-            object: playerItem
-        )
-    }
-
-    @objc private func playerItemDidReadyToPlay(notification: Notification) {
-        if let playerItem = notification.object as? AVPlayerItem {
-            duration = CMTimeGetSeconds(playerItem.duration)
+    private func loadDuration() {
+        Task {
+            if let duration = try? await playerItem?.asset.load(.duration)
+            {
+                DispatchQueue.main.async { [weak self] in
+                    if !duration.isIndefinite {
+                        self?.duration = duration.seconds
+                        print("Duration loaded: \(duration) seconds")
+                    }
+                }
+            }
         }
     }
 
@@ -83,6 +82,41 @@ class AudioPlayerViewModel: ObservableObject {
     }
 }
 
+struct AudioScrubberView: View {
+    @ObservedObject var playerModel: AudioPlayerViewModel
+    @State private var sliderValue: Double = 0.0
+    @State private var isDragging: Bool = false
+
+    var body: some View {
+        Slider(value: $sliderValue, in: 0...1, onEditingChanged: sliderEditingChanged)
+        HStack {
+            Text(formatTime(seconds: playerModel.currentTime))
+            Spacer()
+            Text(formatTime(seconds: playerModel.duration))
+        }
+        .onReceive(playerModel.$progress) { progress in
+            if !isDragging {
+                sliderValue = progress
+            }
+        }
+    }
+    
+    private func sliderEditingChanged(editingStarted: Bool) {
+        isDragging = editingStarted
+        if !editingStarted {
+            playerModel.seekToProgress(percentage: sliderValue)
+        }
+    }
+    
+    private func formatTime(seconds: TimeInterval) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.zeroFormattingBehavior = .pad
+        formatter.allowedUnits = [.minute, .second]
+        return formatter.string(from: seconds) ?? "0:00"
+    }
+}
+
+
 
 struct NowPlayingView: View {
     var topic: Topic
@@ -117,7 +151,7 @@ struct NowPlayingView: View {
                 }
                 
             }
-            ProgressView("Progress", value: playerModel.progress, total: 1.0)
+            AudioScrubberView(playerModel: playerModel)
         }
         .padding()
         .background(.white)
@@ -125,9 +159,9 @@ struct NowPlayingView: View {
         .frame(maxWidth: .infinity)
         .shadow(color: .gray, radius: 10)
         .padding()
-        .onTapGesture {
-            isPlayerShowing = true
-        }
+//        .onTapGesture {
+//            isPlayerShowing = true
+//        }
         .sheet(isPresented: $isPlayerShowing, onDismiss: {
             isPlayerShowing = false
         }) {
