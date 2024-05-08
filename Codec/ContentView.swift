@@ -18,7 +18,13 @@ struct ContentView: View {
             if (!userData.feed.isEmpty) {
                 PageView(selection: $selectedIndex) {
                     ForEach(0..<userData.feed.count, id: \.self) { index in
-                        TopicView(topic: userData.feed[index])
+                        TopicView(
+                            topic: userData.feed[index],
+                            isPlaying: index == userData.feedIndex,
+                            onPlay: {
+                                userData.feedIndex = index
+                            }
+                        )
                     }
                 }
                 .pageViewStyle(.cardDeck)

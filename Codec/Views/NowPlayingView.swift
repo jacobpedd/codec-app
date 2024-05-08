@@ -18,13 +18,36 @@ class AudioPlayerViewModel: ObservableObject {
     @Published var currentTime: TimeInterval = 0.0
     @Published var duration: TimeInterval = 0.0
 
-    init(url: URL) {
-        let asset = AVAsset(url: url)
-        playerItem = AVPlayerItem(asset: asset)
-        audioPlayer = AVPlayer(playerItem: playerItem)
+    init(audioKey: String) {
+        setupPlayer(audioKey: audioKey)
+    }
+
+    func setupPlayer(audioKey: String) {
+        if let audioURL = URL(string: "https://bucket.wirehead.tech/\(audioKey)") {
+            let asset = AVAsset(url: audioURL)
+            playerItem = AVPlayerItem(asset: asset)
+            audioPlayer = AVPlayer(playerItem: playerItem)
+            
+            loadDuration()
+            setupProgressListener()
+        }
+    }
+
+    func playNewAudio(audioKey: String) {
+        if (isPlaying) {
+            playPause()
+            isPlaying = false
+        }
+        if let token = timeObserverToken {
+            audioPlayer?.removeTimeObserver(token)
+            timeObserverToken = nil
+        }
+        setupPlayer(audioKey: audioKey)
         
-        loadDuration()
-        setupProgressListener()
+        playPause()
+        isPlaying = true
+        currentTime = 0
+        progress = 0
     }
 
     deinit {
@@ -124,12 +147,7 @@ struct NowPlayingView: View {
     
     init(topic: Topic) {
         self.topic = topic
-        if let audioURL = URL(string: "https://bucket.wirehead.tech/\(topic.audio)") {
-            _playerModel = StateObject(wrappedValue: AudioPlayerViewModel(url: audioURL))
-        } else {
-            _playerModel = StateObject(wrappedValue: AudioPlayerViewModel(url: URL(string: "about:blank")!))
-            print("Error: Invalid Audio URL")
-        }
+        _playerModel = StateObject(wrappedValue: AudioPlayerViewModel(audioKey: topic.audio))
     }
     
     
@@ -158,6 +176,9 @@ struct NowPlayingView: View {
         .frame(maxWidth: .infinity)
         .shadow(color: .gray, radius: 10)
         .padding()
+        .onChange(of: topic.audio) { audio in
+            playerModel.playNewAudio(audioKey: audio)
+        }
 //        .onTapGesture {
 //            isPlayerShowing = true
 //        }
