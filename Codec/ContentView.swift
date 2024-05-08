@@ -8,29 +8,10 @@
 import SwiftUI
 import BigUIPaging
 
-struct TopicView: View {
-    var topic: Topic
-
-    var body: some View {
-        VStack {
-            VStack {
-                Spacer()
-                Text(topic.title)
-                    .font(.largeTitle)
-                    .foregroundStyle(.white)
-            }
-        }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.blue)
-        .cornerRadius(10)
-    }
-}
 
 struct ContentView: View {
     @State private var userData = UserData()
     @State private var selectedIndex: Int = 0
-    @State private var isPlayerShowing: Bool = false
 
     var body: some View {
         VStack {
@@ -52,31 +33,7 @@ struct ContentView: View {
                 .pageIndicatorBackgroundStyle(.prominent)
                 .allowsContinuousInteraction(false)
                 
-                HStack {
-                    Text(userData.feed[userData.feedIndex].title)
-                    Spacer()
-                    Image(systemName: "play.fill")
-                }
-                .padding()
-                .background(.white)
-                .cornerRadius(15)
-                .frame(maxWidth: .infinity)
-                .shadow(color: .gray, radius: 10)
-                .padding()
-                .onTapGesture {
-                    isPlayerShowing = true
-                }
-                .sheet(isPresented: $isPlayerShowing, onDismiss: {
-                    isPlayerShowing = false
-                }) {
-                    VStack(spacing: 15) {
-                        Text("Big Player Screen")
-                            .font(.largeTitle)
-                        Spacer()
-                    }
-                    .padding()
-                    .presentationDragIndicator(.visible)
-                }
+                NowPlayingView(topic: userData.feed[userData.feedIndex])
             } else {
                 Spacer()
                 ProgressView()
@@ -95,12 +52,13 @@ struct ContentView: View {
         }
         
         do {
-            
             let (data, _) = try await URLSession.shared.data(from: url)
+            
             let decoder = JSONDecoder()
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
             decoder.dateDecodingStrategy = .formatted(dateFormatter)
+            
             let decodedResponse = try! decoder.decode([Topic].self, from: data)
             userData.feed = decodedResponse
         } catch {

@@ -1,6 +1,33 @@
 {
-  "originHash" : "c9e06183a1f9b96b5232b1bd4ea2b95f0f08e466ad69edc51c4be76e5b14f91d",
+  "originHash" : "3ddc7801bba4efaab575638bf827136918fa17a7a9545b56729032bd46c96a48",
   "pins" : [
+    {
+      "identity" : "audiostreaming",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/dimitris-c/AudioStreaming.git",
+      "state" : {
+        "revision" : "ffa5bf8f2c4614dcc1fbdddf197af6e339087de6",
+        "version" : "1.2.0"
+      }
+    },
+    {
+      "identity" : "aws-crt-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/awslabs/aws-crt-swift",
+      "state" : {
+        "revision" : "b6380f683b31072d77b601c88674461c11bcad5a",
+        "version" : "0.30.0"
+      }
+    },
+    {
+      "identity" : "aws-sdk-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/awslabs/aws-sdk-swift",
+      "state" : {
+        "revision" : "c479168ac169cd13230a0a5a8ded502b2f4e363f",
+        "version" : "0.43.0"
+      }
+    },
     {
       "identity" : "biguipaging",
       "kind" : "remoteSourceControl",
@@ -8,6 +35,24 @@
       "state" : {
         "revision" : "40fa6e1683bd47b962e216c05377bfd1b8f760de",
         "version" : "0.0.3"
+      }
+    },
+    {
+      "identity" : "smithy-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/smithy-lang/smithy-swift",
+      "state" : {
+        "revision" : "c382f74c368c512a914323a9ab6411149d58b92a",
+        "version" : "0.48.0"
+      }
+    },
+    {
+      "identity" : "swift-log",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-log.git",
+      "state" : {
+        "revision" : "e97a6fcb1ab07462881ac165fdbb37f067e205d5",
+        "version" : "1.5.4"
       }
     }
   ],
