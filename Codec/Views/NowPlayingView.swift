@@ -41,7 +41,6 @@ class AudioPlayerViewModel: ObservableObject {
                 DispatchQueue.main.async { [weak self] in
                     if !duration.isIndefinite {
                         self?.duration = duration.seconds
-                        print("Duration loaded: \(duration) seconds")
                     }
                 }
             }
