@@ -197,8 +197,7 @@ struct TopicView: View {
                 }
                 .frame(minHeight: 0)
             }
-            .padding(.top)
-            .padding(.horizontal)
+            .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .padding(.top)
@@ -243,39 +242,6 @@ struct TopicView: View {
         }.resume()
     }
 }
-
-//            VStack(alignment: .leading) {
-//                Text(topic.title)
-//                    .font(.title)
-//                    .fontWeight(.bold)
-//                    .lineLimit(3)
-//                    .foregroundStyle(.white)
-//                HStack {
-//                    if (isPlaying) {
-//                        Text("Now Playing")
-//                            .foregroundStyle(.white)
-//                            .padding(.vertical, 5)
-//                    } else {
-//                        Button(action: onPlay) {
-//                            HStack {
-//                                Text("Play")
-//                                    .fontWeight(.bold)
-//                                    .foregroundStyle(bgColor)
-//                                Image(systemName: "play.fill")
-//                                    .foregroundStyle(bgColor)
-//                            }
-//                        }
-//                        .padding(.vertical, 5)
-//                        .padding(.horizontal)
-//                        .background(.white)
-//                        .cornerRadius(10)
-//                    }
-//                    Spacer()
-//                }
-//            }
-//            .padding()
-//            .frame(maxHeight: .infinity)
-//            .border(.red)
 
 #Preview {
     let topic = Topic(id: 0, title: "Deepfakes Shatter Trust in 2024 Election Reality", audio: "62a9e81834fbf4ebecea4403ed713117", image: "495b1a1f839200a3ea096019a582f176", createdAt: .now)

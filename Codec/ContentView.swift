@@ -10,19 +10,19 @@ import BigUIPaging
 
 
 struct ContentView: View {
-    @State private var userData = UserData()
-    @State private var selectedIndex: Int = 0
+    @State private var viewModel = ViewModel()
+    @State private var currentPageIndex: Int = 0
 
     var body: some View {
         VStack {
-            if (!userData.feed.isEmpty) {
-                PageView(selection: $selectedIndex) {
-                    ForEach(0..<userData.feed.count, id: \.self) { index in
+            if (!viewModel.feed.isEmpty) {
+                PageView(selection: $currentPageIndex) {
+                    ForEach(0..<viewModel.feed.count, id: \.self) { index in
                         TopicView(
-                            topic: userData.feed[index],
-                            isPlaying: index == userData.feedIndex,
+                            topic: viewModel.feed[index],
+                            isPlaying: index == viewModel.feedIndex,
                             onPlay: {
-                                userData.feedIndex = index
+                                viewModel.feedIndex = index
                             }
                         )
                     }
@@ -30,8 +30,8 @@ struct ContentView: View {
                 .pageViewStyle(.cardDeck)
                 .pageViewCardCornerRadius(15)
                 
-                PageIndicator(selection: $selectedIndex, total: userData.feed.count) { (index, _) in
-                    if index == userData.feedIndex {
+                PageIndicator(selection: $currentPageIndex, total: viewModel.feed.count) { (index, _) in
+                    if index == viewModel.feedIndex {
                             Image(systemName: "play.fill")
                         }
                 }
@@ -40,7 +40,7 @@ struct ContentView: View {
                 .pageIndicatorBackgroundStyle(.prominent)
                 .allowsContinuousInteraction(false)
                 
-                NowPlayingView(topic: userData.feed[userData.feedIndex])
+                NowPlayingView(topic: viewModel.currentTopic)
             } else {
                 Spacer()
                 ProgressView()
@@ -48,28 +48,7 @@ struct ContentView: View {
             }
         }
         .task {
-            await loadFeed()
-        }
-    }
-    
-    func loadFeed() async {
-        guard let url = URL(string: "https://api.wirehead.tech/queue?email=jacob.peddicord@hey.com") else {
-            print("Invalid URL")
-            return
-        }
-        
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            
-            let decoder = JSONDecoder()
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-            decoder.dateDecodingStrategy = .formatted(dateFormatter)
-            
-            let decodedResponse = try! decoder.decode([Topic].self, from: data)
-            userData.feed = decodedResponse
-        } catch {
-            print("Error: \(error)")
+            await viewModel.loadFeed()
         }
     }
 }
