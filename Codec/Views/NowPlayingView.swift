@@ -47,7 +47,7 @@ struct NowPlayingView: View {
     var topic: Topic
     @State private var isPlayerShowing: Bool = false
     @EnvironmentObject private var playerModel: AudioPlayerModel
-    @EnvironmentObject private var userDataModel: UserDataModel
+    @EnvironmentObject private var userDataModel: UserModel
     
     
     var body: some View {

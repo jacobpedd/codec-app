@@ -13,7 +13,7 @@ struct CodecApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(AudioPlayerModel())
-                .environmentObject(UserDataModel())
+                .environmentObject(UserModel())
         }
     }
 }

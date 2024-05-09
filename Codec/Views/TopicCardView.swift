@@ -9,9 +9,6 @@ import SwiftUI
 import BigUIPaging
 import ColorKit
 
-// TODO: Add Image
-// TODO: Dynamically set bgColor based on image
-
 extension UIImage {
     /// There are two main ways to get the color from an image, just a simple "sum up an average" or by squaring their sums. Each has their advantages, but the 'simple' option *seems* better for average color of entire image and closely mirrors CoreImage. Details: https://sighack.com/post/averaging-rgb-colors-the-right-way\
     
@@ -126,15 +123,31 @@ extension Date {
     }
 }
 
-
 struct TopicView: View {
     var topic: Topic
-    var isPlaying: Bool
-    var onPlay: () -> Void
+    @EnvironmentObject var userModel: UserModel
     
-    @State private var image: UIImage?
-    @State private var bgColor: Color = .gray
-    @State private var shadowColor: Color = .black
+    var id: Int { topic.id }
+    
+    var isPlaying: Bool {
+        userModel.feedIndex == id
+    }
+    
+    var image: UIImage? {
+        return userModel.images[topic.id]
+    }
+    
+    var bgColor: Color {
+        return Color(image?.findAverageColor() ?? .gray)
+    }
+    
+    var shadowColor: Color {
+        return Color.darkerColor(for: image?.findAverageColor() ?? .black).opacity(0.3)
+    }
+    
+    func onPlay() {
+        userModel.feedIndex = id
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -161,9 +174,9 @@ struct TopicView: View {
                 Text(
                     topic.createdAt.customFormatted()
                 )
-                    .font(.footnote)
-                    .foregroundStyle(.white)
-                    .padding(.bottom, 2)
+                .font(.footnote)
+                .foregroundStyle(.white)
+                .padding(.bottom, 2)
                 
                 Text(topic.title)
                     .font(.title)
@@ -205,41 +218,6 @@ struct TopicView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(bgColor)
         .cornerRadius(10)
-        .onAppear {
-            loadImage()
-        }
-    }
-    
-    func loadImage() {
-        loadImageFromURL(urlString: "https://bucket.wirehead.tech/\(topic.image)") { loadedImage in
-            guard let loadedImage = loadedImage else {
-                return
-            }
-            self.image = loadedImage
-            let uiBgColor = loadedImage.findAverageColor()
-            if let uiBgColor {
-                self.bgColor = Color(uiBgColor)
-                self.shadowColor = Color.darkerColor(for: uiBgColor).opacity(0.3)
-            }
-            
-        }
-    }
-    
-    func loadImageFromURL(urlString: String, completion: @escaping (UIImage?) -> Void) {
-        guard let url = URL(string: urlString) else {
-            completion(nil)
-            return
-        }
-        
-        URLSession.shared.dataTask(with: url) { data, _, error in
-            guard let data = data, error == nil else {
-                completion(nil)
-                return
-            }
-            
-            let loadedImage = UIImage(data: data)
-            completion(loadedImage)
-        }.resume()
     }
 }
 
@@ -251,11 +229,12 @@ struct TopicView: View {
             return 0
         }, set: {_,_ in })) {
             ForEach(0..<1, id: \.self) { index in
-                TopicView(topic: topic, isPlaying: false, onPlay: {})
+                TopicView(topic: topic)
             }
         }
         .pageViewStyle(.cardDeck)
         .pageViewCardCornerRadius(15)
         .frame(height: 550)
     }
+    .environmentObject(UserModel())
 }

@@ -10,7 +10,7 @@ import BigUIPaging
 
 
 struct ContentView: View {
-    @EnvironmentObject private var userModel: UserDataModel
+    @EnvironmentObject private var userModel: UserModel
     @State private var currentPageIndex: Int = 0
 
     var body: some View {
@@ -18,13 +18,7 @@ struct ContentView: View {
             if (!userModel.feed.isEmpty) {
                 PageView(selection: $currentPageIndex) {
                     ForEach(0..<userModel.feed.count, id: \.self) { index in
-                        TopicView(
-                            topic: userModel.feed[index],
-                            isPlaying: index == userModel.feedIndex,
-                            onPlay: {
-                                userModel.feedIndex = index
-                            }
-                        )
+                        TopicView(topic: userModel.feed[index])
                     }
                 }
                 .pageViewStyle(.cardDeck)
@@ -59,5 +53,5 @@ struct ContentView: View {
 #Preview {
     return ContentView()
         .environmentObject(AudioPlayerModel())
-        .environmentObject(UserDataModel())
+        .environmentObject(UserModel())
 }
