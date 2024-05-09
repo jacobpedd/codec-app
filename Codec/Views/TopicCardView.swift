@@ -176,7 +176,7 @@ struct TopicView: View {
                     if (isPlaying) {
                         Text("Now Playing")
                             .foregroundStyle(.white)
-                            .padding(.vertical, 5)
+                            .padding(.vertical, 10)
                     } else {
                         Button(action: onPlay) {
                             HStack {
@@ -187,10 +187,10 @@ struct TopicView: View {
                                     .foregroundStyle(bgColor)
                             }
                         }
-                        .padding(.vertical, 5)
+                        .padding(.vertical, 10)
                         .padding(.horizontal)
                         .background(.white)
-                        .cornerRadius(10)
+                        .cornerRadius(30)
                         .shadow(color: shadowColor, radius: 20)
                     }
                     Spacer()
@@ -251,7 +251,7 @@ struct TopicView: View {
             return 0
         }, set: {_,_ in })) {
             ForEach(0..<1, id: \.self) { index in
-                TopicView(topic: topic, isPlaying: true, onPlay: {})
+                TopicView(topic: topic, isPlaying: false, onPlay: {})
             }
         }
         .pageViewStyle(.cardDeck)
