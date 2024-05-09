@@ -99,6 +99,34 @@ extension Color {
     }
 }
 
+extension Date {
+    func customFormatted() -> String {
+        let now = Date()
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.hour, .day], from: self, to: now)
+        
+        let relativeFormatter = RelativeDateTimeFormatter()
+        relativeFormatter.unitsStyle = .abbreviated
+        
+        // Check if the difference is less than 12 hours
+        if let hour = components.hour, hour < 12 {
+            return relativeFormatter.localizedString(for: self, relativeTo: now)
+        }
+        
+        // Check if the difference is less than 7 days
+        if let day = components.day, day < 7 {
+            return relativeFormatter.localizedString(for: self, relativeTo: now)
+        }
+        
+        // Otherwise, format the date in a standard way
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .medium
+        dateFormatter.timeStyle = .none
+        return dateFormatter.string(from: self)
+    }
+}
+
+
 struct TopicView: View {
     var topic: Topic
     var isPlaying: Bool
@@ -117,7 +145,7 @@ struct TopicView: View {
                         .aspectRatio(1, contentMode: .fit)
                         .clipped()
                         .cornerRadius(15)
-                        .shadow(color: shadowColor, radius: 10)
+                        .shadow(color: shadowColor, radius: 20)
                 } else {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -125,12 +153,21 @@ struct TopicView: View {
             }
             .frame(maxHeight: .infinity)
             
-            VStack(alignment: .leading) {
+            VStack(alignment: .leading, spacing: 0) {
+                Spacer()
+                Text(
+                    topic.createdAt.customFormatted()
+                )
+                    .font(.footnote)
+                    .foregroundStyle(.white)
+                    .padding(.bottom, 2)
+                
                 Text(topic.title)
                     .font(.title)
                     .fontWeight(.bold)
                     .lineLimit(3)
                     .foregroundStyle(.white)
+                
                 Spacer()
                 HStack {
                     if (isPlaying) {
@@ -140,10 +177,10 @@ struct TopicView: View {
                     } else {
                         Button(action: onPlay) {
                             HStack {
+                                Image(systemName: "play.fill")
+                                    .foregroundStyle(bgColor)
                                 Text("Play")
                                     .fontWeight(.bold)
-                                    .foregroundStyle(bgColor)
-                                Image(systemName: "play.fill")
                                     .foregroundStyle(bgColor)
                             }
                         }
@@ -151,9 +188,11 @@ struct TopicView: View {
                         .padding(.horizontal)
                         .background(.white)
                         .cornerRadius(10)
+                        .shadow(color: shadowColor, radius: 20)
                     }
                     Spacer()
                 }
+                .frame(minHeight: 0)
             }
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
