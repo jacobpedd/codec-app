@@ -8,6 +8,8 @@
 import SwiftUI
 import AVFoundation
 
+// TODO: Don't display the Topic change until the audio is loaded
+
 class AudioPlayerViewModel: ObservableObject {
     private var audioPlayer: AVPlayer?
     private var playerItem: AVPlayerItem?
@@ -26,7 +28,12 @@ class AudioPlayerViewModel: ObservableObject {
         if let audioURL = URL(string: "https://bucket.wirehead.tech/\(audioKey)") {
             let asset = AVAsset(url: audioURL)
             playerItem = AVPlayerItem(asset: asset)
-            audioPlayer = AVPlayer(playerItem: playerItem)
+            
+            if (audioPlayer != nil) {
+                audioPlayer?.replaceCurrentItem(with: playerItem)
+            } else {
+                audioPlayer = AVPlayer(playerItem: playerItem)
+            }
             
             loadDuration()
             setupProgressListener()
@@ -197,7 +204,7 @@ struct NowPlayingView: View {
 }
 
 #Preview {
-    let topic = Topic(id: 0, title: "TikTok Battles US Ban, Slams China Crackdown", audio: "4ddce98e811f426816ba3ef6a6880169", createdAt: .now)
+    let topic = Topic(id: 0, title: "Deepfakes Shatter Trust in 2024 Election Reality", audio: "62a9e81834fbf4ebecea4403ed713117", image: "ae8e033c59cb551bc34e2f2279c91638", createdAt: .now)
     
     return VStack {
         Spacer()

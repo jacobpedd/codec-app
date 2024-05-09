@@ -28,6 +28,7 @@ struct ContentView: View {
                     }
                 }
                 .pageViewStyle(.cardDeck)
+                .pageViewCardCornerRadius(15)
                 
                 PageIndicator(selection: $selectedIndex, total: userData.feed.count) { (index, _) in
                     if index == userData.feedIndex {
