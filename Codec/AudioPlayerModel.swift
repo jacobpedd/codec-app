@@ -33,9 +33,10 @@ class AudioPlayerModel: ObservableObject {
         }
     }
 
-    func loadAudio(audioKey: String, shouldPlay: Bool = false) {
+    func loadAudio(audioKey: String) {
         // Pause existing content if playing
-        if (isPlaying) {
+        let originalIsPlaying = isPlaying
+        if (originalIsPlaying) {
             playPause()
             isPlaying = false
         }
@@ -65,7 +66,7 @@ class AudioPlayerModel: ObservableObject {
         currentTime = 0
         progress = 0
         
-        if (shouldPlay) {
+        if (originalIsPlaying) {
             playPause()
             isPlaying = true
         }

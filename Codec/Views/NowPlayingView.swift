@@ -79,7 +79,7 @@ struct NowPlayingView: View {
         .shadow(color: Color.gray.opacity(0.3), radius: 10)
         .padding()
         .onChange(of: topic.audio) { audio in
-            playerModel.loadAudio(audioKey: audio, shouldPlay: true)
+            playerModel.loadAudio(audioKey: audio)
         }
 //        .onTapGesture {
 //            isPlayerShowing = true

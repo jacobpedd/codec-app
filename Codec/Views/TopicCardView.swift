@@ -124,13 +124,11 @@ extension Date {
 }
 
 struct TopicView: View {
-    var topic: Topic
+    var index: Int
     @EnvironmentObject var userModel: UserModel
-    
-    var id: Int { topic.id }
-    
-    var isPlaying: Bool {
-        userModel.feedIndex == id
+    @EnvironmentObject var playerModel: AudioPlayerModel
+    var topic: Topic {
+        return userModel.feed[index]
     }
     
     var image: UIImage? {
@@ -146,7 +144,10 @@ struct TopicView: View {
     }
     
     func onPlay() {
-        userModel.feedIndex = id
+        userModel.playingIndex = index
+        if (!playerModel.isPlaying) {
+            playerModel.playPause()
+        }
     }
 
     var body: some View {
@@ -186,7 +187,7 @@ struct TopicView: View {
                 
                 Spacer()
                 HStack {
-                    if (isPlaying) {
+                    if (userModel.playingIndex == index) {
                         Text("Now Playing")
                             .foregroundStyle(.white)
                             .padding(.vertical, 10)
@@ -229,7 +230,7 @@ struct TopicView: View {
             return 0
         }, set: {_,_ in })) {
             ForEach(0..<1, id: \.self) { index in
-                TopicView(topic: topic)
+                TopicView(index: 0)
             }
         }
         .pageViewStyle(.cardDeck)

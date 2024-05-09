@@ -18,14 +18,14 @@ struct ContentView: View {
             if (!userModel.feed.isEmpty) {
                 PageView(selection: $currentPageIndex) {
                     ForEach(0..<userModel.feed.count, id: \.self) { index in
-                        TopicView(topic: userModel.feed[index])
+                        TopicView(index: index)
                     }
                 }
                 .pageViewStyle(.cardDeck)
                 .pageViewCardCornerRadius(15)
                 
                 PageIndicator(selection: $currentPageIndex, total: userModel.feed.count) { (index, _) in
-                    if index == userModel.feedIndex {
+                    if index == userModel.playingIndex {
                             Image(systemName: "play.fill")
                         }
                 }
@@ -41,8 +41,8 @@ struct ContentView: View {
                 Spacer()
             }
         }
-        .onChange(of: userModel.feedIndex) {
-            currentPageIndex = userModel.feedIndex
+        .onChange(of: userModel.playingIndex) {
+            currentPageIndex = userModel.playingIndex
         }
         .task {
             await userModel.loadFeed()

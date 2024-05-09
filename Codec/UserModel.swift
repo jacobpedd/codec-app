@@ -11,15 +11,15 @@ import UIKit
 class UserModel: ObservableObject {
     @Published private(set) var feed = [Topic]()
     @Published private(set) var images = [Int: UIImage]()
-    @Published var feedIndex: Int = 0
-    
+    @Published var playingIndex: Int = 0
+
     var currentTopic: Topic {
-        return feed[feedIndex]
+        return feed[playingIndex]
     }
     
     func next() {
-        if (feedIndex < feed.count - 1) {
-            feedIndex += 1
+        if (playingIndex < feed.count - 1) {
+            playingIndex += 1
         }
     }
     
