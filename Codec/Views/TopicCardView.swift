@@ -137,21 +137,24 @@ struct TopicView: View {
     @State private var shadowColor: Color = .black
 
     var body: some View {
-        VStack() {
-            VStack {
-                if let image = image {
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(1, contentMode: .fit)
-                        .clipped()
-                        .cornerRadius(15)
-                        .shadow(color: shadowColor, radius: 20)
-                } else {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        VStack(spacing: 0) {
+            GeometryReader { geometry in
+                VStack {
+                    if let image = image {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: geometry.size.height, height: geometry.size.height)
+                            .clipped()
+                            .cornerRadius(15)
+                            .shadow(color: shadowColor, radius: 20)
+                    } else {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
                 }
+                .frame(maxWidth: .infinity)
             }
-            .frame(maxHeight: .infinity)
             
             VStack(alignment: .leading, spacing: 0) {
                 Spacer()
@@ -194,7 +197,8 @@ struct TopicView: View {
                 }
                 .frame(minHeight: 0)
             }
-            .padding()
+            .padding(.top)
+            .padding(.horizontal)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .padding(.top)
@@ -215,9 +219,8 @@ struct TopicView: View {
             self.image = loadedImage
             let uiBgColor = loadedImage.findAverageColor()
             if let uiBgColor {
-                print(uiBgColor)
                 self.bgColor = Color(uiBgColor)
-                self.shadowColor = Color.darkerColor(for: uiBgColor)
+                self.shadowColor = Color.darkerColor(for: uiBgColor).opacity(0.3)
             }
             
         }
@@ -275,7 +278,7 @@ struct TopicView: View {
 //            .border(.red)
 
 #Preview {
-    let topic = Topic(id: 0, title: "Deepfakes Shatter Trust in 2024 Election Reality", audio: "62a9e81834fbf4ebecea4403ed713117", image: "ae8e033c59cb551bc34e2f2279c91638", createdAt: .now)
+    let topic = Topic(id: 0, title: "Deepfakes Shatter Trust in 2024 Election Reality", audio: "62a9e81834fbf4ebecea4403ed713117", image: "495b1a1f839200a3ea096019a582f176", createdAt: .now)
     
     return VStack {
         PageView(selection: Binding(get: {

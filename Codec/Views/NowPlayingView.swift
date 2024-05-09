@@ -162,26 +162,29 @@ struct NowPlayingView: View {
         VStack {
             HStack {
                 Text(topic.title)
+                    .lineLimit(1)
                 Spacer()
-                Button(action: {
-                    playerModel.seekToTime(seconds: 0)
-                }) {
-                    Image(systemName: "backward.fill")
-                }
                 Button(action: {
                     playerModel.playPause()
                 }) {
                     Image(systemName: playerModel.isPlaying ? "pause.fill" : "play.fill")
+                        .foregroundColor(.black)
+                }
+                Button(action: {
+                    playerModel.seekToTime(seconds: 0)
+                }) {
+                    Image(systemName: "forward.fill")
+                        .foregroundColor(.black)
                 }
                 
             }
-            AudioScrubberView(playerModel: playerModel)
+//            AudioScrubberView(playerModel: playerModel)
         }
         .padding()
         .background(.white)
         .cornerRadius(15)
         .frame(maxWidth: .infinity)
-        .shadow(color: .gray, radius: 10)
+        .shadow(color: Color.gray.opacity(0.3), radius: 10)
         .padding()
         .onChange(of: topic.audio) { audio in
             playerModel.playNewAudio(audioKey: audio)
