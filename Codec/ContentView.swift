@@ -10,19 +10,19 @@ import BigUIPaging
 
 
 struct ContentView: View {
-    @State private var viewModel = ViewModel()
+    @EnvironmentObject private var userModel: UserDataModel
     @State private var currentPageIndex: Int = 0
 
     var body: some View {
         VStack {
-            if (!viewModel.feed.isEmpty) {
+            if (!userModel.feed.isEmpty) {
                 PageView(selection: $currentPageIndex) {
-                    ForEach(0..<viewModel.feed.count, id: \.self) { index in
+                    ForEach(0..<userModel.feed.count, id: \.self) { index in
                         TopicView(
-                            topic: viewModel.feed[index],
-                            isPlaying: index == viewModel.feedIndex,
+                            topic: userModel.feed[index],
+                            isPlaying: index == userModel.feedIndex,
                             onPlay: {
-                                viewModel.feedIndex = index
+                                userModel.feedIndex = index
                             }
                         )
                     }
@@ -30,8 +30,8 @@ struct ContentView: View {
                 .pageViewStyle(.cardDeck)
                 .pageViewCardCornerRadius(15)
                 
-                PageIndicator(selection: $currentPageIndex, total: viewModel.feed.count) { (index, _) in
-                    if index == viewModel.feedIndex {
+                PageIndicator(selection: $currentPageIndex, total: userModel.feed.count) { (index, _) in
+                    if index == userModel.feedIndex {
                             Image(systemName: "play.fill")
                         }
                 }
@@ -40,19 +40,24 @@ struct ContentView: View {
                 .pageIndicatorBackgroundStyle(.prominent)
                 .allowsContinuousInteraction(false)
                 
-                NowPlayingView(topic: viewModel.currentTopic)
+                NowPlayingView(topic: userModel.currentTopic)
             } else {
                 Spacer()
                 ProgressView()
                 Spacer()
             }
         }
+        .onChange(of: userModel.feedIndex) {
+            currentPageIndex = userModel.feedIndex
+        }
         .task {
-            await viewModel.loadFeed()
+            await userModel.loadFeed()
         }
     }
 }
 
 #Preview {
     return ContentView()
+        .environmentObject(AudioPlayerModel())
+        .environmentObject(UserDataModel())
 }
