@@ -11,6 +11,7 @@
 		0B076D1E2BEAC66A00EB4063 /* NowPlayingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B076D1D2BEAC66A00EB4063 /* NowPlayingView.swift */; };
 		0B4E98352BED4F5400B8FDB9 /* AudioPlayerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4E98342BED4F5400B8FDB9 /* AudioPlayerModel.swift */; };
 		0B4E98372BED707F00B8FDB9 /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4E98362BED707F00B8FDB9 /* UserModel.swift */; };
+		0B4E983A2BED78B800B8FDB9 /* Artwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4E98392BED78B800B8FDB9 /* Artwork.swift */; };
 		0BB3083C2BE94A0000EB2494 /* CodecApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB3083B2BE94A0000EB2494 /* CodecApp.swift */; };
 		0BB3083E2BE94A0000EB2494 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB3083D2BE94A0000EB2494 /* ContentView.swift */; };
 		0BB308422BE94A0100EB2494 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0BB308412BE94A0100EB2494 /* Assets.xcassets */; };
@@ -25,6 +26,7 @@
 		0B076D1D2BEAC66A00EB4063 /* NowPlayingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingView.swift; sourceTree = "<group>"; };
 		0B4E98342BED4F5400B8FDB9 /* AudioPlayerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayerModel.swift; sourceTree = "<group>"; };
 		0B4E98362BED707F00B8FDB9 /* UserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModel.swift; sourceTree = "<group>"; };
+		0B4E98392BED78B800B8FDB9 /* Artwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Artwork.swift; sourceTree = "<group>"; };
 		0BB308382BE94A0000EB2494 /* Codec.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Codec.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0BB3083B2BE94A0000EB2494 /* CodecApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodecApp.swift; sourceTree = "<group>"; };
 		0BB3083D2BE94A0000EB2494 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -56,6 +58,14 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		0B4E98382BED78A600B8FDB9 /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				0B4E98392BED78B800B8FDB9 /* Artwork.swift */,
+			);
+			path = Helpers;
+			sourceTree = "<group>";
+		};
 		0BB3082F2BE94A0000EB2494 = {
 			isa = PBXGroup;
 			children = (
@@ -75,6 +85,7 @@
 		0BB3083A2BE94A0000EB2494 /* Codec */ = {
 			isa = PBXGroup;
 			children = (
+				0B4E98382BED78A600B8FDB9 /* Helpers */,
 				0B076D1A2BEAC46C00EB4063 /* Views */,
 				0BB3083B2BE94A0000EB2494 /* CodecApp.swift */,
 				0BB3083D2BE94A0000EB2494 /* ContentView.swift */,
@@ -176,6 +187,7 @@
 			files = (
 				0B4E98352BED4F5400B8FDB9 /* AudioPlayerModel.swift in Sources */,
 				0B4E98372BED707F00B8FDB9 /* UserModel.swift in Sources */,
+				0B4E983A2BED78B800B8FDB9 /* Artwork.swift in Sources */,
 				0B076D1E2BEAC66A00EB4063 /* NowPlayingView.swift in Sources */,
 				0BB3083E2BE94A0000EB2494 /* ContentView.swift in Sources */,
 				0BB308522BE9AC7B00EB2494 /* Topic.swift in Sources */,

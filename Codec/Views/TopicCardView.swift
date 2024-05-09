@@ -131,20 +131,23 @@ struct TopicView: View {
         return userModel.feed[index]
     }
     
-    var image: UIImage? {
-        return userModel.images[topic.id]
+    var image: Artwork? {
+        return userModel.topicArtworks[topic.id]
     }
     
     var bgColor: Color {
-        return Color(image?.findAverageColor() ?? .gray)
+        return image?.bgColor ?? .gray
     }
     
-    var shadowColor: Color {
-        return Color.darkerColor(for: image?.findAverageColor() ?? .black).opacity(0.3)
+    var shadwoColor: Color {
+        return image?.shadowColor ?? .gray
     }
     
     func onPlay() {
+        // Switch to the current index
         userModel.playingIndex = index
+        
+        // Play if it wasn't already playing
         if (!playerModel.isPlaying) {
             playerModel.playPause()
         }
@@ -155,13 +158,13 @@ struct TopicView: View {
             GeometryReader { geometry in
                 VStack {
                     if let image = image {
-                        Image(uiImage: image)
+                        Image(uiImage: image.image)
                             .resizable()
                             .scaledToFill()
                             .frame(width: geometry.size.height, height: geometry.size.height)
                             .clipped()
                             .cornerRadius(15)
-                            .shadow(color: shadowColor, radius: 20)
+                            .shadow(color: image.shadowColor, radius: 20)
                     } else {
                         ProgressView()
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -205,7 +208,7 @@ struct TopicView: View {
                         .padding(.horizontal)
                         .background(.white)
                         .cornerRadius(30)
-                        .shadow(color: shadowColor, radius: 20)
+                        .shadow(color: shadwoColor, radius: 20)
                     }
                     Spacer()
                 }

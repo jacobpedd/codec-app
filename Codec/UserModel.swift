@@ -7,10 +7,11 @@
 
 import Foundation
 import UIKit
+import SwiftUI
 
 class UserModel: ObservableObject {
     @Published private(set) var feed = [Topic]()
-    @Published private(set) var images = [Int: UIImage]()
+    @Published private(set) var topicArtworks = [Int: Artwork]()
     @Published var playingIndex: Int = 0
 
     var currentTopic: Topic {
@@ -56,7 +57,7 @@ class UserModel: ObservableObject {
             guard let data = data, error == nil else { return }
             DispatchQueue.main.async {
                 if let image = UIImage(data: data) {
-                    self?.images[topic.id] = image
+                    self?.topicArtworks[topic.id] = Artwork(image: image)
                 }
             }
         }.resume()
