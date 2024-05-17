@@ -22,10 +22,43 @@ struct RouteButtonView: UIViewRepresentable {
     }
 }
 
-import SwiftUI
+struct AirPlayView: UIViewRepresentable {
+    
+    private let routePickerView = AVRoutePickerView()
+
+    func makeUIView(context: UIViewRepresentableContext<AirPlayView>) -> UIView {
+        UIView()
+    }
+
+    func updateUIView(_ uiView: UIView, context: UIViewRepresentableContext<AirPlayView>) {
+        routePickerView.tintColor = .black
+        routePickerView.activeTintColor = .blue
+        routePickerView.backgroundColor = .clear
+        
+        routePickerView.translatesAutoresizingMaskIntoConstraints = false
+        uiView.addSubview(routePickerView)
+
+        NSLayoutConstraint.activate([
+            routePickerView.topAnchor.constraint(equalTo: uiView.topAnchor),
+            routePickerView.leadingAnchor.constraint(equalTo: uiView.leadingAnchor),
+            routePickerView.bottomAnchor.constraint(equalTo: uiView.bottomAnchor),
+            routePickerView.trailingAnchor.constraint(equalTo: uiView.trailingAnchor)
+        ])
+    }
+    
+    func showAirPlayMenu() {
+        for view: UIView in routePickerView.subviews {
+            if let button = view as? UIButton {
+                button.sendActions(for: .touchUpInside)
+                break
+            }
+        }
+    }
+}
 
 struct NowPlayingSheet: View {
     @State private var isTranscriptShowing: Bool = false
+    @State private var airPlayView = AirPlayView()
     @EnvironmentObject private var playerModel: AudioPlayerModel
     @EnvironmentObject private var userModel: UserModel
     
@@ -176,8 +209,8 @@ struct NowPlayingSheet: View {
                 Spacer()
                 
                 ZStack {
-                    RouteButtonView()
-                        .frame(width: 10, height: 50)
+                    airPlayView
+                        .frame(width: 50, height: 50)
                     
                     HStack {
                         Menu {

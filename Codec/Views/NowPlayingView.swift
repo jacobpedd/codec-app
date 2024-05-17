@@ -9,7 +9,7 @@ import SwiftUI
 
 
 struct NowPlayingView: View {
-    @State private var isPlayerShowing: Bool = false
+    @State private var isPlayerShowing: Bool = true
     @EnvironmentObject private var playerModel: AudioPlayerModel
     @EnvironmentObject private var userModel: UserModel
     
