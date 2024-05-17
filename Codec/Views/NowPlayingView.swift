@@ -115,8 +115,6 @@ struct NowPlayingView: View {
 }
 
 #Preview {
-    let topic = Topic(id: 0, title: "Deepfakes Shatter Trust in 2024 Election Reality", audio: "62a9e81834fbf4ebecea4403ed713117", image: "ae8e033c59cb551bc34e2f2279c91638", createdAt: .now)
-    
     return VStack {
         Spacer()
         NowPlayingView()

@@ -226,7 +226,7 @@ struct TopicView: View {
 }
 
 #Preview {
-    let topic = Topic(id: 0, title: "Deepfakes Shatter Trust in 2024 Election Reality", audio: "62a9e81834fbf4ebecea4403ed713117", image: "495b1a1f839200a3ea096019a582f176", createdAt: .now)
+    let topic = Topic(id: 0, title: "Deepfakes Shatter Trust in 2024 Election Reality", script: "", audio: "62a9e81834fbf4ebecea4403ed713117", image: "495b1a1f839200a3ea096019a582f176", createdAt: .now)
     
     return VStack {
         PageView(selection: Binding(get: {

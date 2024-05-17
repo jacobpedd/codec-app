@@ -25,6 +25,7 @@ struct RouteButtonView: UIViewRepresentable {
 import SwiftUI
 
 struct NowPlayingSheet: View {
+    @State private var isTranscriptShowing: Bool = true
     @EnvironmentObject private var playerModel: AudioPlayerModel
     @EnvironmentObject private var userModel: UserModel
     
@@ -32,6 +33,10 @@ struct NowPlayingSheet: View {
     
     var topic: Topic {
         return userModel.feed[userModel.playingIndex]
+    }
+    
+    var duration: Double {
+        return playerModel.duration
     }
     
     var image: Artwork? {
@@ -53,10 +58,18 @@ struct NowPlayingSheet: View {
         return formatter.string(from: NSNumber(value: speed)) ?? "\(speed)"
     }
     
+    func formattedTime(from seconds: Double) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.unitsStyle = .positional
+        formatter.allowedUnits = seconds >= 3600 ? [.hour, .minute, .second] : [.minute, .second]
+        formatter.zeroFormattingBehavior = .pad
+        return formatter.string(from: seconds) ?? "0:00"
+    }
+    
     var body: some View {
         VStack() {
             GeometryReader { geometry in
-                VStack {
+                ZStack {
                     if let image = image {
                         Image(uiImage: image.image)
                             .resizable()
@@ -69,10 +82,20 @@ struct NowPlayingSheet: View {
                         ProgressView()
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
+                    
+                    if isTranscriptShowing {
+                        ScrollView(.vertical, showsIndicators: true) {
+                            Text(topic.script.trimmingCharacters(in: .whitespacesAndNewlines))
+                                
+                        }
+                        .padding()
+                        .padding(.horizontal)
+                        .background(.ultraThickMaterial)
+                        .cornerRadius(15)
+                    }
                 }
                 .frame(maxWidth: .infinity)
             }
-            .padding()
             .padding()
             
             VStack(alignment: .leading, spacing: 0) {
@@ -112,11 +135,11 @@ struct NowPlayingSheet: View {
                     .frame(height: 5)
                     
                     HStack {
-                        Text("0:00")
+                        Text(formattedTime(from: playerModel.currentTime))
                             .font(.caption)
                             .foregroundColor(Color.gray)
                         Spacer()
-                        Text("-1:00")
+                        Text(formattedTime(from: playerModel.duration))
                             .font(.caption)
                             .foregroundColor(Color.gray)
                     }
@@ -154,7 +177,7 @@ struct NowPlayingSheet: View {
                 
                 ZStack {
                     RouteButtonView()
-                        .frame(height: 50)
+                        .frame(width: 10, height: 50)
                     
                     HStack {
                         Menu {
@@ -173,11 +196,22 @@ struct NowPlayingSheet: View {
                         Spacer()
                         
                         Button(action: {
-                            userModel.next()
+                            isTranscriptShowing = !isTranscriptShowing
                         }) {
-                            Image(systemName: "text.quote")
-                                .foregroundColor(.black)
-                                .font(.system(size: 24))
+                            if isTranscriptShowing {
+                                Image(systemName: "text.quote")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.white)
+                                    .padding(8)
+                                    .background(.gray)
+                                    .cornerRadius(10)
+                            } else {
+                                Image(systemName: "text.quote")
+                                    .foregroundColor(.black)
+                                    .font(.system(size: 24))
+                                    .padding(8)
+                            }
+                            
                         }
                             
                     }
@@ -195,8 +229,6 @@ struct NowPlayingSheet: View {
 }
 
 #Preview {
-    let topic = Topic(id: 0, title: "Deepfakes Shatter Trust in 2024 Election Reality", audio: "62a9e81834fbf4ebecea4403ed713117", image: "ae8e033c59cb551bc34e2f2279c91638", createdAt: .now)
-    
     return VStack {
         Spacer()
         NowPlayingView()

@@ -54,9 +54,15 @@ struct TopicListView: View {
                     }
                     
                     if userModel.playingIndex == index {
-                        Image(systemName: "speaker.wave.2.fill")
-                            .foregroundColor(.white)
-                            .font(.system(size: 24))
+                        if playerModel.isPlaying {
+                            Image(systemName: "speaker.wave.2.fill")
+                                .foregroundColor(.white)
+                                .font(.system(size: 24))
+                        } else  {
+                            Image(systemName: "speaker.fill")
+                                .foregroundColor(.white)
+                                .font(.system(size: 24))
+                        }
                     }
                 }
                 
