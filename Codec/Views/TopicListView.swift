@@ -23,13 +23,18 @@ struct TopicListView: View {
     }
     
     func onPlay() {
-        // Switch to the current index
-        userModel.playingIndex = index
-        
-        // Play if it wasn't already playing
-        if !playerModel.isPlaying {
+        if (userModel.playingIndex != index) {
+            // Switch to the current index
+            userModel.playingIndex = index
+            
+            // Play if it wasn't already playing
+            if !playerModel.isPlaying {
+                playerModel.playPause()
+            }
+        } else {
             playerModel.playPause()
         }
+        
     }
 
     var body: some View {

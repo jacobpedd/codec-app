@@ -7,43 +7,9 @@
 
 import SwiftUI
 
-struct AudioScrubberView: View {
-    @ObservedObject var playerModel: AudioPlayerModel
-    @State private var sliderValue: Double = 0.0
-    @State private var isDragging: Bool = false
-
-    var body: some View {
-        Slider(value: $sliderValue, in: 0...1, onEditingChanged: sliderEditingChanged)
-        HStack {
-            Text(formatTime(seconds: playerModel.currentTime))
-            Spacer()
-            Text(formatTime(seconds: playerModel.duration))
-        }
-        .onReceive(playerModel.$progress) { progress in
-            if !isDragging {
-                sliderValue = progress
-            }
-        }
-    }
-    
-    private func sliderEditingChanged(editingStarted: Bool) {
-        isDragging = editingStarted
-        if !editingStarted {
-            playerModel.seekToProgress(percentage: sliderValue)
-        }
-    }
-    
-    private func formatTime(seconds: TimeInterval) -> String {
-        let formatter = DateComponentsFormatter()
-        formatter.zeroFormattingBehavior = .pad
-        formatter.allowedUnits = [.minute, .second]
-        return formatter.string(from: seconds) ?? "0:00"
-    }
-}
-
 
 struct NowPlayingView: View {
-    @State private var isPlayerShowing: Bool = true
+    @State private var isPlayerShowing: Bool = false
     @EnvironmentObject private var playerModel: AudioPlayerModel
     @EnvironmentObject private var userModel: UserModel
     
