@@ -17,21 +17,18 @@ struct ContentView: View {
         VStack {
             if (!userModel.feed.isEmpty) {
                 ZStack() {
-                    List(0..<userModel.feed.count, id: \.self) { index in
-                        TopicListView(index: index)
-                            .listRowSeparator(.hidden)
-                            .listRowInsets(EdgeInsets())
-                        
-                            
-                    }
-                    .listStyle(PlainListStyle())
-                    
-                    
                     VStack {
-                        Spacer()
+                        List(0..<userModel.feed.count, id: \.self) { index in
+                            TopicListView(index: index)
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(EdgeInsets())
+                            
+                                
+                        }
+                        .listStyle(PlainListStyle())
                         Rectangle()
                             .fill(.white)
-                            .frame(height: 20)
+                            .frame(height: 40)
                             .background(.white)
                     }
                     

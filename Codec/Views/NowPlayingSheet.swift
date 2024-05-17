@@ -25,7 +25,7 @@ struct RouteButtonView: UIViewRepresentable {
 import SwiftUI
 
 struct NowPlayingSheet: View {
-    @State private var isTranscriptShowing: Bool = true
+    @State private var isTranscriptShowing: Bool = false
     @EnvironmentObject private var playerModel: AudioPlayerModel
     @EnvironmentObject private var userModel: UserModel
     

@@ -21,8 +21,6 @@ struct NowPlayingView: View {
         userModel.topicArtworks[topic.id]
     }
     
-    
-    
     var body: some View {
         VStack {
             HStack {
@@ -62,6 +60,7 @@ struct NowPlayingView: View {
             .frame(maxWidth: .infinity)
             .shadow(color: Color.gray.opacity(0.3), radius: 10)
             .padding(.horizontal)
+            .padding(.bottom)
             .onChange(of: topic.audio) { audio in
                 playerModel.loadAudio(audioKey: audio)
             }

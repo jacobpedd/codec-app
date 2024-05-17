@@ -95,6 +95,10 @@ struct TopicListView: View {
                     
                 }
                 .frame(height: 20)
+            } else {
+                // Annoying spacing for the now playing overlay effect
+                Rectangle()
+                    .frame(width: 00, height: 20)
             }
         }
         .padding(.horizontal)
