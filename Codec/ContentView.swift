@@ -16,25 +16,31 @@ struct ContentView: View {
     var body: some View {
         VStack {
             if (!userModel.feed.isEmpty) {
-                PageView(selection: $currentPageIndex) {
-                    ForEach(0..<userModel.feed.count, id: \.self) { index in
-                        TopicView(index: index)
+                ZStack() {
+                    List(0..<userModel.feed.count, id: \.self) { index in
+                        TopicListView(index: index)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets())
+                        
+                            
+                    }
+                    .listStyle(PlainListStyle())
+                    
+                    
+                    VStack {
+                        Spacer()
+                        Rectangle()
+                            .fill(.white)
+                            .frame(height: 20)
+                            .background(.white)
+                    }
+                    
+                    
+                    VStack {
+                        Spacer()
+                        NowPlayingView()
                     }
                 }
-                .pageViewStyle(.cardDeck)
-                .pageViewCardCornerRadius(15)
-                
-                PageIndicator(selection: $currentPageIndex, total: userModel.feed.count) { (index, _) in
-                    if index == userModel.playingIndex {
-                            Image(systemName: "play.fill")
-                        }
-                }
-                .pageIndicatorColor(.gray)
-                .pageIndicatorCurrentColor(.accentColor)
-                .pageIndicatorBackgroundStyle(.prominent)
-                .allowsContinuousInteraction(false)
-                
-                NowPlayingView(topic: userModel.currentTopic)
             } else {
                 Spacer()
                 ProgressView()

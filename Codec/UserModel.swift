@@ -18,6 +18,12 @@ class UserModel: ObservableObject {
         return feed[playingIndex]
     }
     
+    func previous() {
+        if (playingIndex > 0) {
+            playingIndex -= 1
+        }
+    }
+    
     func next() {
         if (playingIndex < feed.count - 1) {
             playingIndex += 1

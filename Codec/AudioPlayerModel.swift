@@ -12,10 +12,10 @@ class AudioPlayerModel: ObservableObject {
     private var playerItem: AVPlayerItem?
     private var timeObserverToken: Any?
 
-    @Published var isPlaying = false
-    @Published var progress: Double = 0.0
-    @Published var currentTime: TimeInterval = 0.0
-    @Published var duration: TimeInterval = 0.0
+    @Published private(set) var isPlaying = false
+    @Published private(set) var progress: Double = 0.0
+    @Published private(set) var currentTime: TimeInterval = 0.0
+    @Published private(set) var duration: TimeInterval = 0.0
 
     func setupPlayer(audioKey: String) {
         if let audioURL = URL(string: "https://bucket.wirehead.tech/\(audioKey)") {
@@ -115,6 +115,9 @@ class AudioPlayerModel: ObservableObject {
     func seekToTime(seconds: Double) {
         let seekTime = CMTime(seconds: seconds, preferredTimescale: 1)
         audioPlayer?.seek(to: seekTime)
+        
+        currentTime = seconds
+        progress = seconds / duration
     }
 
     func seekToProgress(percentage: Double) {
@@ -123,6 +126,10 @@ class AudioPlayerModel: ObservableObject {
         let seekTimeSeconds = totalSeconds * percentage
         let seekTime = CMTime(seconds: seekTimeSeconds, preferredTimescale: 1)
         audioPlayer?.seek(to: seekTime)
+        
+        currentTime = seekTimeSeconds
+        progress = percentage
+        print("seeked top \(seekTime)")
     }
 }
 

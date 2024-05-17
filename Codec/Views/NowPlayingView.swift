@@ -42,16 +42,125 @@ struct AudioScrubberView: View {
 }
 
 
-
-struct NowPlayingView: View {
-    var topic: Topic
+struct PlayerSheet: View {
     @State private var isPlayerShowing: Bool = false
     @EnvironmentObject private var playerModel: AudioPlayerModel
-    @EnvironmentObject private var userDataModel: UserModel
+    @EnvironmentObject private var userModel: UserModel
+    
+    var topic: Topic {
+        return userModel.feed[userModel.playingIndex]
+    }
+    
+    var image: Artwork? {
+        return userModel.topicArtworks[topic.id]
+    }
+    
+    var bgColor: Color {
+        return image?.bgColor ?? .gray
+    }
+    
+    var shadwoColor: Color {
+        return image?.shadowColor ?? .gray
+    }
+    
+    var body: some View {
+        VStack() {
+            GeometryReader { geometry in
+                VStack {
+                    if let image = image {
+                        Image(uiImage: image.image)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: geometry.size.height, height: geometry.size.height)
+                            .clipped()
+                            .cornerRadius(15)
+                            .shadow(color: image.shadowColor, radius: 20)
+                    } else {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .padding()
+            .padding()
+            
+            VStack() {
+                Text(topic.title)
+                    .lineLimit(1)
+                    .fontWeight(.bold)
+                
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 10)
+                            .frame(height: 10)
+                            .foregroundColor(.gray.opacity(0.3))
+                            
+                        
+                        RoundedRectangle(cornerRadius: 10)
+                            .frame(width: geometry.size.width * playerModel.progress, height: 10)
+                            .foregroundColor(.gray)
+                            .animation(.linear, value: playerModel.progress)
+                        
+                        RoundedRectangle(cornerRadius: 10)
+                            .opacity(0.10)
+                            .frame(height: 10)
+                            .gesture(
+                                DragGesture(minimumDistance: 0)
+                                    .onChanged { value in
+                                        let newProgress = value.location.x / geometry.size.width
+                                        playerModel.seekToProgress(percentage: min(max(newProgress, 0), 1))
+                                    }
+                            )
+                    }
+                }
+                .frame(height: 10)
+                
+                HStack {
+                    Button(action: {
+                        userModel.previous()
+                    }) {
+                        Image(systemName: "backward.fill")
+                            .foregroundColor(.black)
+                    }
+                    Button(action: {
+                        playerModel.playPause()
+                    }) {
+                        Image(systemName: playerModel.isPlaying ? "pause.fill" : "play.fill")
+                            .foregroundColor(.black)
+                    }
+                    Button(action: {
+                        userModel.next()
+                    }) {
+                        Image(systemName: "forward.fill")
+                            .foregroundColor(.black)
+                    }
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .padding()
+        .presentationDragIndicator(.visible)
+    }
+}
+
+
+struct NowPlayingView: View {
+    @State private var isPlayerShowing: Bool = false
+    @EnvironmentObject private var playerModel: AudioPlayerModel
+    @EnvironmentObject private var userModel: UserModel
+    
+    var topic: Topic {
+        return userModel.feed[userModel.playingIndex]
+    }
     
     
     var body: some View {
         VStack {
+
             HStack {
                 Text(topic.title)
                     .lineLimit(1)
@@ -63,40 +172,33 @@ struct NowPlayingView: View {
                         .foregroundColor(.black)
                 }
                 Button(action: {
-                    userDataModel.next()
+                    userModel.next()
                 }) {
                     Image(systemName: "forward.fill")
                         .foregroundColor(.black)
                 }
                 
             }
-//            AudioScrubberView()
-        }
-        .padding()
-        .background(.white)
-        .cornerRadius(15)
-        .frame(maxWidth: .infinity)
-        .shadow(color: Color.gray.opacity(0.3), radius: 10)
-        .padding()
-        .onChange(of: topic.audio) { audio in
-            playerModel.loadAudio(audioKey: audio)
-        }
-//        .onTapGesture {
-//            isPlayerShowing = true
-//        }
-        .sheet(isPresented: $isPlayerShowing, onDismiss: {
-            isPlayerShowing = false
-        }) {
-            VStack(spacing: 15) {
-                Text("Big Player Screen")
-                    .font(.largeTitle)
-                Spacer()
-            }
             .padding()
-            .presentationDragIndicator(.visible)
-        }
-        .onAppear() {
-            playerModel.setupPlayer(audioKey: topic.audio)
+            .background()
+            .cornerRadius(10)
+            .frame(maxWidth: .infinity)
+            .shadow(color: Color.gray.opacity(0.3), radius: 10)
+            .padding(.horizontal)
+            .onChange(of: topic.audio) { audio in
+                playerModel.loadAudio(audioKey: audio)
+            }
+            .onTapGesture {
+                isPlayerShowing = true
+            }
+            .sheet(isPresented: $isPlayerShowing, onDismiss: {
+                isPlayerShowing = false
+            }) {
+                PlayerSheet()
+            }
+            .onAppear() {
+                playerModel.loadAudio(audioKey: topic.audio)
+            }
         }
     }
 }
@@ -106,7 +208,8 @@ struct NowPlayingView: View {
     
     return VStack {
         Spacer()
-        NowPlayingView(topic: topic)
+        NowPlayingView()
             .environmentObject(AudioPlayerModel())
+            .environmentObject(UserModel())
     }
 }
