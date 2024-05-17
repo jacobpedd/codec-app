@@ -16,6 +16,11 @@ class AudioPlayerModel: ObservableObject {
     @Published private(set) var progress: Double = 0.0
     @Published private(set) var currentTime: TimeInterval = 0.0
     @Published private(set) var duration: TimeInterval = 0.0
+    @Published var playbackSpeed: Double = 1.0 {
+        didSet {
+            audioPlayer?.rate = isPlaying ? Float(playbackSpeed) : 0.0
+        }
+    }
 
     func setupPlayer(audioKey: String) {
         if let audioURL = URL(string: "https://bucket.wirehead.tech/\(audioKey)") {
@@ -97,6 +102,7 @@ class AudioPlayerModel: ObservableObject {
             audioPlayer?.pause()
         } else {
             audioPlayer?.play()
+            audioPlayer?.rate = Float(playbackSpeed)
         }
         isPlaying.toggle()
     }
@@ -129,7 +135,6 @@ class AudioPlayerModel: ObservableObject {
         
         currentTime = seekTimeSeconds
         progress = percentage
-        print("seeked top \(seekTime)")
     }
 }
 

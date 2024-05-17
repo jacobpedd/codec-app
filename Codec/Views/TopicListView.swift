@@ -72,15 +72,19 @@ struct TopicListView: View {
                 
                 Spacer()
             }
-            HStack() {
-                Rectangle()
-                    .frame(width: 60, height: 0)
-                VStack {
-                    Divider()
+            
+            // Add spacer if not last
+            if (index != userModel.feed.count - 1) {
+                HStack() {
+                    Rectangle()
+                        .frame(width: 60, height: 0)
+                    VStack {
+                        Divider()
+                    }
+                    
                 }
-                
+                .frame(height: 20)
             }
-            .frame(height: 20)
         }
         .padding(.horizontal)
         .onTapGesture {

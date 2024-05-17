@@ -42,8 +42,8 @@ struct AudioScrubberView: View {
 }
 
 
-struct PlayerSheet: View {
-    @State private var isPlayerShowing: Bool = false
+struct NowPlayingView: View {
+    @State private var isPlayerShowing: Bool = true
     @EnvironmentObject private var playerModel: AudioPlayerModel
     @EnvironmentObject private var userModel: UserModel
     
@@ -52,117 +52,28 @@ struct PlayerSheet: View {
     }
     
     var image: Artwork? {
-        return userModel.topicArtworks[topic.id]
+        userModel.topicArtworks[topic.id]
     }
     
-    var bgColor: Color {
-        return image?.bgColor ?? .gray
-    }
-    
-    var shadwoColor: Color {
-        return image?.shadowColor ?? .gray
-    }
-    
-    var body: some View {
-        VStack() {
-            GeometryReader { geometry in
-                VStack {
-                    if let image = image {
-                        Image(uiImage: image.image)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: geometry.size.height, height: geometry.size.height)
-                            .clipped()
-                            .cornerRadius(15)
-                            .shadow(color: image.shadowColor, radius: 20)
-                    } else {
-                        ProgressView()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-            }
-            .padding()
-            .padding()
-            
-            VStack() {
-                Text(topic.title)
-                    .lineLimit(1)
-                    .fontWeight(.bold)
-                
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 10)
-                            .frame(height: 10)
-                            .foregroundColor(.gray.opacity(0.3))
-                            
-                        
-                        RoundedRectangle(cornerRadius: 10)
-                            .frame(width: geometry.size.width * playerModel.progress, height: 10)
-                            .foregroundColor(.gray)
-                            .animation(.linear, value: playerModel.progress)
-                        
-                        RoundedRectangle(cornerRadius: 10)
-                            .opacity(0.10)
-                            .frame(height: 10)
-                            .gesture(
-                                DragGesture(minimumDistance: 0)
-                                    .onChanged { value in
-                                        let newProgress = value.location.x / geometry.size.width
-                                        playerModel.seekToProgress(percentage: min(max(newProgress, 0), 1))
-                                    }
-                            )
-                    }
-                }
-                .frame(height: 10)
-                
-                HStack {
-                    Button(action: {
-                        userModel.previous()
-                    }) {
-                        Image(systemName: "backward.fill")
-                            .foregroundColor(.black)
-                    }
-                    Button(action: {
-                        playerModel.playPause()
-                    }) {
-                        Image(systemName: playerModel.isPlaying ? "pause.fill" : "play.fill")
-                            .foregroundColor(.black)
-                    }
-                    Button(action: {
-                        userModel.next()
-                    }) {
-                        Image(systemName: "forward.fill")
-                            .foregroundColor(.black)
-                    }
-                }
-                
-                Spacer()
-            }
-            .padding()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .padding()
-        .presentationDragIndicator(.visible)
-    }
-}
-
-
-struct NowPlayingView: View {
-    @State private var isPlayerShowing: Bool = false
-    @EnvironmentObject private var playerModel: AudioPlayerModel
-    @EnvironmentObject private var userModel: UserModel
-    
-    var topic: Topic {
-        return userModel.feed[userModel.playingIndex]
-    }
     
     
     var body: some View {
         VStack {
-
             HStack {
+                if let image = image {
+                    Image(uiImage: image.image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 40, height: 40)
+                        .cornerRadius(10)
+                } else {
+                    Rectangle()
+                        .fill(Color.gray)
+                        .frame(width: 30, height: 30)
+                        .cornerRadius(10)
+                }
                 Text(topic.title)
+                    .font(.footnote)
                     .lineLimit(1)
                 Spacer()
                 Button(action: {
@@ -179,7 +90,7 @@ struct NowPlayingView: View {
                 }
                 
             }
-            .padding()
+            .padding(10)
             .background()
             .cornerRadius(10)
             .frame(maxWidth: .infinity)
@@ -194,7 +105,7 @@ struct NowPlayingView: View {
             .sheet(isPresented: $isPlayerShowing, onDismiss: {
                 isPlayerShowing = false
             }) {
-                PlayerSheet()
+                NowPlayingSheet()
             }
             .onAppear() {
                 playerModel.loadAudio(audioKey: topic.audio)
