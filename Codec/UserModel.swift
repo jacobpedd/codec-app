@@ -12,42 +12,74 @@ import SwiftUI
 class UserModel: ObservableObject {
     @Published private(set) var feed = [Topic]()
     @Published private(set) var topicArtworks = [Int: Artwork]()
-    @Published var playingIndex: Int = 0
+    @Published var playingTopicId: Int? = nil
 
-    var currentTopic: Topic {
-        return feed[playingIndex]
+    var playingTopic: Topic? {
+        if let playingTopicId = playingTopicId {
+            return feed.first { $0.id == playingTopicId }
+        }
+        return nil
+    }
+    
+    var playingTopicIndex: Int? {
+        if let playingTopicId = playingTopicId {
+            return feed.firstIndex { $0.id == playingTopicId }
+        }
+        return nil
     }
     
     func previous() {
-        if (playingIndex > 0) {
-            playingIndex -= 1
+        if let playingTopicIndex {
+            if (playingTopicIndex > 0) {
+                playingTopicId = feed[playingTopicIndex - 1].id
+            }
         }
     }
     
     func next() {
-        if (playingIndex < feed.count - 1) {
-            playingIndex += 1
+        if let playingTopicIndex {
+            if (playingTopicIndex < feed.count - 1) {
+                playingTopicId = feed[playingTopicIndex + 1].id
+            }
         }
     }
     
-    func deleteTopic(at index: Int) {
+    func deleteTopicIndex(at index: Int) {
         guard index >= 0 && index < feed.count else { return }
-        if playingIndex >= index {
-            playingIndex = max(0, playingIndex - 1)
+        if let playingTopicIndex {
+            if  playingTopicIndex >= index {
+                playingTopicId = feed[max(0, playingTopicIndex - 1)].id
+            }
         }
         feed.remove(at: index)
     }
     
-    func moveTopicToFront(at index: Int) {
-        guard index >= 0 && index < feed.count else { return }
-        let topic = feed.remove(at: index)
-        feed.insert(topic, at: 0)
+    func deleteTopicId(at id: Int) {
+        if let topicIndex = feed.firstIndex(where: { $0.id == id }) {
+            if let playingTopicIndex {
+                if  playingTopicIndex >= topicIndex {
+                    playingTopicId = feed[max(0, playingTopicIndex - 1)].id
+                }
+            }
+            
+            feed.remove(at: topicIndex)
+        }
     }
     
-    func moveTopicToBack(at index: Int) {
-        guard index >= 0 && index < feed.count else { return }
-        let topic = feed.remove(at: index)
-        feed.append(topic)
+    func moveTopicToFront(at id: Int) {
+        if let topicIndex = feed.firstIndex(where: { $0.id == id }) {
+            guard topicIndex >= 0 && topicIndex < feed.count else { return }
+            let topic = feed.remove(at: topicIndex)
+            feed.insert(topic, at: 0)
+        }
+    }
+    
+    func moveTopicToBack(at id: Int) {
+        if let topicIndex = feed.firstIndex(where: { $0.id == id }) {
+            guard topicIndex >= 0 && topicIndex < feed.count else { return }
+            let topic = feed.remove(at: topicIndex)
+            feed.append(topic)
+        }
     }
     
     func loadFeed() async {
@@ -64,6 +96,7 @@ class UserModel: ObservableObject {
             decoder.dateDecodingStrategy = .formatted(dateFormatter)
             let decodedResponse = try decoder.decode([Topic].self, from: data)
             feed = decodedResponse
+            playingTopicId = feed[0].id
             for topic in feed {
                 loadImageForTopic(topic)
             }

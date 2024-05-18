@@ -145,7 +145,7 @@ struct TopicView: View {
     
     func onPlay() {
         // Switch to the current index
-        userModel.playingIndex = index
+        userModel.playingTopicId = index
         
         // Play if it wasn't already playing
         if (!playerModel.isPlaying) {
@@ -190,7 +190,7 @@ struct TopicView: View {
                 
                 Spacer()
                 HStack {
-                    if (userModel.playingIndex == index) {
+                    if (userModel.playingTopicId == index) {
                         Text("Now Playing")
                             .foregroundStyle(.white)
                             .padding(.vertical, 10)

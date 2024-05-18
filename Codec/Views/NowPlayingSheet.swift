@@ -64,8 +64,8 @@ struct NowPlayingSheet: View {
     
     let speeds: [Double] = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
     
-    var topic: Topic {
-        return userModel.feed[userModel.playingIndex]
+    var topic: Topic? {
+        userModel.playingTopic
     }
     
     var duration: Double {
@@ -73,7 +73,10 @@ struct NowPlayingSheet: View {
     }
     
     var image: Artwork? {
-        return userModel.topicArtworks[topic.id]
+        if let topicId = topic?.id {
+            return userModel.topicArtworks[topicId]
+        }
+        return nil
     }
     
     var bgColor: Color {
@@ -101,159 +104,160 @@ struct NowPlayingSheet: View {
     
     var body: some View {
         VStack() {
-            GeometryReader { geometry in
-                ZStack {
-                    if let image = image {
-                        Image(uiImage: image.image)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: geometry.size.height, height: geometry.size.height)
-                            .clipped()
-                            .cornerRadius(15)
-                            .shadow(color: image.shadowColor, radius: 20)
-                    } else {
-                        ProgressView()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    }
-                    
-                    if isTranscriptShowing {
-                        ScrollView(.vertical, showsIndicators: true) {
-                            Text(topic.script.trimmingCharacters(in: .whitespacesAndNewlines))
+            if let topic {
+                GeometryReader { geometry in
+                    ZStack {
+                        if let image = image {
+                            Image(uiImage: image.image)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: geometry.size.height, height: geometry.size.height)
+                                .clipped()
+                                .cornerRadius(15)
+                                .shadow(color: image.shadowColor, radius: 20)
+                        } else {
+                            ProgressView()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        }
+                        
+                        if isTranscriptShowing {
+                            ScrollView(.vertical, showsIndicators: true) {
+                                Text(topic.script.trimmingCharacters(in: .whitespacesAndNewlines))
                                 
-                        }
-                        .padding()
-                        .padding(.horizontal)
-                        .background(.ultraThickMaterial)
-                        .cornerRadius(15)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-            }
-            .padding()
-            
-            VStack(alignment: .leading, spacing: 0) {
-                Text(topic.title)
-                    .lineLimit(3)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                
-                Spacer()
-                
-                
-                VStack {
-                    GeometryReader { geometry in
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 10)
-                                .frame(height: 5)
-                                .foregroundColor(Color.gray)
-                                .brightness(0.3)
-                            
-                            RoundedRectangle(cornerRadius: 10)
-                                .frame(width: geometry.size.width * playerModel.progress, height: 5)
-                                .foregroundColor(.gray)
-                                .animation(.linear, value: playerModel.progress)
-                            
-                            RoundedRectangle(cornerRadius: 10)
-                                .opacity(0.01)
-                                .frame(height: 5)
-                                .gesture(
-                                    DragGesture(minimumDistance: 0)
-                                        .onChanged { value in
-                                            let newProgress = value.location.x / geometry.size.width
-                                            playerModel.seekToProgress(percentage: min(max(newProgress, 0), 1))
-                                        }
-                                )
-                        }
-                    }
-                    .frame(height: 5)
-                    
-                    HStack {
-                        Text(formattedTime(from: playerModel.currentTime))
-                            .font(.caption)
-                            .foregroundColor(Color.gray)
-                        Spacer()
-                        Text(formattedTime(from: playerModel.duration))
-                            .font(.caption)
-                            .foregroundColor(Color.gray)
-                    }
-                }
-                
-                Spacer()
-                
-                HStack {
-                    Button(action: {
-                        userModel.previous()
-                    }) {
-                        Image(systemName: "backward.fill")
-                            .foregroundColor(.black)
-                            .font(.system(size: 30))
-                    }
-                    Spacer()
-                    Button(action: {
-                        playerModel.playPause()
-                    }) {
-                        Image(systemName: playerModel.isPlaying ? "pause.fill" : "play.fill")
-                            .foregroundColor(.black)
-                            .font(.system(size: 50))
-                    }
-                    Spacer()
-                    Button(action: {
-                        userModel.next()
-                    }) {
-                        Image(systemName: "forward.fill")
-                            .foregroundColor(.black)
-                            .font(.system(size: 30))
-                    }
-                }
-                
-                Spacer()
-                
-                ZStack {
-                    airPlayView
-                        .frame(width: 50, height: 50)
-                    
-                    HStack {
-                        Menu {
-                            ForEach(speeds, id: \.self) { speed in
-                                Button("\(formattedSpeed(speed))x") {
-                                    playerModel.playbackSpeed = speed
-                                }
                             }
-                        } label: {
-                            Text("\(formattedSpeed(playerModel.playbackSpeed))x")
-                                .foregroundColor(.black)
-                                .font(.system(size: 24))
-                            
+                            .padding()
+                            .padding(.horizontal)
+                            .background(.ultraThickMaterial)
+                            .cornerRadius(15)
                         }
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .padding()
+                
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(topic.title)
+                        .lineLimit(3)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    Spacer()
+                    
+                    
+                    VStack {
+                        GeometryReader { geometry in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .frame(height: 5)
+                                    .foregroundColor(Color.gray)
+                                    .brightness(0.3)
+                                
+                                RoundedRectangle(cornerRadius: 10)
+                                    .frame(width: geometry.size.width * playerModel.progress, height: 5)
+                                    .foregroundColor(.gray)
+                                    .animation(.linear, value: playerModel.progress)
+                                
+                                RoundedRectangle(cornerRadius: 10)
+                                    .opacity(0.01)
+                                    .frame(height: 5)
+                                    .gesture(
+                                        DragGesture(minimumDistance: 0)
+                                            .onChanged { value in
+                                                let newProgress = value.location.x / geometry.size.width
+                                                playerModel.seekToProgress(percentage: min(max(newProgress, 0), 1))
+                                            }
+                                    )
+                            }
+                        }
+                        .frame(height: 5)
                         
-                        Spacer()
-                        
+                        HStack {
+                            Text(formattedTime(from: playerModel.currentTime))
+                                .font(.caption)
+                                .foregroundColor(Color.gray)
+                            Spacer()
+                            Text(formattedTime(from: playerModel.duration))
+                                .font(.caption)
+                                .foregroundColor(Color.gray)
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    HStack {
                         Button(action: {
-                            isTranscriptShowing = !isTranscriptShowing
+                            userModel.previous()
                         }) {
-                            if isTranscriptShowing {
-                                Image(systemName: "text.quote")
-                                    .font(.system(size: 24))
-                                    .foregroundColor(.white)
-                                    .padding(8)
-                                    .background(.gray)
-                                    .cornerRadius(10)
-                            } else {
-                                Image(systemName: "text.quote")
+                            Image(systemName: "backward.fill")
+                                .foregroundColor(.black)
+                                .font(.system(size: 30))
+                        }
+                        Spacer()
+                        Button(action: {
+                            playerModel.playPause()
+                        }) {
+                            Image(systemName: playerModel.isPlaying ? "pause.fill" : "play.fill")
+                                .foregroundColor(.black)
+                                .font(.system(size: 50))
+                        }
+                        Spacer()
+                        Button(action: {
+                            userModel.next()
+                        }) {
+                            Image(systemName: "forward.fill")
+                                .foregroundColor(.black)
+                                .font(.system(size: 30))
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    ZStack {
+                        airPlayView
+                            .frame(width: 50, height: 50)
+                        
+                        HStack {
+                            Menu {
+                                ForEach(speeds, id: \.self) { speed in
+                                    Button("\(formattedSpeed(speed))x") {
+                                        playerModel.playbackSpeed = speed
+                                    }
+                                }
+                            } label: {
+                                Text("\(formattedSpeed(playerModel.playbackSpeed))x")
                                     .foregroundColor(.black)
                                     .font(.system(size: 24))
-                                    .padding(8)
+                                
+                            }
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                isTranscriptShowing = !isTranscriptShowing
+                            }) {
+                                if isTranscriptShowing {
+                                    Image(systemName: "text.quote")
+                                        .font(.system(size: 24))
+                                        .foregroundColor(.white)
+                                        .padding(8)
+                                        .background(.gray)
+                                        .cornerRadius(10)
+                                } else {
+                                    Image(systemName: "text.quote")
+                                        .foregroundColor(.black)
+                                        .font(.system(size: 24))
+                                        .padding(8)
+                                }
+                                
                             }
                             
                         }
-                            
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.horizontal)
+                .padding(.top)   
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.horizontal)
-            .padding(.top)
-            
         }
         .padding(.horizontal)
         .padding(.top)

@@ -10,25 +10,30 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var userModel: UserModel
-    @State private var currentPageIndex: Int = 0
 
     var body: some View {
         VStack {
             if (!userModel.feed.isEmpty) {
                 ZStack() {
                     VStack {
-                        List(0..<userModel.feed.count, id: \.self) { index in
-                            TopicListView(index: index)
+                        List {
+                            ForEach(userModel.feed) { topic in
+                                TopicListView(topic: topic)
+                                    .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
+                            }
+                            .onDelete(perform: delete)
+                            Rectangle()
+                                .fill(.blue)
+                                .frame(height: 0)
                                 .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets())
-                            
-                                
                         }
                         .listStyle(PlainListStyle())
+                        
                         Rectangle()
                             .fill(.white)
                             .frame(height: 40)
                     }
+                    .padding(.trailing)
                     
                     VStack {
                         Spacer()
@@ -41,11 +46,14 @@ struct ContentView: View {
                 Spacer()
             }
         }
-        .onChange(of: userModel.playingIndex) {
-            currentPageIndex = userModel.playingIndex
-        }
         .task {
             await userModel.loadFeed()
+        }
+    }
+    
+    private func delete(at offsets: IndexSet) {
+        for index in offsets {
+            userModel.deleteTopicIndex(at: index)
         }
     }
 }
