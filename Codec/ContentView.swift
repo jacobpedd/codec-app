@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import BigUIPaging
 
 
 struct ContentView: View {
@@ -29,9 +28,7 @@ struct ContentView: View {
                         Rectangle()
                             .fill(.white)
                             .frame(height: 40)
-                            .background(.white)
                     }
-                    
                     
                     VStack {
                         Spacer()

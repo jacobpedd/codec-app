@@ -7,7 +7,7 @@
 
 import Foundation
 
-class Topic: Codable, Identifiable {
+class Topic: Codable, Identifiable, CustomStringConvertible {
     var id: Int
     var title: String
     var script: String
@@ -22,5 +22,10 @@ class Topic: Codable, Identifiable {
         self.audio = audio
         self.image = image
         self.createdAt = createdAt
+    }
+    
+    var description: String {
+        let string = String(title)
+        return string
     }
 }

@@ -30,6 +30,26 @@ class UserModel: ObservableObject {
         }
     }
     
+    func deleteTopic(at index: Int) {
+        guard index >= 0 && index < feed.count else { return }
+        if playingIndex >= index {
+            playingIndex = max(0, playingIndex - 1)
+        }
+        feed.remove(at: index)
+    }
+    
+    func moveTopicToFront(at index: Int) {
+        guard index >= 0 && index < feed.count else { return }
+        let topic = feed.remove(at: index)
+        feed.insert(topic, at: 0)
+    }
+    
+    func moveTopicToBack(at index: Int) {
+        guard index >= 0 && index < feed.count else { return }
+        let topic = feed.remove(at: index)
+        feed.append(topic)
+    }
+    
     func loadFeed() async {
         guard let url = URL(string: "https://api.wirehead.tech/queue?email=jacob.peddicord@hey.com") else {
             print("Invalid URL")
@@ -38,15 +58,12 @@ class UserModel: ObservableObject {
         
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
-            
             let decoder = JSONDecoder()
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
             decoder.dateDecodingStrategy = .formatted(dateFormatter)
-            
-            let decodedResponse = try! decoder.decode([Topic].self, from: data)
+            let decodedResponse = try decoder.decode([Topic].self, from: data)
             feed = decodedResponse
-            
             for topic in feed {
                 loadImageForTopic(topic)
             }
@@ -58,7 +75,6 @@ class UserModel: ObservableObject {
     private func loadImageForTopic(_ topic: Topic) {
         let urlString = "https://bucket.wirehead.tech/\(topic.image)"
         guard let url = URL(string: urlString) else { return }
-
         URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
             guard let data = data, error == nil else { return }
             DispatchQueue.main.async {
@@ -69,4 +85,3 @@ class UserModel: ObservableObject {
         }.resume()
     }
 }
-
