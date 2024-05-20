@@ -58,24 +58,26 @@ struct TopicListView: View {
                 }
 
                 Spacer()
-
-                Menu {
-                    Button(role: .destructive, action: { onDelete(id: topic.id) }) {
-                        Label("Remove", systemImage: "trash")
+                
+                if (!isPlayingTopic) {
+                    Menu {
+                        Button(role: .destructive, action: { onDelete(id: topic.id) }) {
+                            Label("Remove", systemImage: "trash")
+                        }
+                        Button(action: { userModel.moveTopicToFront(at: topic.id) }) {
+                            Label("Play Next", systemImage: "text.line.first.and.arrowtriangle.forward")
+                        }
+                        Button(action: { userModel.moveTopicToBack(at: topic.id) }) {
+                            Label("Play Last", systemImage: "text.line.last.and.arrowtriangle.forward")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .foregroundColor(.black)
+                            .padding()
                     }
-                    Button(action: { userModel.moveTopicToFront(at: topic.id) }) {
-                        Label("Play Next", systemImage: "text.line.first.and.arrowtriangle.forward")
+                    .onTapGesture {
+                        isMenuOpen.toggle()
                     }
-                    Button(action: { userModel.moveTopicToBack(at: topic.id) }) {
-                        Label("Play Last", systemImage: "text.line.last.and.arrowtriangle.forward")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .foregroundColor(.black)
-                        .padding()
-                }
-                .onTapGesture {
-                    isMenuOpen.toggle()
                 }
             }
         }
@@ -94,25 +96,25 @@ struct TopicListView: View {
     }
     
     private var isPlayingTopic: Bool {
-        if let playingTopicId = userModel.playingTopicId {
-            return playingTopicId == topic.id
+        if let playingTopic = userModel.playingTopic {
+            return topic.id == playingTopic.id
         }
         return false
     }
 
     private func onPlay(id: Int) {
-        if userModel.playingTopicId != id {
-            userModel.playingTopicId = id
-
-            if !playerModel.isPlaying {
-                playerModel.playPause()
-            }
-        } else {
-            playerModel.playPause()
-        }
+//        if userModel.playingTopicId != id {
+//            userModel.playingTopicId = id
+//
+//            if !playerModel.isPlaying {
+//                playerModel.playPause()
+//            }
+//        } else {
+//            playerModel.playPause()
+//        }
     }
 
     private func onDelete(id: Int) {
-        userModel.deleteTopicId(at: id)
+//        userModel.deleteTopicId(at: id)
     }
 }

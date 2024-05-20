@@ -123,122 +123,122 @@ extension Date {
     }
 }
 
-struct TopicView: View {
-    var index: Int
-    @EnvironmentObject var userModel: UserModel
-    @EnvironmentObject var playerModel: AudioPlayerModel
-    var topic: Topic {
-        return userModel.feed[index]
-    }
-    
-    var image: Artwork? {
-        return userModel.topicArtworks[topic.id]
-    }
-    
-    var bgColor: Color {
-        return image?.bgColor ?? .gray
-    }
-    
-    var shadwoColor: Color {
-        return image?.shadowColor ?? .gray
-    }
-    
-    func onPlay() {
-        // Switch to the current index
-        userModel.playingTopicId = index
-        
-        // Play if it wasn't already playing
-        if (!playerModel.isPlaying) {
-            playerModel.playPause()
-        }
-    }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            GeometryReader { geometry in
-                VStack {
-                    if let image = image {
-                        Image(uiImage: image.image)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: geometry.size.height, height: geometry.size.height)
-                            .clipped()
-                            .cornerRadius(15)
-                            .shadow(color: image.shadowColor, radius: 20)
-                    } else {
-                        ProgressView()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-            }
-            
-            VStack(alignment: .leading, spacing: 0) {
-                Spacer()
-                Text(
-                    topic.createdAt.customFormatted()
-                )
-                .font(.footnote)
-                .foregroundStyle(.white)
-                .padding(.bottom, 2)
-                
-                Text(topic.title)
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .lineLimit(3)
-                    .foregroundStyle(.white)
-                
-                Spacer()
-                HStack {
-                    if (userModel.playingTopicId == index) {
-                        Text("Now Playing")
-                            .foregroundStyle(.white)
-                            .padding(.vertical, 10)
-                    } else {
-                        Button(action: onPlay) {
-                            HStack {
-                                Image(systemName: "play.fill")
-                                    .foregroundStyle(bgColor)
-                                Text("Play")
-                                    .fontWeight(.bold)
-                                    .foregroundStyle(bgColor)
-                            }
-                        }
-                        .padding(.vertical, 10)
-                        .padding(.horizontal)
-                        .background(.white)
-                        .cornerRadius(30)
-                        .shadow(color: shadwoColor, radius: 20)
-                    }
-                    Spacer()
-                }
-                .frame(minHeight: 0)
-            }
-            .padding()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .padding(.top)
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(bgColor)
-        .cornerRadius(10)
-    }
-}
-
-#Preview {
-    let topic = Topic(id: 0, title: "Deepfakes Shatter Trust in 2024 Election Reality", script: "", audio: "62a9e81834fbf4ebecea4403ed713117", image: "495b1a1f839200a3ea096019a582f176", createdAt: .now)
-    
-    return VStack {
-        PageView(selection: Binding(get: {
-            return 0
-        }, set: {_,_ in })) {
-            ForEach(0..<1, id: \.self) { index in
-                TopicView(index: 0)
-            }
-        }
-        .pageViewStyle(.cardDeck)
-        .pageViewCardCornerRadius(15)
-        .frame(height: 550)
-    }
-    .environmentObject(UserModel())
-}
+//struct TopicView: View {
+//    var index: Int
+//    @EnvironmentObject var userModel: UserModel
+//    @EnvironmentObject var playerModel: AudioPlayerModel
+//    var topic: Topic {
+//        return userModel.feed[index]
+//    }
+//    
+//    var image: Artwork? {
+//        return userModel.topicArtworks[topic.id]
+//    }
+//    
+//    var bgColor: Color {
+//        return image?.bgColor ?? .gray
+//    }
+//    
+//    var shadwoColor: Color {
+//        return image?.shadowColor ?? .gray
+//    }
+//    
+//    func onPlay() {
+//        // Switch to the current index
+//        userModel.playingTopicId = index
+//        
+//        // Play if it wasn't already playing
+//        if (!playerModel.isPlaying) {
+//            playerModel.playPause()
+//        }
+//    }
+//
+//    var body: some View {
+//        VStack(spacing: 0) {
+//            GeometryReader { geometry in
+//                VStack {
+//                    if let image = image {
+//                        Image(uiImage: image.image)
+//                            .resizable()
+//                            .scaledToFill()
+//                            .frame(width: geometry.size.height, height: geometry.size.height)
+//                            .clipped()
+//                            .cornerRadius(15)
+//                            .shadow(color: image.shadowColor, radius: 20)
+//                    } else {
+//                        ProgressView()
+//                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+//                    }
+//                }
+//                .frame(maxWidth: .infinity)
+//            }
+//            
+//            VStack(alignment: .leading, spacing: 0) {
+//                Spacer()
+//                Text(
+//                    topic.createdAt.customFormatted()
+//                )
+//                .font(.footnote)
+//                .foregroundStyle(.white)
+//                .padding(.bottom, 2)
+//                
+//                Text(topic.title)
+//                    .font(.title)
+//                    .fontWeight(.bold)
+//                    .lineLimit(3)
+//                    .foregroundStyle(.white)
+//                
+//                Spacer()
+//                HStack {
+//                    if (userModel.playingTopicId == index) {
+//                        Text("Now Playing")
+//                            .foregroundStyle(.white)
+//                            .padding(.vertical, 10)
+//                    } else {
+//                        Button(action: onPlay) {
+//                            HStack {
+//                                Image(systemName: "play.fill")
+//                                    .foregroundStyle(bgColor)
+//                                Text("Play")
+//                                    .fontWeight(.bold)
+//                                    .foregroundStyle(bgColor)
+//                            }
+//                        }
+//                        .padding(.vertical, 10)
+//                        .padding(.horizontal)
+//                        .background(.white)
+//                        .cornerRadius(30)
+//                        .shadow(color: shadwoColor, radius: 20)
+//                    }
+//                    Spacer()
+//                }
+//                .frame(minHeight: 0)
+//            }
+//            .padding()
+//            .frame(maxWidth: .infinity, maxHeight: .infinity)
+//        }
+//        .padding(.top)
+//        .padding()
+//        .frame(maxWidth: .infinity, maxHeight: .infinity)
+//        .background(bgColor)
+//        .cornerRadius(10)
+//    }
+//}
+//
+//#Preview {
+//    let topic = Topic(id: 0, title: "Deepfakes Shatter Trust in 2024 Election Reality", script: "", audio: "62a9e81834fbf4ebecea4403ed713117", image: "495b1a1f839200a3ea096019a582f176", createdAt: .now)
+//    
+//    return VStack {
+//        PageView(selection: Binding(get: {
+//            return 0
+//        }, set: {_,_ in })) {
+//            ForEach(0..<1, id: \.self) { index in
+//                TopicView(index: 0)
+//            }
+//        }
+//        .pageViewStyle(.cardDeck)
+//        .pageViewCardCornerRadius(15)
+//        .frame(height: 550)
+//    }
+//    .environmentObject(UserModel())
+//}

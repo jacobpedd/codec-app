@@ -12,7 +12,7 @@ class Topic: Codable, Identifiable, CustomStringConvertible {
     var title: String
     var script: String
     var audio: String // bucket key of the audio file
-    var image: String // bucket key of the image file
+    var image: String? // bucket key of the image file
     var createdAt: Date
     
     init(id: Int, title: String, script: String, audio: String, image: String, createdAt: Date) {
