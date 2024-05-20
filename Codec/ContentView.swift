@@ -39,36 +39,53 @@ struct ContentView: View {
         VStack {
             ZStack() {
                 VStack {
-                    List {
-                        Section(header: Text("History")) {
-                            ForEach(history) { topic in
-                                TopicListView(topic: topic)
-                                    .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
+                    ScrollViewReader { scrollView in
+                        List {
+                            if history.count > 0 {
+                                Section(header: Text("History")) {
+                                    ForEach(history) { topic in
+                                        TopicListView(topic: topic)
+                                            .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
+                                            .id(topic.id)
+                                    }
+                                    .onDelete(perform: deleteFromHistory)
+                                }
                             }
-                            .onDelete(perform: deleteFromHistory)
+                            
+                            if nowPlaying != nil {
+                                Section(header: Text("Now Playing")) {
+                                    TopicListView(topic: nowPlaying!)
+                                        .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
+                                        .listRowSeparator(.hidden)
+                                        .id(nowPlaying!.id)
+                                    
+                                }
+                            }
+                            
+                            if upNext.count > 0 {
+                                Section(header: Text("Up Next")) {
+                                    ForEach(upNext) { topic in
+                                        TopicListView(topic: topic)
+                                            .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
+                                            .id(topic.id)
+                                    }
+                                    .onDelete(perform: deleteFromUpNext)
+                                }
+                            }
+                            Rectangle()
+                                .fill(.blue)
+                                .frame(height: 0)
+                                .listRowSeparator(.hidden)
                         }
-                        
-                        if nowPlaying != nil {
-                            Section(header: Text("Now Playing")) {
-                                TopicListView(topic: nowPlaying!)
-                                    .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
-                                
+                        .listStyle(PlainListStyle())
+                        .onChange(of: nowPlaying?.id) {
+                            if let topicId = nowPlaying?.id {
+                                withAnimation {
+                                    scrollView.scrollTo(topicId, anchor: .top)
+                                }
                             }
                         }
-                        
-                        Section(header: Text("Up Next")) {
-                            ForEach(upNext) { topic in
-                                TopicListView(topic: topic)
-                                    .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
-                            }
-                            .onDelete(perform: deleteFromUpNext)
-                        }
-                        Rectangle()
-                            .fill(.blue)
-                            .frame(height: 0)
-                            .listRowSeparator(.hidden)
                     }
-                    .listStyle(PlainListStyle())
                     
                     Rectangle()
                         .fill(.white)

@@ -50,11 +50,18 @@ class UserModel: ObservableObject {
         }
     }
     
-    func moveTopicToFront(at id: Int) {
+    func playTopic(at id: Int) {
+        if let topicIndex = feed.firstIndex(where: { $0.id == id }) {
+            guard topicIndex >= 0 && topicIndex < feed.count else { return }
+            nowPlayingIndex = topicIndex
+        }
+    }
+    
+    func playNext(at id: Int) {
         if let topicIndex = feed.firstIndex(where: { $0.id == id }) {
             guard topicIndex >= 0 && topicIndex < feed.count else { return }
             let topic = feed.remove(at: topicIndex)
-            feed.insert(topic, at: 0)
+            feed.insert(topic, at: nowPlayingIndex + 1)
         }
     }
     

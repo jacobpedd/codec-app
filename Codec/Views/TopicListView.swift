@@ -61,10 +61,10 @@ struct TopicListView: View {
                 
                 if (!isPlayingTopic) {
                     Menu {
-                        Button(role: .destructive, action: { onDelete(id: topic.id) }) {
+                        Button(role: .destructive, action: { onDelete() }) {
                             Label("Remove", systemImage: "trash")
                         }
-                        Button(action: { userModel.moveTopicToFront(at: topic.id) }) {
+                        Button(action: { userModel.playNext(at: topic.id) }) {
                             Label("Play Next", systemImage: "text.line.first.and.arrowtriangle.forward")
                         }
                         Button(action: { userModel.moveTopicToBack(at: topic.id) }) {
@@ -83,16 +83,16 @@ struct TopicListView: View {
         }
         .padding(.horizontal)
         .onTapGesture {
-            onPlay(id: topic.id)
+            onPlay()
         }
 
-//        if isMenuOpen {
-//            Color.black.opacity(0.001)
-//                .edgesIgnoringSafeArea(.all)
-//                .onTapGesture {
-//                    isMenuOpen = false
-//                }
-//        }
+        if isMenuOpen {
+            Color.black.opacity(0.001)
+                .edgesIgnoringSafeArea(.all)
+                .onTapGesture {
+                    isMenuOpen = false
+                }
+        }
     }
     
     private var isPlayingTopic: Bool {
@@ -102,19 +102,19 @@ struct TopicListView: View {
         return false
     }
 
-    private func onPlay(id: Int) {
-//        if userModel.playingTopicId != id {
-//            userModel.playingTopicId = id
-//
-//            if !playerModel.isPlaying {
-//                playerModel.playPause()
-//            }
-//        } else {
-//            playerModel.playPause()
-//        }
+    private func onPlay() {
+        if isPlayingTopic {
+            playerModel.playPause()
+        } else {
+            userModel.playTopic(at: topic.id)
+
+            if !playerModel.isPlaying {
+                playerModel.playPause()
+            }
+        }
     }
 
-    private func onDelete(id: Int) {
-//        userModel.deleteTopicId(at: id)
+    private func onDelete() {
+        userModel.deleteTopicId(at: topic.id)
     }
 }
