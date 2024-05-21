@@ -81,9 +81,8 @@ struct ContentView: View {
                                 }
                             }
                             .onChange(of: feedModel.upNext.count) {
-                                if feedModel.upNext.count < 3 {
-                                    fetchingNewTopics = true
-                                    // Fetch new topics
+                                if feedModel.upNext.count < 5 && !fetchingNewTopics {
+                                    fetchMoreTopics()
                                 }
                             }
                         }
@@ -116,6 +115,16 @@ struct ContentView: View {
     private func deleteFromUpNext(at offsets: IndexSet) {
         for index in offsets {
             feedModel.deleteTopic(id: feedModel.upNext[index].id)
+        }
+    }
+    
+    private func fetchMoreTopics() {
+        fetchingNewTopics = true
+        Task {
+            await feedModel.loadMoreTopics()
+            DispatchQueue.main.async {
+                fetchingNewTopics = false
+            }
         }
     }
 }

@@ -24,6 +24,7 @@ class FeedModel: ObservableObject {
         didSet {
             // Load new audio file on change
             self.loadAudio(audioKey: feed[nowPlayingIndex].audio)
+            self.feedService.postView(uuid: feed[nowPlayingIndex].uuid, duration: 0.0)
         }
     }
     @Published private(set) var topicArtworks = [Int: Artwork]()
@@ -31,7 +32,11 @@ class FeedModel: ObservableObject {
     // Audio player state
     @Published private(set) var isPlaying = false
     @Published private(set) var progress: Double = 0.0
-    @Published private(set) var currentTime: TimeInterval = 0.0
+    @Published private(set) var currentTime: TimeInterval = 0.0 {
+        didSet {
+            nowPlaying?.currentTime = Int(currentTime)
+        }
+    }
     @Published private(set) var duration: TimeInterval = 0.0
     @Published var playbackSpeed: Double = 1.0 {
         didSet {
@@ -262,5 +267,16 @@ extension FeedModel {
                 }
             }
         }
+    }
+    
+    func loadMoreTopics() async {
+        let newTopics = await feedService.loadQueue()
+        // Remove duplicates by checking for unique topic IDs
+        // NOTE: Shouldn't have duplicates, but just in case
+        let existingTopicIds = Set(feed.map { $0.id })
+        let filteredNewTopics = newTopics.filter { !existingTopicIds.contains($0.id) }
+        // Append the filtered new topics to the feed
+        feed.append(contentsOf: filteredNewTopics)
+        filteredNewTopics.forEach(loadImageForTopic)
     }
 }
