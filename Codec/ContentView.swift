@@ -13,7 +13,7 @@ struct ContentView: View {
     @State private var fetchingNewTopics: Bool = false
 
     var body: some View {
-        if feedModel.nowPlaying != nil {
+        if let nowPlaying = feedModel.nowPlaying {
             NavigationStack {
                 ZStack() {
                     VStack {
@@ -30,15 +30,14 @@ struct ContentView: View {
                                     }
                                 }
                                 
-                                if feedModel.nowPlaying != nil {
-                                    Section(header: Text("Now Playing")) {
-                                        TopicListView(topic: feedModel.nowPlaying!)
-                                            .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
-                                            .listRowSeparator(.hidden)
-                                            .id(feedModel.nowPlaying!.id)
-                                        
-                                    }
+                                Section(header: Text("Now Playing")) {
+                                    TopicListView(topic: nowPlaying)
+                                        .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
+                                        .listRowSeparator(.hidden)
+                                        .id(nowPlaying.id)
+                                    
                                 }
+                                .headerProminence(.increased)
                                 
                                 if feedModel.upNext.count > 0 {
                                     Section(header: Text("Up Next")) {
@@ -49,6 +48,7 @@ struct ContentView: View {
                                         }
                                         .onDelete(perform: deleteFromUpNext)
                                     }
+
                                 }
                                 if fetchingNewTopics {
                                     VStack {
