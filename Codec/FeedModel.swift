@@ -132,6 +132,7 @@ class FeedModel: ObservableObject {
     
     func deleteTopic(id: Int) {
         if let topicIndex = feed.firstIndex(where: {$0.id == id}) {
+            feedService.postView(uuid: feed[topicIndex].uuid, duration: -1.0)
             feed.remove(at: topicIndex)
             if nowPlayingIndex > topicIndex {
                 nowPlayingIndex -= 1
