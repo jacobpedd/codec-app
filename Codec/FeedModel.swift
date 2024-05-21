@@ -9,15 +9,12 @@ import SwiftUI
 import AVFoundation
 import MediaPlayer
 
-class FeedModel: ObservableObject {
-    // Managing audio libraries
-    private var audioPlayer: AVPlayer?
-    private var playerItem: AVPlayerItem?
-    private var timeObserverToken: Any?
-    
-    // View tracking
+class FeedModel: ObservableObject, AudioManagerDelegate {
+    // Properties
+    private let audioManager = AudioManager()
     private var lastViewItemUuid: String?
     private var lastViewCurrentTime: Double = 0
+    private let feedService = FeedService()
     
     // Feed
     @Published private var feed = [Topic]()
@@ -27,8 +24,8 @@ class FeedModel: ObservableObject {
             // Sometimes things get moved but it doesn't really change
             if nowPlaying?.id != feed[nowPlayingIndex].id {
                 nowPlaying = feed[nowPlayingIndex]
-                self.loadAudio(audioKey: feed[nowPlayingIndex].audio)
-                self.feedService.postView(uuid: feed[nowPlayingIndex].uuid, duration: 0.0)
+                audioManager.loadAudio(audioKey: feed[nowPlayingIndex].audio)
+                feedService.postView(uuid: feed[nowPlayingIndex].uuid, duration: 0.0)
             }
         }
     }
@@ -40,7 +37,6 @@ class FeedModel: ObservableObject {
     
     // Audio player state
     @Published private(set) var isPlaying = false
-    @Published private(set) var progress: Double = 0.0
     @Published private(set) var currentTime: TimeInterval = 0.0 {
         didSet {
             // Keep feed updated
@@ -50,7 +46,7 @@ class FeedModel: ObservableObject {
             MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
         }
     }
-    @Published private(set) var duration: TimeInterval = 0.0 {
+    @Published private(set) var duration: Double = 0.0 {
         didSet {
             // Sync with control center
             MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyPlaybackDuration] = duration
@@ -58,7 +54,7 @@ class FeedModel: ObservableObject {
     }
     @Published var playbackSpeed: Double = 1.0 {
         didSet {
-            audioPlayer?.rate = isPlaying ? Float(playbackSpeed) : 0.0
+            audioManager.setRate(rate: isPlaying ? playbackSpeed : 0.0)
         }
     }
     
@@ -73,6 +69,10 @@ class FeedModel: ObservableObject {
     
     var nowPlaying: Topic?
     
+    var progress: Double {
+        currentTime / duration
+    }
+    
     var upNext: [Topic] {
         if feed.count > 0 {
             return Array(feed[(nowPlayingIndex + 1)...])
@@ -81,7 +81,10 @@ class FeedModel: ObservableObject {
         }
     }
     
-    private let feedService = FeedService()
+    init() {
+        audioManager.delegate = self
+    }
+        
     
     func load() async {
         setupPlayBack()
@@ -95,10 +98,10 @@ class FeedModel: ObservableObject {
     
     func playPause() {
         if isPlaying {
-            audioPlayer?.pause()
+            audioManager.pause()
         } else {
-            audioPlayer?.play()
-            audioPlayer?.rate = Float(playbackSpeed)
+            audioManager.play()
+            audioManager.setRate(rate: playbackSpeed)
         }
         isPlaying.toggle()
     }
@@ -112,22 +115,16 @@ class FeedModel: ObservableObject {
     }
     
     func seekToTime(seconds: Double) {
-        let seekTime = CMTime(seconds: seconds, preferredTimescale: 1)
-        audioPlayer?.seek(to: seekTime)
+        audioManager.seekTo(seconds: seconds)
         
         currentTime = seconds
-        progress = seconds / duration
     }
 
     func seekToProgress(percentage: Double) {
-        guard let duration = playerItem?.duration else { return }
-        let totalSeconds = CMTimeGetSeconds(duration)
-        let seekTimeSeconds = totalSeconds * percentage
-        let seekTime = CMTime(seconds: seekTimeSeconds, preferredTimescale: 1)
-        audioPlayer?.seek(to: seekTime)
+        let seekTime = duration * percentage
+        audioManager.seekTo(seconds: seekTime)
         
-        currentTime = seekTimeSeconds
-        progress = percentage
+        currentTime = seekTime
     }
     
     func playNext(at id: Int) {
@@ -185,12 +182,19 @@ class FeedModel: ObservableObject {
             nowPlayingIndex = max(0, min(nowPlayingIndex, feed.count - 1))
         }
     }
+}
+
+extension FeedModel {
+    func playbackDidEnd() {
+        next()
+    }
     
-    deinit {
-        if let token = timeObserverToken {
-            audioPlayer?.removeTimeObserver(token)
-        }
-        NotificationCenter.default.removeObserver(self)
+    func currentTimeUpdated(_ timeElapsed: TimeInterval) {
+        currentTime = timeElapsed
+    }
+    
+    func durationLoaded(_ duration: TimeInterval) {
+        self.duration = duration
     }
 }
 
@@ -205,91 +209,6 @@ extension FeedModel {
                 }
             }
         }.resume()
-    }
-}
-
-extension FeedModel {
-    private func loadAudio(audioKey: String) {
-        // Pause existing content if playing
-        let originalIsPlaying = isPlaying
-        if (originalIsPlaying) {
-            playPause()
-            isPlaying = false
-        }
-        
-        // Remove old observer if exists
-        if let token = timeObserverToken {
-            audioPlayer?.removeTimeObserver(token)
-            timeObserverToken = nil
-        }
-        
-        // Remove any old end of play observers
-        NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: playerItem)
-
-        // Load new audio from bucket
-        if let audioURL = URL(string: "https://bucket.wirehead.tech/\(audioKey)") {
-            let asset = AVAsset(url: audioURL)
-            playerItem = AVPlayerItem(asset: asset)
-            
-            if (audioPlayer != nil) {
-                audioPlayer?.replaceCurrentItem(with: playerItem)
-            } else {
-                audioPlayer = AVPlayer(playerItem: playerItem)
-            }
-            
-            // Add completion observer
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(playerItemDidReachEnd(notification:)),
-                name: .AVPlayerItemDidPlayToEndTime,
-                object: playerItem
-            )
-            
-            loadDuration()
-            setupProgressListener()
-            updateNowPlayingInfo()
-        }
-        
-        // Reset progress
-        currentTime = 0
-        progress = 0
-        
-        if (originalIsPlaying) {
-            playPause()
-            isPlaying = true
-        }
-    }
-    
-    @objc private func playerItemDidReachEnd(notification: Notification) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.feedService.postView(uuid: self.nowPlaying!.uuid, duration: self.duration)
-            self.next()
-        }
-    }
-
-    private func loadDuration() {
-        Task {
-            if let duration = try? await playerItem?.asset.load(.duration) {
-                DispatchQueue.main.async { [weak self] in
-                    if !duration.isIndefinite {
-                        self?.duration = duration.seconds
-                    }
-                }
-            }
-        }
-    }
-    
-    private func setupProgressListener() {
-        let interval = CMTime(seconds: 0.1, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-        timeObserverToken = audioPlayer?.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
-            guard let self = self else { return }
-            let durationSeconds = CMTimeGetSeconds(self.playerItem?.duration ?? .zero)
-            let currentSeconds = CMTimeGetSeconds(time)
-            self.currentTime = currentSeconds
-            self.progress = (durationSeconds > 0) ? currentSeconds / durationSeconds : 0
-            self.updateView()
-        }
     }
 }
 
@@ -450,7 +369,6 @@ extension FeedModel {
         }
     }
     
-    // TODO: Make this private and call when upnext gets small
     func loadMoreTopics() async {
         let newTopics = await feedService.loadQueue()
         // Remove duplicates by checking for unique topic IDs
