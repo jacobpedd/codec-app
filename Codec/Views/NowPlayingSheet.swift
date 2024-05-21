@@ -31,8 +31,8 @@ struct AirPlayView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: UIView, context: UIViewRepresentableContext<AirPlayView>) {
-        routePickerView.tintColor = .black
-        routePickerView.activeTintColor = .blue
+        routePickerView.tintColor = .lightGray
+        routePickerView.activeTintColor = .black
         routePickerView.backgroundColor = .clear
         
         routePickerView.translatesAutoresizingMaskIntoConstraints = false
@@ -134,11 +134,19 @@ struct NowPlayingSheet: View {
                 }
                 .padding()
                 
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(topic.title)
-                        .lineLimit(3)
-                        .font(.title2)
-                        .fontWeight(.bold)
+                VStack(spacing: 0) {
+                    VStack {
+                        Text(topic.title)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .lineLimit(3)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            
+                    }
+                    .frame(height: 100)
+                    
+                        
+                        
                     
                     Spacer()
                     
@@ -235,17 +243,13 @@ struct NowPlayingSheet: View {
                                 isTranscriptShowing = !isTranscriptShowing
                             }) {
                                 if isTranscriptShowing {
-                                    Image(systemName: "text.quote")
+                                    Image(systemName: "photo")
+                                        .foregroundColor(.black)
                                         .font(.system(size: 24))
-                                        .foregroundColor(.white)
-                                        .padding(8)
-                                        .background(.gray)
-                                        .cornerRadius(10)
                                 } else {
                                     Image(systemName: "text.quote")
                                         .foregroundColor(.black)
                                         .font(.system(size: 24))
-                                        .padding(8)
                                 }
                                 
                             }
