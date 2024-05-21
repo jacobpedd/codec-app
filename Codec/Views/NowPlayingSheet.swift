@@ -59,22 +59,21 @@ struct AirPlayView: UIViewRepresentable {
 struct NowPlayingSheet: View {
     @State private var isTranscriptShowing: Bool = false
     @State private var airPlayView = AirPlayView()
-    @EnvironmentObject private var playerModel: AudioPlayerModel
-    @EnvironmentObject private var userModel: UserModel
+    @EnvironmentObject private var feedModel: FeedModel
     
     let speeds: [Double] = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
     
     var topic: Topic? {
-        userModel.playingTopic
+        feedModel.nowPlaying
     }
     
     var duration: Double {
-        return playerModel.duration
+        return feedModel.duration
     }
     
     var image: Artwork? {
         if let topicId = topic?.id {
-            return userModel.topicArtworks[topicId]
+            return feedModel.topicArtworks[topicId]
         }
         return nil
     }
@@ -153,9 +152,9 @@ struct NowPlayingSheet: View {
                                     .brightness(0.3)
                                 
                                 RoundedRectangle(cornerRadius: 10)
-                                    .frame(width: geometry.size.width * playerModel.progress, height: 5)
+                                    .frame(width: geometry.size.width * feedModel.progress, height: 5)
                                     .foregroundColor(.gray)
-                                    .animation(.linear, value: playerModel.progress)
+                                    .animation(.linear, value: feedModel.progress)
                                 
                                 RoundedRectangle(cornerRadius: 10)
                                     .opacity(0.01)
@@ -164,7 +163,7 @@ struct NowPlayingSheet: View {
                                         DragGesture(minimumDistance: 0)
                                             .onChanged { value in
                                                 let newProgress = value.location.x / geometry.size.width
-                                                playerModel.seekToProgress(percentage: min(max(newProgress, 0), 1))
+                                                feedModel.seekToProgress(percentage: min(max(newProgress, 0), 1))
                                             }
                                     )
                             }
@@ -172,11 +171,11 @@ struct NowPlayingSheet: View {
                         .frame(height: 5)
                         
                         HStack {
-                            Text(formattedTime(from: playerModel.currentTime))
+                            Text(formattedTime(from: feedModel.currentTime))
                                 .font(.caption)
                                 .foregroundColor(Color.gray)
                             Spacer()
-                            Text(formattedTime(from: playerModel.duration))
+                            Text(formattedTime(from: feedModel.duration))
                                 .font(.caption)
                                 .foregroundColor(Color.gray)
                         }
@@ -186,7 +185,7 @@ struct NowPlayingSheet: View {
                     
                     HStack {
                         Button(action: {
-                            userModel.previous()
+                            feedModel.previous()
                         }) {
                             Image(systemName: "backward.fill")
                                 .foregroundColor(.black)
@@ -194,15 +193,15 @@ struct NowPlayingSheet: View {
                         }
                         Spacer()
                         Button(action: {
-                            playerModel.playPause()
+                            feedModel.playPause()
                         }) {
-                            Image(systemName: playerModel.isPlaying ? "pause.fill" : "play.fill")
+                            Image(systemName: feedModel.isPlaying ? "pause.fill" : "play.fill")
                                 .foregroundColor(.black)
                                 .font(.system(size: 50))
                         }
                         Spacer()
                         Button(action: {
-                            userModel.next()
+                            feedModel.next()
                         }) {
                             Image(systemName: "forward.fill")
                                 .foregroundColor(.black)
@@ -220,11 +219,11 @@ struct NowPlayingSheet: View {
                             Menu {
                                 ForEach(speeds, id: \.self) { speed in
                                     Button("\(formattedSpeed(speed))x") {
-                                        playerModel.playbackSpeed = speed
+                                        feedModel.playbackSpeed = speed
                                     }
                                 }
                             } label: {
-                                Text("\(formattedSpeed(playerModel.playbackSpeed))x")
+                                Text("\(formattedSpeed(feedModel.playbackSpeed))x")
                                     .foregroundColor(.black)
                                     .font(.system(size: 24))
                                 
@@ -269,7 +268,6 @@ struct NowPlayingSheet: View {
     return VStack {
         Spacer()
         NowPlayingView()
-            .environmentObject(AudioPlayerModel())
-            .environmentObject(UserModel())
+            .environmentObject(FeedModel())
     }
 }

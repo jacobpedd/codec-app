@@ -10,23 +10,18 @@ import SwiftUI
 
 struct NowPlayingView: View {
     @State private var isPlayerShowing: Bool = false
-    @EnvironmentObject private var playerModel: AudioPlayerModel
-    @EnvironmentObject private var userModel: UserModel
-    
-    var topic: Topic? {
-        userModel.playingTopic
-    }
+    @EnvironmentObject private var feedModel: FeedModel
     
     var image: Artwork? {
-        if let topic {
-            return userModel.topicArtworks[topic.id]
+        if let topic = feedModel.nowPlaying {
+            return feedModel.topicArtworks[topic.id]
         }
         return nil
     }
     
     var body: some View {
         VStack {
-            if let topic {
+            if let topic = feedModel.nowPlaying {
                 HStack {
                     if let image = image {
                         Image(uiImage: image.image)
@@ -45,13 +40,13 @@ struct NowPlayingView: View {
                         .lineLimit(1)
                     Spacer()
                     Button(action: {
-                        playerModel.playPause()
+                        feedModel.playPause()
                     }) {
-                        Image(systemName: playerModel.isPlaying ? "pause.fill" : "play.fill")
+                        Image(systemName: feedModel.isPlaying ? "pause.fill" : "play.fill")
                             .foregroundColor(.black)
                     }
                     Button(action: {
-                        userModel.next()
+                        feedModel.next()
                     }) {
                         Image(systemName: "forward.fill")
                             .foregroundColor(.black)
@@ -65,8 +60,9 @@ struct NowPlayingView: View {
                 .shadow(color: Color.gray.opacity(0.3), radius: 10)
                 .padding(.horizontal)
                 .padding(.bottom)
-                .onChange(of: topic.audio) { audio in
-                    playerModel.loadAudio(audioKey: audio)
+                .onChange(of: topic.audio) {
+                    // TODO: I think the loading should happen in model?
+                    feedModel.loadAudio(audioKey: topic.audio)
                 }
                 .onTapGesture {
                     isPlayerShowing = true
@@ -77,7 +73,8 @@ struct NowPlayingView: View {
                     NowPlayingSheet()
                 }
                 .onAppear() {
-                    playerModel.loadAudio(audioKey: topic.audio)
+                    // TODO: I think the loading should happen in model?
+                    feedModel.loadAudio(audioKey: topic.audio)
                 }
             }
         }
@@ -88,7 +85,6 @@ struct NowPlayingView: View {
     return VStack {
         Spacer()
         NowPlayingView()
-            .environmentObject(AudioPlayerModel())
-            .environmentObject(UserModel())
+            .environmentObject(FeedModel())
     }
 }

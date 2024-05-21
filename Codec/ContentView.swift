@@ -9,122 +9,118 @@ import SwiftUI
 
 
 struct ContentView: View {
-    @EnvironmentObject private var userModel: UserModel
-    
-    var history: [Topic] {
-        if userModel.feed.count > 0 {
-            return Array(userModel.feed[..<userModel.nowPlayingIndex])
-        } else {
-            return []
-        }
-    }
-    
-    var nowPlaying: Topic? {
-        if userModel.feed.count > 0 {
-            return userModel.feed[userModel.nowPlayingIndex]
-        } else {
-            return nil
-        }
-    }
-    
-    var upNext: [Topic] {
-        if userModel.feed.count > 0 {
-            return Array(userModel.feed[(userModel.nowPlayingIndex + 1)...])
-        } else {
-           return []
-        }
-    }
+    @EnvironmentObject private var feedModel: FeedModel
+    @State private var fetchingNewTopics: Bool = false
 
     var body: some View {
-        VStack {
-            ZStack() {
-                VStack {
-                    ScrollViewReader { scrollView in
-                        List {
-                            if history.count > 0 {
-                                Section(header: Text("History")) {
-                                    ForEach(history) { topic in
-                                        TopicListView(topic: topic)
-                                            .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
-                                            .id(topic.id)
+        if feedModel.nowPlaying != nil {
+            VStack {
+                ZStack() {
+                    VStack {
+                        ScrollViewReader { scrollView in
+                            List {
+                                if feedModel.history.count > 0 {
+                                    Section(header: Text("History")) {
+                                        ForEach(feedModel.history) { topic in
+                                            TopicListView(topic: topic)
+                                                .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
+                                                .id(topic.id)
+                                        }
+                                        .onDelete(perform: deleteFromHistory)
                                     }
-                                    .onDelete(perform: deleteFromHistory)
                                 }
-                            }
-                            
-                            if nowPlaying != nil {
-                                Section(header: Text("Now Playing")) {
-                                    TopicListView(topic: nowPlaying!)
-                                        .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
-                                        .listRowSeparator(.hidden)
-                                        .id(nowPlaying!.id)
-                                    
-                                }
-                            }
-                            
-                            if upNext.count > 0 {
-                                Section(header: Text("Up Next")) {
-                                    ForEach(upNext) { topic in
-                                        TopicListView(topic: topic)
+                                
+                                if feedModel.nowPlaying != nil {
+                                    Section(header: Text("Now Playing")) {
+                                        TopicListView(topic: feedModel.nowPlaying!)
                                             .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
-                                            .id(topic.id)
+                                            .listRowSeparator(.hidden)
+                                            .id(feedModel.nowPlaying!.id)
+                                        
                                     }
-                                    .onDelete(perform: deleteFromUpNext)
                                 }
+                                
+                                if feedModel.upNext.count > 0 {
+                                    Section(header: Text("Up Next")) {
+                                        ForEach(feedModel.upNext) { topic in
+                                            TopicListView(topic: topic)
+                                                .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
+                                                .id(topic.id)
+                                        }
+                                        .onDelete(perform: deleteFromUpNext)
+                                    }
+                                }
+                                if fetchingNewTopics {
+                                    VStack {
+                                        ProgressView()
+                                        Text("Fetching more topics...")
+                                            .foregroundStyle(.gray)
+                                            .font(.caption)
+                                            .padding(.top, 10)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                }
+                                
+                                Rectangle()
+                                    .fill(.blue)
+                                    .frame(height: 0)
+                                    .listRowSeparator(.hidden)
                             }
-                            Rectangle()
-                                .fill(.blue)
-                                .frame(height: 0)
-                                .listRowSeparator(.hidden)
-                        }
-                        .listStyle(PlainListStyle())
-                        .onChange(of: nowPlaying?.id) {
-                            if let topicId = nowPlaying?.id {
-                                withAnimation {
+                            .listStyle(PlainListStyle())
+                            .onAppear() {
+                                if let topicId = feedModel.nowPlaying?.id {
                                     scrollView.scrollTo(topicId, anchor: .top)
                                 }
                             }
+                            .onChange(of: feedModel.nowPlaying?.id) {
+                                if let topicId = feedModel.nowPlaying?.id {
+                                    withAnimation {
+                                        scrollView.scrollTo(topicId, anchor: .top)
+                                    }
+                                }
+                            }
+                            .onChange(of: feedModel.upNext.count) {
+                                if feedModel.upNext.count < 3 {
+                                    fetchingNewTopics = true
+                                    // Fetch new topics
+                                }
+                            }
                         }
+                        Rectangle()
+                            .fill(.white)
+                            .frame(height: 40)
                     }
+                    .padding(.trailing)
                     
-                    Rectangle()
-                        .fill(.white)
-                        .frame(height: 40)
-                }
-                .padding(.trailing)
-                
-                VStack {
-                    Spacer()
-                    NowPlayingView()
+                    VStack {
+                        Spacer()
+                        NowPlayingView()
+                    }
                 }
             }
-        }
-        .task {
-            await userModel.loadFeed()
+        } else {
+            ProgressView()
+                .task {
+                    await feedModel.load()
+                }
         }
     }
     
     private func deleteFromHistory(at offsets: IndexSet) {
         for index in offsets {
-            userModel.deleteTopicIndex(at: index)
-        }
-    }
-    
-    private func deleteNowPlaying(at offsets: IndexSet) {
-        if nowPlaying != nil {
-            userModel.deleteTopicIndex(at: userModel.nowPlayingIndex)
+            feedModel.deleteTopic(id: feedModel.history[index].id)
         }
     }
     
     private func deleteFromUpNext(at offsets: IndexSet) {
         for index in offsets {
-            userModel.deleteTopicIndex(at: userModel.nowPlayingIndex + 1 + index)
+            feedModel.deleteTopic(id: feedModel.upNext[index].id)
         }
     }
 }
 
 #Preview {
     return ContentView()
-        .environmentObject(AudioPlayerModel())
-        .environmentObject(UserModel())
+        .environmentObject(FeedModel())
 }
