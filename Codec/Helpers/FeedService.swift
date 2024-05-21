@@ -67,9 +67,9 @@ class FeedService {
                 return
             }
             
-            if let responseString = String(data: data, encoding: .utf8) {
-                print("Response: \(responseString)")
-            }
+//            if let responseString = String(data: data, encoding: .utf8) {
+//                print("Response: \(responseString)")
+//            }
             
             completion?(true)
         }.resume()

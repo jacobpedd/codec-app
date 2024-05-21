@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import MediaPlayer
 
 class FeedModel: ObservableObject {
     // Managing audio libraries
@@ -25,24 +26,36 @@ class FeedModel: ObservableObject {
             // Only reload topic if it's now
             // Sometimes things get moved but it doesn't really change
             if nowPlaying?.id != feed[nowPlayingIndex].id {
-                print("value updated")
                 nowPlaying = feed[nowPlayingIndex]
                 self.loadAudio(audioKey: feed[nowPlayingIndex].audio)
                 self.feedService.postView(uuid: feed[nowPlayingIndex].uuid, duration: 0.0)
             }
         }
     }
-    @Published private(set) var topicArtworks = [Int: Artwork]()
+    @Published private(set) var topicArtworks = [Int: Artwork]() {
+        didSet {
+            updateNowPlayingInfo()
+        }
+    }
     
     // Audio player state
     @Published private(set) var isPlaying = false
     @Published private(set) var progress: Double = 0.0
     @Published private(set) var currentTime: TimeInterval = 0.0 {
         didSet {
+            // Keep feed updated
             nowPlaying?.currentTime = Int(currentTime)
+            
+            // Sync with control center
+            MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
         }
     }
-    @Published private(set) var duration: TimeInterval = 0.0
+    @Published private(set) var duration: TimeInterval = 0.0 {
+        didSet {
+            // Sync with control center
+            MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyPlaybackDuration] = duration
+        }
+    }
     @Published var playbackSpeed: Double = 1.0 {
         didSet {
             audioPlayer?.rate = isPlaying ? Float(playbackSpeed) : 0.0
@@ -71,6 +84,7 @@ class FeedModel: ObservableObject {
     private let feedService = FeedService()
     
     func load() async {
+        setupPlayBack()
         let (history, queue) = await (feedService.loadHistory(), feedService.loadQueue())
         DispatchQueue.main.async {
             self.feed = history + queue
@@ -194,7 +208,6 @@ extension FeedModel {
     }
 }
 
-
 extension FeedModel {
     private func loadAudio(audioKey: String) {
         // Pause existing content if playing
@@ -234,6 +247,7 @@ extension FeedModel {
             
             loadDuration()
             setupProgressListener()
+            updateNowPlayingInfo()
         }
         
         // Reset progress
@@ -249,7 +263,7 @@ extension FeedModel {
     @objc private func playerItemDidReachEnd(notification: Notification) {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
-            self.feedService.postView(uuid: self.nowPlaying!.uuid, duration: duration)
+            self.feedService.postView(uuid: self.nowPlaying!.uuid, duration: self.duration)
             self.next()
         }
     }
@@ -280,11 +294,147 @@ extension FeedModel {
 }
 
 extension FeedModel {
+    private func setupPlayBack() {
+        configureAudioSession()
+        setupControlCenterControls()
+    }
+    
+    private func configureAudioSession() {
+        do {
+            let session = AVAudioSession.sharedInstance()
+            // Configure the app for playback of long-form TTS.
+            try session.setCategory(.playback)
+            try session.setActive(true)
+            
+            // Add interruption observer
+            NotificationCenter.default.addObserver(self, selector: #selector(handleInterruption), name: AVAudioSession.interruptionNotification, object: session)
+            
+            // Add route change observer (e.g., headphones plugged/unplugged)
+            NotificationCenter.default.addObserver(self, selector: #selector(handleRouteChange), name: AVAudioSession.routeChangeNotification, object: session)
+        } catch let error as NSError {
+            print("Setting category to AVAudioSessionCategoryPlayback failed: \(error)")
+        }
+    }
+    
+    private func setupControlCenterControls() {
+        // Get the shared MPRemoteCommandCenter
+        let commandCenter = MPRemoteCommandCenter.shared()
+
+        // Add handler for Play Command
+        commandCenter.playCommand.addTarget { [unowned self] event in
+            print("Play command - is playing: \(self.isPlaying)")
+            if !self.isPlaying {
+                self.playPause()
+                return .success
+            }
+            return .commandFailed
+        }
+
+        // Add handler for Pause Command
+        commandCenter.pauseCommand.addTarget { [unowned self] event in
+            print("Pause command - is playing: \(self.isPlaying)")
+            if self.isPlaying {
+                self.playPause()
+                return .success
+            }
+            return .commandFailed
+        }
+
+        // Add handler for Next Command
+        commandCenter.nextTrackCommand.addTarget { [unowned self] event in
+            print("Next command")
+            self.next()
+            return .success
+        }
+
+        // Add handler for Previous Command
+        commandCenter.previousTrackCommand.addTarget { [unowned self] event in
+            print("Previous command")
+            self.previous()
+            return .success
+        }
+
+        // Add handler for Seek Command
+        commandCenter.changePlaybackPositionCommand.addTarget { [unowned self] event in
+            guard let event = event as? MPChangePlaybackPositionCommandEvent else {
+                return .commandFailed
+            }
+            print("Seek command - position: \(event.positionTime)")
+            self.seekToTime(seconds: event.positionTime)
+            return .success
+        }
+    }
+    
+    private func updateNowPlayingInfo() {
+        var nowPlayingInfo = [String: Any]()
+                
+        if let nowPlaying = nowPlaying {
+            nowPlayingInfo[MPMediaItemPropertyTitle] = nowPlaying.title
+            nowPlayingInfo[MPMediaItemPropertyArtist] = "Codec"
+            
+            if let artwork = topicArtworks[nowPlaying.id]?.image {
+                let artwork = MPMediaItemArtwork(boundsSize: artwork.size) { size in
+                    return artwork
+                }
+                nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
+            }
+        }
+        
+        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
+        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
+        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
+        
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+    }
+    
+    @objc private func handleInterruption(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+            return
+        }
+
+        if type == .began {
+            // Interruption began, pause playback
+            if isPlaying {
+                playPause()
+            }
+        } else if type == .ended {
+            // Interruption ended, resume playback if needed
+            guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { return }
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+            if options.contains(.shouldResume) {
+                // Resume playback if appropriate
+                if !isPlaying {
+                    playPause()
+                }
+            }
+        }
+    }
+
+    @objc private func handleRouteChange(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
+              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else {
+            return
+        }
+
+        switch reason {
+            case .oldDeviceUnavailable:
+                // Headphones unplugged, pause playback
+                if isPlaying {
+                    playPause()
+                }
+            default: break
+        }
+    }
+}
+
+extension FeedModel {
     private func updateView() {
         if let playingTopicUuid = nowPlaying?.uuid {
             if playingTopicUuid != lastViewItemUuid {
                 // Topic change, should update
-//                print("\(nowPlaying?.title ?? ""): \(currentTime)")
                 lastViewItemUuid = playingTopicUuid
                 lastViewCurrentTime = currentTime
                 feedService.postView(uuid: playingTopicUuid, duration: currentTime)
@@ -293,7 +443,6 @@ extension FeedModel {
                 let timeDiff = abs(currentTime - lastViewCurrentTime)
                 if timeDiff > 3 {
                     // Time changed, should update
-//                    print("\(nowPlaying?.title ?? ""): \(currentTime)")
                     lastViewCurrentTime = currentTime
                     feedService.postView(uuid: playingTopicUuid, duration: currentTime)
                 }
@@ -301,6 +450,7 @@ extension FeedModel {
         }
     }
     
+    // TODO: Make this private and call when upnext gets small
     func loadMoreTopics() async {
         let newTopics = await feedService.loadQueue()
         // Remove duplicates by checking for unique topic IDs
