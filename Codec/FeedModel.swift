@@ -119,7 +119,9 @@ class FeedModel: ObservableObject {
     func deleteTopic(id: Int) {
         if let topicIndex = feed.firstIndex(where: {$0.id == id}) {
             feed.remove(at: topicIndex)
-            // TODO: Idk if this preserves position when deleting moves around index... test it
+            if nowPlayingIndex > topicIndex {
+                nowPlayingIndex -= 1
+            }
             nowPlayingIndex = max(0, min(nowPlayingIndex, feed.count - 1))
         }
     }
