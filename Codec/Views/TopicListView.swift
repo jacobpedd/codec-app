@@ -50,7 +50,7 @@ struct TopicListView: View {
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    Text(topic.createdAt.customFormatted())
+                    Text("\(topic.createdAt.customFormatted()) • \(formatTimeStatus())")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -104,4 +104,24 @@ struct TopicListView: View {
     private func onDelete() {
         feedModel.deleteTopic(id: topic.id)
     }
+    
+    private func formatTimeStatus() -> String {
+        if let currentTime = topic.currentTime, currentTime < topic.duration {
+            let timeRemaining = topic.duration - currentTime
+            let minutesRemaining = Int(timeRemaining / 60)
+
+            if minutesRemaining > 0 {
+                let minLabel = minutesRemaining == 1 ? "min" : "mins"
+                return "\(minutesRemaining) \(minLabel) left"
+            } else {
+                return "Less than a minute left"
+            }
+        } else {
+            // If currentTime is not set or duration is complete
+            let totalDurationMinutes = Int(topic.duration / 60)
+            let minLabel = totalDurationMinutes == 1 ? "min" : "mins"
+            return "\(totalDurationMinutes) \(minLabel)"
+        }
+    }
+
 }

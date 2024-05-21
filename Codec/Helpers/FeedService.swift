@@ -34,4 +34,44 @@ class FeedService {
             return []
         }
     }
+    
+    func postView(uuid: String, duration: Double, completion: ((Bool) -> Void)? = nil) {
+        guard let url = URL(string: "https://api.wirehead.tech/view") else {
+            print("Invalid URL")
+            completion?(false)
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        let body: [String: Any] = ["itemId": uuid, "duration": duration, "email": "jacob.peddicord@hey.com"]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: [])
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+                completion?(false)
+                return
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+                print("Server error")
+                completion?(false)
+                return
+            }
+            
+            guard let data = data else {
+                print("No data received")
+                completion?(false)
+                return
+            }
+            
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("Response: \(responseString)")
+            }
+            
+            completion?(true)
+        }.resume()
+    }
 }

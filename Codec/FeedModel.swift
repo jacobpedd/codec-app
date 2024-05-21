@@ -9,18 +9,26 @@ import SwiftUI
 import AVFoundation
 
 class FeedModel: ObservableObject {
+    // Managing audio libraries
     private var audioPlayer: AVPlayer?
     private var playerItem: AVPlayerItem?
     private var timeObserverToken: Any?
     
+    // View tracking
+    private var lastViewItemUuid: String?
+    private var lastViewCurrentTime: Double = 0
+    
+    // Feed
     @Published private var feed = [Topic]()
     @Published private var nowPlayingIndex: Int = 0 {
         didSet {
             // Load new audio file on change
-            loadAudio(audioKey: feed[nowPlayingIndex].audio)
+            self.loadAudio(audioKey: feed[nowPlayingIndex].audio)
         }
     }
     @Published private(set) var topicArtworks = [Int: Artwork]()
+    
+    // Audio player state
     @Published private(set) var isPlaying = false
     @Published private(set) var progress: Double = 0.0
     @Published private(set) var currentTime: TimeInterval = 0.0
@@ -31,6 +39,7 @@ class FeedModel: ObservableObject {
         }
     }
     
+    // Feed vars the views will use
     var history: [Topic] {
         if feed.count > 0 {
             return Array(feed[..<nowPlayingIndex])
@@ -203,6 +212,7 @@ extension FeedModel {
     @objc private func playerItemDidReachEnd(notification: Notification) {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
+            self.feedService.postView(uuid: self.nowPlaying!.uuid, duration: duration)
             self.next()
         }
     }
@@ -227,7 +237,30 @@ extension FeedModel {
             let currentSeconds = CMTimeGetSeconds(time)
             self.currentTime = currentSeconds
             self.progress = (durationSeconds > 0) ? currentSeconds / durationSeconds : 0
+            self.updateView()
         }
     }
 }
 
+extension FeedModel {
+    private func updateView() {
+        if let playingTopicUuid = nowPlaying?.uuid {
+            if playingTopicUuid != lastViewItemUuid {
+                // Topic change, should update
+//                print("\(nowPlaying?.title ?? ""): \(currentTime)")
+                lastViewItemUuid = playingTopicUuid
+                lastViewCurrentTime = currentTime
+                feedService.postView(uuid: playingTopicUuid, duration: currentTime)
+            } else {
+                // Same topic, update if time chaged
+                let timeDiff = abs(currentTime - lastViewCurrentTime)
+                if timeDiff > 3 {
+                    // Time changed, should update
+//                    print("\(nowPlaying?.title ?? ""): \(currentTime)")
+                    lastViewCurrentTime = currentTime
+                    feedService.postView(uuid: playingTopicUuid, duration: currentTime)
+                }
+            }
+        }
+    }
+}
