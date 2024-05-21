@@ -60,10 +60,6 @@ struct NowPlayingView: View {
                 .shadow(color: Color.gray.opacity(0.3), radius: 10)
                 .padding(.horizontal)
                 .padding(.bottom)
-                .onChange(of: topic.audio) {
-                    // TODO: I think the loading should happen in model?
-                    feedModel.loadAudio(audioKey: topic.audio)
-                }
                 .onTapGesture {
                     isPlayerShowing = true
                 }
@@ -71,10 +67,6 @@ struct NowPlayingView: View {
                     isPlayerShowing = false
                 }) {
                     NowPlayingSheet()
-                }
-                .onAppear() {
-                    // TODO: I think the loading should happen in model?
-                    feedModel.loadAudio(audioKey: topic.audio)
                 }
             }
         }

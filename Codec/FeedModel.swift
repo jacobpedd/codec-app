@@ -14,7 +14,12 @@ class FeedModel: ObservableObject {
     private var timeObserverToken: Any?
     
     @Published private var feed = [Topic]()
-    @Published private var nowPlayingIndex: Int = 0
+    @Published private var nowPlayingIndex: Int = 0 {
+        didSet {
+            // Load new audio file on change
+            loadAudio(audioKey: feed[nowPlayingIndex].audio)
+        }
+    }
     @Published private(set) var topicArtworks = [Int: Artwork]()
     @Published private(set) var isPlaying = false
     @Published private(set) var progress: Double = 0.0
@@ -56,7 +61,6 @@ class FeedModel: ObservableObject {
             self.nowPlayingIndex = max(0, history.count - 1)
             self.feed.forEach(self.loadImageForTopic)
         }
-        // TODO: Load audio here and internally
     }
     
     func playPause() {
@@ -144,8 +148,7 @@ extension FeedModel {
 
 
 extension FeedModel {
-    // TODO: Make this stuff private so it's internally handled
-    func loadAudio(audioKey: String) {
+    private func loadAudio(audioKey: String) {
         // Pause existing content if playing
         let originalIsPlaying = isPlaying
         if (originalIsPlaying) {
@@ -159,6 +162,9 @@ extension FeedModel {
             timeObserverToken = nil
         }
         
+        // Remove any old end of play observers
+        NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: playerItem)
+
         // Load new audio from bucket
         if let audioURL = URL(string: "https://bucket.wirehead.tech/\(audioKey)") {
             let asset = AVAsset(url: audioURL)
@@ -169,6 +175,14 @@ extension FeedModel {
             } else {
                 audioPlayer = AVPlayer(playerItem: playerItem)
             }
+            
+            // Add completion observer
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(playerItemDidReachEnd(notification:)),
+                name: .AVPlayerItemDidPlayToEndTime,
+                object: playerItem
+            )
             
             loadDuration()
             setupProgressListener()
@@ -184,10 +198,16 @@ extension FeedModel {
         }
     }
     
+    @objc private func playerItemDidReachEnd(notification: Notification) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.next()
+        }
+    }
+
     private func loadDuration() {
         Task {
-            if let duration = try? await playerItem?.asset.load(.duration)
-            {
+            if let duration = try? await playerItem?.asset.load(.duration) {
                 DispatchQueue.main.async { [weak self] in
                     if !duration.isIndefinite {
                         self?.duration = duration.seconds
