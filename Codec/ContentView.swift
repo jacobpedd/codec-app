@@ -90,7 +90,6 @@ struct ContentView: View {
                             .fill(.white)
                             .frame(height: 40)
                     }
-                    .padding(.trailing)
                     
                     VStack {
                         Spacer()
