@@ -7,10 +7,16 @@
 
 import Foundation
 import AVFoundation
+import MediaPlayer
 
 protocol AudioManagerDelegate: AnyObject {
+    var isPlaying: Bool { get }
+    func playPause()
+    func next()
+    func previous()
+    func seekToTime(seconds: Double)
     func playbackDidEnd()
-    func currentTimeUpdated(_ timeElapsed: TimeInterval)
+    func currentTimeUpdated(_ currentTime: TimeInterval)
     func durationLoaded(_ duration: TimeInterval)
 }
 
@@ -19,20 +25,22 @@ class AudioManager {
     var audioPlayer: AVPlayer?
     var playerItem: AVPlayerItem?
     var timeObserverToken: Any?
-
+    
     init() {
+        setupControlCenterControls()
         configureAudioSession()
     }
-
+    
     private func configureAudioSession() {
+        let session = AVAudioSession.sharedInstance()
         do {
-            let session = AVAudioSession.sharedInstance()
             try session.setCategory(.playback)
             try session.setActive(true)
         } catch {
-            print("Error configuring session")
+            print("Error configuring session: \(error)")
         }
     }
+
 
     func loadAudio(audioKey: String) {
         cleanUp()
@@ -48,11 +56,17 @@ class AudioManager {
             name: .AVPlayerItemDidPlayToEndTime,
             object: playerItem
         )
+        
+        // Add observers for the audio session
+        let session = AVAudioSession.sharedInstance()
+        NotificationCenter.default.addObserver(self, selector: #selector(handleInterruption), name: AVAudioSession.interruptionNotification, object: session)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleRouteChange), name: AVAudioSession.routeChangeNotification, object: session)
 
         audioPlayer = audioPlayer ?? AVPlayer(playerItem: playerItem)
         audioPlayer?.replaceCurrentItem(with: playerItem)
-
+        
         setupProgressListener()
+        configureAudioSession()
         loadDuration()
     }
 
@@ -97,9 +111,107 @@ class AudioManager {
             self?.delegate?.currentTimeUpdated(timeElapsed)
         }
     }
+    
+    private func setupControlCenterControls() {
+        // Get the shared MPRemoteCommandCenter
+        let commandCenter = MPRemoteCommandCenter.shared()
+
+        // Add handler for Play Command
+        commandCenter.playCommand.addTarget { [unowned self] event in
+            guard let delegate = self.delegate else { return .commandFailed }
+            print("Play command - is playing: \(delegate.isPlaying)")
+            if !delegate.isPlaying {
+                delegate.playPause()
+                return .success
+            }
+            return .commandFailed
+        }
+
+        // Add handler for Pause Command
+        commandCenter.pauseCommand.addTarget { [unowned self] event in
+            guard let delegate = self.delegate else { return .commandFailed }
+            print("Pause command - is playing: \(delegate.isPlaying)")
+            if delegate.isPlaying {
+                delegate.playPause()
+                return .success
+            }
+            return .commandFailed
+        }
+
+        // Add handler for Next Command
+        commandCenter.nextTrackCommand.addTarget { [unowned self] event in
+            guard let delegate = self.delegate else { return .commandFailed }
+            print("Next command")
+            delegate.next()
+            return .success
+        }
+
+        // Add handler for Previous Command
+        commandCenter.previousTrackCommand.addTarget { [unowned self] event in
+            guard let delegate = self.delegate else { return .commandFailed }
+            print("Previous command")
+            delegate.previous()
+            return .success
+        }
+
+        // Add handler for Seek Command
+        commandCenter.changePlaybackPositionCommand.addTarget { [unowned self] event in
+            guard let event = event as? MPChangePlaybackPositionCommandEvent else {
+                return .commandFailed
+            }
+            guard let delegate = self.delegate else { return .commandFailed }
+            print("Seek command - position: \(event.positionTime)")
+            delegate.seekToTime(seconds: event.positionTime)
+            return .success
+        }
+    }
 
     @objc private func playerItemDidReachEnd() {
         delegate?.playbackDidEnd()
+    }
+    
+    @objc private func handleInterruption(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+            return
+        }
+        guard let delegate = self.delegate else { return }
+
+        if type == .began {
+            // Interruption began, pause playback
+            if delegate.isPlaying {
+                delegate.playPause()
+            }
+        } else if type == .ended {
+            // Interruption ended, resume playback if needed
+            guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { return }
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+            if options.contains(.shouldResume) {
+                // Resume playback if appropriate
+                if !delegate.isPlaying {
+                    delegate.playPause()
+                }
+            }
+        }
+    }
+
+    @objc private func handleRouteChange(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
+              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else {
+            return
+        }
+        guard let delegate = self.delegate else { return }
+
+        switch reason {
+            case .oldDeviceUnavailable:
+                // Headphones unplugged, pause playback
+                if delegate.isPlaying {
+                    delegate.playPause()
+                }
+            default: break
+        }
     }
 
     private func cleanUp() {

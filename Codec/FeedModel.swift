@@ -31,7 +31,14 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
     }
     @Published private(set) var topicArtworks = [Int: Artwork]() {
         didSet {
-            updateNowPlayingInfo()
+            if let topicId = nowPlaying?.id {
+                if let artwork = topicArtworks[topicId]?.image {
+                    let artwork = MPMediaItemArtwork(boundsSize: artwork.size) { size in
+                        return artwork
+                    }
+                    MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
+                }
+            }
         }
     }
     
@@ -67,7 +74,21 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
         }
     }
     
-    var nowPlaying: Topic?
+    var nowPlaying: Topic? {
+        didSet {
+            // Sync with control center
+            if let topic = nowPlaying {
+                MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyTitle] = topic.title
+                if let artwork = topicArtworks[topic.id]?.image {
+                    let artwork = MPMediaItemArtwork(boundsSize: artwork.size) { size in
+                        return artwork
+                    }
+                    MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
+                }
+            }
+            
+        }
+    }
     
     var progress: Double {
         currentTime / duration
@@ -83,11 +104,11 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
     
     init() {
         audioManager.delegate = self
+        setupNowPlayingInfo()
     }
         
     
     func load() async {
-        setupPlayBack()
         let (history, queue) = await (feedService.loadHistory(), feedService.loadQueue())
         DispatchQueue.main.async {
             self.feed = history + queue
@@ -189,99 +210,18 @@ extension FeedModel {
         next()
     }
     
-    func currentTimeUpdated(_ timeElapsed: TimeInterval) {
-        currentTime = timeElapsed
+    func currentTimeUpdated(_ currentTime: TimeInterval) {
+        self.currentTime = currentTime
     }
     
     func durationLoaded(_ duration: TimeInterval) {
         self.duration = duration
     }
-}
-
-extension FeedModel {
-    private func loadImageForTopic(_ topic: Topic) {
-        guard let image = topic.image, let url = URL(string: "https://bucket.wirehead.tech/\(image)") else { return }
-        URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
-            guard let data = data, error == nil else { return }
-            DispatchQueue.main.async {
-                if let image = UIImage(data: data) {
-                    self?.topicArtworks[topic.id] = Artwork(image: image)
-                }
-            }
-        }.resume()
-    }
-}
-
-extension FeedModel {
-    private func setupPlayBack() {
-        configureAudioSession()
-        setupControlCenterControls()
-    }
     
-    private func configureAudioSession() {
-        do {
-            let session = AVAudioSession.sharedInstance()
-            // Configure the app for playback of long-form TTS.
-            try session.setCategory(.playback)
-            try session.setActive(true)
-            
-            // Add interruption observer
-            NotificationCenter.default.addObserver(self, selector: #selector(handleInterruption), name: AVAudioSession.interruptionNotification, object: session)
-            
-            // Add route change observer (e.g., headphones plugged/unplugged)
-            NotificationCenter.default.addObserver(self, selector: #selector(handleRouteChange), name: AVAudioSession.routeChangeNotification, object: session)
-        } catch let error as NSError {
-            print("Setting category to AVAudioSessionCategoryPlayback failed: \(error)")
-        }
-    }
-    
-    private func setupControlCenterControls() {
-        // Get the shared MPRemoteCommandCenter
-        let commandCenter = MPRemoteCommandCenter.shared()
-
-        // Add handler for Play Command
-        commandCenter.playCommand.addTarget { [unowned self] event in
-            print("Play command - is playing: \(self.isPlaying)")
-            if !self.isPlaying {
-                self.playPause()
-                return .success
-            }
-            return .commandFailed
-        }
-
-        // Add handler for Pause Command
-        commandCenter.pauseCommand.addTarget { [unowned self] event in
-            print("Pause command - is playing: \(self.isPlaying)")
-            if self.isPlaying {
-                self.playPause()
-                return .success
-            }
-            return .commandFailed
-        }
-
-        // Add handler for Next Command
-        commandCenter.nextTrackCommand.addTarget { [unowned self] event in
-            print("Next command")
-            self.next()
-            return .success
-        }
-
-        // Add handler for Previous Command
-        commandCenter.previousTrackCommand.addTarget { [unowned self] event in
-            print("Previous command")
-            self.previous()
-            return .success
-        }
-
-        // Add handler for Seek Command
-        commandCenter.changePlaybackPositionCommand.addTarget { [unowned self] event in
-            guard let event = event as? MPChangePlaybackPositionCommandEvent else {
-                return .commandFailed
-            }
-            print("Seek command - position: \(event.positionTime)")
-            self.seekToTime(seconds: event.positionTime)
-            return .success
-        }
+    private func setupNowPlayingInfo() {
+        var nowPlayingInfo = [String: Any]()
+        nowPlayingInfo[MPMediaItemPropertyArtist] = "Codec"
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
     }
     
     private func updateNowPlayingInfo() {
@@ -305,47 +245,19 @@ extension FeedModel {
         
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
     }
-    
-    @objc private func handleInterruption(notification: Notification) {
-        guard let userInfo = notification.userInfo,
-              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
-              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
-            return
-        }
+}
 
-        if type == .began {
-            // Interruption began, pause playback
-            if isPlaying {
-                playPause()
-            }
-        } else if type == .ended {
-            // Interruption ended, resume playback if needed
-            guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { return }
-            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
-            if options.contains(.shouldResume) {
-                // Resume playback if appropriate
-                if !isPlaying {
-                    playPause()
+extension FeedModel {
+    private func loadImageForTopic(_ topic: Topic) {
+        guard let image = topic.image, let url = URL(string: "https://bucket.wirehead.tech/\(image)") else { return }
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
+            guard let data = data, error == nil else { return }
+            DispatchQueue.main.async {
+                if let image = UIImage(data: data) {
+                    self?.topicArtworks[topic.id] = Artwork(image: image)
                 }
             }
-        }
-    }
-
-    @objc private func handleRouteChange(notification: Notification) {
-        guard let userInfo = notification.userInfo,
-              let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
-              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else {
-            return
-        }
-
-        switch reason {
-            case .oldDeviceUnavailable:
-                // Headphones unplugged, pause playback
-                if isPlaying {
-                    playPause()
-                }
-            default: break
-        }
+        }.resume()
     }
 }
 
