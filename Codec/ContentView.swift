@@ -14,7 +14,7 @@ struct ContentView: View {
 
     var body: some View {
         if feedModel.nowPlaying != nil {
-            VStack {
+            NavigationStack {
                 ZStack() {
                     VStack {
                         ScrollViewReader { scrollView in
@@ -97,6 +97,7 @@ struct ContentView: View {
                         NowPlayingView()
                     }
                 }
+                .navigationTitle("Codec")
             }
         } else {
             ProgressView()
