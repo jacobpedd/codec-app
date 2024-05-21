@@ -22,9 +22,14 @@ class FeedModel: ObservableObject {
     @Published private var feed = [Topic]()
     @Published private var nowPlayingIndex: Int = 0 {
         didSet {
-            // Load new audio file on change
-            self.loadAudio(audioKey: feed[nowPlayingIndex].audio)
-            self.feedService.postView(uuid: feed[nowPlayingIndex].uuid, duration: 0.0)
+            // Only reload topic if it's now
+            // Sometimes things get moved but it doesn't really change
+            if nowPlaying?.id != feed[nowPlayingIndex].id {
+                print("value updated")
+                nowPlaying = feed[nowPlayingIndex]
+                self.loadAudio(audioKey: feed[nowPlayingIndex].audio)
+                self.feedService.postView(uuid: feed[nowPlayingIndex].uuid, duration: 0.0)
+            }
         }
     }
     @Published private(set) var topicArtworks = [Int: Artwork]()
@@ -53,10 +58,7 @@ class FeedModel: ObservableObject {
         }
     }
     
-    var nowPlaying: Topic? {
-        guard feed.indices.contains(nowPlayingIndex) else { return nil }
-        return feed[nowPlayingIndex]
-    }
+    var nowPlaying: Topic?
     
     var upNext: [Topic] {
         if feed.count > 0 {
@@ -115,28 +117,57 @@ class FeedModel: ObservableObject {
     }
     
     func playNext(at id: Int) {
-        if let topicIndex = feed.firstIndex(where: { $0.id == id }) {
-            guard topicIndex >= 0 && topicIndex < feed.count else { return }
-            let topic = feed.remove(at: topicIndex)
-            feed.insert(topic, at: nowPlayingIndex + 1)
+        guard let topicIndex = feed.firstIndex(where: { $0.id == id }) else {
+            return
         }
+        
+        // If the topic is already next, no need to move it
+        if topicIndex == nowPlayingIndex + 1 {
+            return
+        }
+        
+        // Remove the topic from its current position
+        let topic = feed.remove(at: topicIndex)
+
+        // Adjust the nowPlayingIndex if necessary
+        if topicIndex < nowPlayingIndex {
+            nowPlayingIndex -= 1
+        }
+
+        
+        // Insert the topic right after the nowPlayingIndex
+        let newIndex = min(nowPlayingIndex + 1, feed.count)
+        feed.insert(topic, at: newIndex)
     }
     
     func playLast(at id: Int) {
-        if let topicIndex = feed.firstIndex(where: { $0.id == id }) {
-            guard topicIndex >= 0 && topicIndex < feed.count else { return }
-            let topic = feed.remove(at: topicIndex)
-            feed.append(topic)
+        guard let topicIndex = feed.firstIndex(where: { $0.id == id }) else {
+            return
         }
+        
+        // Remove the topic from its current position
+        let topic = feed.remove(at: topicIndex)
+        
+        // Adjust the nowPlayingIndex if necessary
+        if topicIndex < nowPlayingIndex {
+            nowPlayingIndex -= 1
+        }
+        
+        // Append the topic to the end of the feed
+        feed.append(topic)
     }
     
     func deleteTopic(id: Int) {
-        if let topicIndex = feed.firstIndex(where: {$0.id == id}) {
+        if let topicIndex = feed.firstIndex(where: { $0.id == id }) {
             feedService.postView(uuid: feed[topicIndex].uuid, duration: -1.0)
             feed.remove(at: topicIndex)
-            if nowPlayingIndex > topicIndex {
+
+            // Adjust the nowPlayingIndex if necessary
+            if nowPlayingIndex >= topicIndex {
                 nowPlayingIndex -= 1
             }
+
+            // Ensure nowPlayingIndex is within the valid range
             nowPlayingIndex = max(0, min(nowPlayingIndex, feed.count - 1))
         }
     }
