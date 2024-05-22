@@ -66,7 +66,6 @@ class AudioManager {
         audioPlayer?.replaceCurrentItem(with: playerItem)
         
         setupProgressListener()
-        configureAudioSession()
         loadDuration()
     }
 

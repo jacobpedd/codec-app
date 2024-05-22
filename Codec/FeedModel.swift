@@ -31,14 +31,9 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
     }
     @Published private(set) var topicArtworks = [Int: Artwork]() {
         didSet {
-            if let topicId = nowPlaying?.id {
-                if let artwork = topicArtworks[topicId]?.image {
-                    let artwork = MPMediaItemArtwork(boundsSize: artwork.size) { size in
-                        return artwork
-                    }
-                    MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
-                }
-            }
+            guard let topicId = nowPlaying?.id else { return }
+            guard let artwork = topicArtworks[topicId]?.image else { return }
+            NowPlayingHelper.setArtwork(artwork)
         }
     }
     
@@ -50,13 +45,13 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
             nowPlaying?.currentTime = Int(currentTime)
             
             // Sync with control center
-            MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
+            NowPlayingHelper.setCurrentTime(currentTime)
         }
     }
     @Published private(set) var duration: Double = 0.0 {
         didSet {
             // Sync with control center
-            MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyPlaybackDuration] = duration
+            NowPlayingHelper.setDuration(duration)
         }
     }
     @Published var playbackSpeed: Double = 1.0 {
@@ -77,15 +72,10 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
     var nowPlaying: Topic? {
         didSet {
             // Sync with control center
-            if let topic = nowPlaying {
-                MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyTitle] = topic.title
-                if let artwork = topicArtworks[topic.id]?.image {
-                    let artwork = MPMediaItemArtwork(boundsSize: artwork.size) { size in
-                        return artwork
-                    }
-                    MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
-                }
-            }
+            guard let topic = nowPlaying else { return }
+            NowPlayingHelper.setTitle(topic.title)
+            guard let artwork = topicArtworks[topic.id]?.image else { return }
+            NowPlayingHelper.setArtwork(artwork)
             
         }
     }
@@ -219,31 +209,7 @@ extension FeedModel {
     }
     
     private func setupNowPlayingInfo() {
-        var nowPlayingInfo = [String: Any]()
-        nowPlayingInfo[MPMediaItemPropertyArtist] = "Codec"
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
-    }
-    
-    private func updateNowPlayingInfo() {
-        var nowPlayingInfo = [String: Any]()
-                
-        if let nowPlaying = nowPlaying {
-            nowPlayingInfo[MPMediaItemPropertyTitle] = nowPlaying.title
-            nowPlayingInfo[MPMediaItemPropertyArtist] = "Codec"
-            
-            if let artwork = topicArtworks[nowPlaying.id]?.image {
-                let artwork = MPMediaItemArtwork(boundsSize: artwork.size) { size in
-                    return artwork
-                }
-                nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
-            }
-        }
-        
-        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
-        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
-        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
-        
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+        NowPlayingHelper.setArtist("Codec")
     }
 }
 
