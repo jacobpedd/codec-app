@@ -197,7 +197,14 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
 
 extension FeedModel {
     func playbackDidEnd() {
-        next()
+        if isPlaying {
+            playPause()
+            next()
+            playPause()
+        } else {
+            // Probably not possible
+            next()
+        }
     }
     
     func currentTimeUpdated(_ currentTime: TimeInterval) {
