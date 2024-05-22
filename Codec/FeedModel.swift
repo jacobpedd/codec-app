@@ -16,6 +16,13 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
     private var lastViewCurrentTime: Double = 0
     private let feedService = FeedService()
     
+    // Fake Auth
+    @Published var email: String = UserDefaults.standard.string(forKey: "userEmail") ?? "" {
+        didSet {
+            UserDefaults.standard.set(email, forKey: "userEmail")
+        }
+    }
+    
     // Feed
     @Published private var feed = [Topic]()
     @Published private var nowPlayingIndex: Int = 0 {

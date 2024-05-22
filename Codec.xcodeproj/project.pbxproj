@@ -16,6 +16,7 @@
 		0B7D3AA62BFD0AED003A3B95 /* CustomDate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7D3AA52BFD0AEC003A3B95 /* CustomDate.swift */; };
 		0B7D3AAB2BFD5B12003A3B95 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7D3AAA2BFD5B12003A3B95 /* AudioManager.swift */; };
 		0B7D3AAD2BFD704B003A3B95 /* NowPlayingHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7D3AAC2BFD704B003A3B95 /* NowPlayingHelper.swift */; };
+		0B7D3AAF2BFE648A003A3B95 /* FeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7D3AAE2BFE648A003A3B95 /* FeedView.swift */; };
 		0BB3083C2BE94A0000EB2494 /* CodecApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB3083B2BE94A0000EB2494 /* CodecApp.swift */; };
 		0BB3083E2BE94A0000EB2494 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB3083D2BE94A0000EB2494 /* ContentView.swift */; };
 		0BB308422BE94A0100EB2494 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0BB308412BE94A0100EB2494 /* Assets.xcassets */; };
@@ -36,6 +37,7 @@
 		0B7D3AA72BFD4385003A3B95 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		0B7D3AAA2BFD5B12003A3B95 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		0B7D3AAC2BFD704B003A3B95 /* NowPlayingHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingHelper.swift; sourceTree = "<group>"; };
+		0B7D3AAE2BFE648A003A3B95 /* FeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedView.swift; sourceTree = "<group>"; };
 		0BB308382BE94A0000EB2494 /* Codec.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Codec.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0BB3083B2BE94A0000EB2494 /* CodecApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodecApp.swift; sourceTree = "<group>"; };
 		0BB3083D2BE94A0000EB2494 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -105,6 +107,7 @@
 				0BB3083B2BE94A0000EB2494 /* CodecApp.swift */,
 				0B7D3AA12BFC42D7003A3B95 /* FeedModel.swift */,
 				0BB3083D2BE94A0000EB2494 /* ContentView.swift */,
+				0B7D3AAE2BFE648A003A3B95 /* FeedView.swift */,
 				0BB308512BE9AC7B00EB2494 /* Topic.swift */,
 				0BB308412BE94A0100EB2494 /* Assets.xcassets */,
 				0BB308432BE94A0100EB2494 /* Codec.entitlements */,
@@ -209,6 +212,7 @@
 				0B7D3AAB2BFD5B12003A3B95 /* AudioManager.swift in Sources */,
 				0B7D3AA42BFC5253003A3B95 /* FeedService.swift in Sources */,
 				0B7D3AA62BFD0AED003A3B95 /* CustomDate.swift in Sources */,
+				0B7D3AAF2BFE648A003A3B95 /* FeedView.swift in Sources */,
 				0B7D3A9A2BF7CB47003A3B95 /* TopicListView.swift in Sources */,
 				0B7D3A9C2BF7DEDC003A3B95 /* NowPlayingSheet.swift in Sources */,
 			);
