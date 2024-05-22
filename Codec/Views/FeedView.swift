@@ -89,7 +89,7 @@ struct FeedView: View {
                         }
                     }
                     Rectangle()
-                        .fill(.white)
+                        .fill(.background)
                         .frame(height: 40)
                 }
                 

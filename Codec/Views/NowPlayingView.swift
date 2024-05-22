@@ -43,13 +43,13 @@ struct NowPlayingView: View {
                         feedModel.playPause()
                     }) {
                         Image(systemName: feedModel.isPlaying ? "pause.fill" : "play.fill")
-                            .foregroundColor(.black)
+                            .foregroundColor(.primary)
                     }
                     Button(action: {
                         feedModel.next()
                     }) {
                         Image(systemName: "forward.fill")
-                            .foregroundColor(.black)
+                            .foregroundColor(.primary)
                     }
                     
                 }

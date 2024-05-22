@@ -9,19 +9,6 @@ import Foundation
 import SwiftUI
 import AVKit
 
-struct RouteButtonView: UIViewRepresentable {
-    func makeUIView(context: Context) -> AVRoutePickerView {
-        let routePickerView = AVRoutePickerView()
-        routePickerView.activeTintColor = .black
-        routePickerView.tintColor = .black
-        return routePickerView
-    }
-    
-    func updateUIView(_ uiView: AVRoutePickerView, context: Context) {
-        // No update needed
-    }
-}
-
 struct AirPlayView: UIViewRepresentable {
     
     private let routePickerView = AVRoutePickerView()
@@ -31,8 +18,8 @@ struct AirPlayView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: UIView, context: UIViewRepresentableContext<AirPlayView>) {
-        routePickerView.tintColor = .lightGray
-        routePickerView.activeTintColor = .black
+        routePickerView.tintColor = UIColor(Color.primary)
+        routePickerView.activeTintColor = UIColor(Color.primary)
         routePickerView.backgroundColor = .clear
         
         routePickerView.translatesAutoresizingMaskIntoConstraints = false
@@ -60,6 +47,7 @@ struct NowPlayingSheet: View {
     @State private var isTranscriptShowing: Bool = false
     @State private var airPlayView = AirPlayView()
     @EnvironmentObject private var feedModel: FeedModel
+    @Environment(\.colorScheme) var colorScheme
     
     let speeds: [Double] = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
     
@@ -156,12 +144,13 @@ struct NowPlayingSheet: View {
                             ZStack(alignment: .leading) {
                                 RoundedRectangle(cornerRadius: 10)
                                     .frame(height: 5)
-                                    .foregroundColor(Color.gray)
-                                    .brightness(0.3)
+                                    .foregroundColor(.gray)
+                                    .brightness(colorScheme == .light ? 0.3 : 0.0)
                                 
                                 RoundedRectangle(cornerRadius: 10)
                                     .frame(width: geometry.size.width * feedModel.progress, height: 5)
                                     .foregroundColor(.gray)
+                                    .brightness(colorScheme == .light ? 0.0 : 0.3)
                                     .animation(.linear, value: feedModel.progress)
                                 
                                 RoundedRectangle(cornerRadius: 10)
@@ -196,7 +185,7 @@ struct NowPlayingSheet: View {
                             feedModel.previous()
                         }) {
                             Image(systemName: "backward.fill")
-                                .foregroundColor(.black)
+                                .foregroundColor(.primary)
                                 .font(.system(size: 30))
                         }
                         Spacer()
@@ -204,7 +193,7 @@ struct NowPlayingSheet: View {
                             feedModel.playPause()
                         }) {
                             Image(systemName: feedModel.isPlaying ? "pause.fill" : "play.fill")
-                                .foregroundColor(.black)
+                                .foregroundColor(.primary)
                                 .font(.system(size: 50))
                         }
                         Spacer()
@@ -212,7 +201,7 @@ struct NowPlayingSheet: View {
                             feedModel.next()
                         }) {
                             Image(systemName: "forward.fill")
-                                .foregroundColor(.black)
+                                .foregroundColor(.primary)
                                 .font(.system(size: 30))
                         }
                     }
@@ -232,7 +221,7 @@ struct NowPlayingSheet: View {
                                 }
                             } label: {
                                 Text("\(formattedSpeed(feedModel.playbackSpeed))x")
-                                    .foregroundColor(.black)
+                                    .foregroundColor(.primary)
                                     .font(.system(size: 24))
                                 
                             }
@@ -244,11 +233,11 @@ struct NowPlayingSheet: View {
                             }) {
                                 if isTranscriptShowing {
                                     Image(systemName: "photo")
-                                        .foregroundColor(.black)
+                                        .foregroundColor(.primary)
                                         .font(.system(size: 24))
                                 } else {
                                     Image(systemName: "text.quote")
-                                        .foregroundColor(.black)
+                                        .foregroundColor(.primary)
                                         .font(.system(size: 24))
                                 }
                                 

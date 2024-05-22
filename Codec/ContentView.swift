@@ -35,4 +35,5 @@ struct ContentView: View {
 #Preview {
     return ContentView()
         .environmentObject(FeedModel())
+        .preferredColorScheme(.dark)
 }

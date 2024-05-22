@@ -70,7 +70,7 @@ struct TopicListView: View {
                         }
                     } label: {
                         Image(systemName: "ellipsis")
-                            .foregroundColor(.black)
+                            .foregroundColor(.primary)
                             .padding()
                     }
                     .onTapGesture {
