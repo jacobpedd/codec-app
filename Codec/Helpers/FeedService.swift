@@ -8,12 +8,18 @@
 import Foundation
 
 class FeedService {
+    var email: String
+    
+    init(email: String) {
+        self.email = email.lowercased()
+    }
+    
     func loadQueue() async -> [Topic] {
-        await load(from: "https://api.wirehead.tech/queue?email=jacob.peddicord@hey.com")
+        await load(from: "https://api.wirehead.tech/queue?email=\(email)")
     }
 
     func loadHistory() async -> [Topic] {
-        await load(from: "https://api.wirehead.tech/history?email=jacob.peddicord@hey.com").reversed()
+        return await load(from: "https://api.wirehead.tech/history?email=\(email)").reversed()
     }
 
     private func load(from urlString: String) async -> [Topic] {
@@ -44,7 +50,7 @@ class FeedService {
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        let body: [String: Any] = ["itemId": uuid, "duration": duration, "email": "jacob.peddicord@hey.com"]
+        let body: [String: Any] = ["itemId": uuid, "duration": duration, "email": "\(email)"]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: [])
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
@@ -61,7 +67,7 @@ class FeedService {
                 return
             }
             
-            guard let data = data else {
+            guard data != nil else {
                 print("No data received")
                 completion?(false)
                 return

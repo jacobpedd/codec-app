@@ -14,12 +14,13 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
     private let audioManager = AudioManager()
     private var lastViewItemUuid: String?
     private var lastViewCurrentTime: Double = 0
-    private let feedService = FeedService()
+    private var feedService: FeedService?
     
     // Fake Auth
     @Published var email: String = UserDefaults.standard.string(forKey: "userEmail") ?? "" {
         didSet {
             UserDefaults.standard.set(email, forKey: "userEmail")
+            feedService = FeedService(email: email)
         }
     }
     
@@ -32,6 +33,8 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
             if nowPlaying?.id != feed[nowPlayingIndex].id {
                 nowPlaying = feed[nowPlayingIndex]
                 audioManager.loadAudio(audioKey: feed[nowPlayingIndex].audio)
+                
+                guard let feedService else { return }
                 feedService.postView(uuid: feed[nowPlayingIndex].uuid, duration: 0.0)
             }
         }
@@ -109,10 +112,16 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
         if playbackSpeed == 0 { // UserDefaults returns 0 if the key does not exist
             playbackSpeed = 1.0 // Default playback speed
         }
+        
+        if !email.isEmpty {
+            feedService = FeedService(email: email)
+        }
     }
         
     
     func load() async {
+        guard let feedService else { return }
+        
         let (history, queue) = await (feedService.loadHistory(), feedService.loadQueue())
         DispatchQueue.main.async {
             self.feed = history + queue
@@ -216,6 +225,7 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
     
     func deleteTopic(id: Int) {
         if let topicIndex = feed.firstIndex(where: { $0.id == id }) {
+            guard let feedService else { return }
             feedService.postView(uuid: feed[topicIndex].uuid, duration: -1.0)
             feed.remove(at: topicIndex)
 
@@ -271,6 +281,7 @@ extension FeedModel {
 
 extension FeedModel {
     private func updateView() {
+        guard let feedService else { return }
         if let playingTopicUuid = nowPlaying?.uuid {
             if playingTopicUuid != lastViewItemUuid {
                 // Topic change, should update
@@ -290,6 +301,7 @@ extension FeedModel {
     }
     
     func loadMoreTopics() async {
+        guard let feedService else { return }
         let newTopics = await feedService.loadQueue()
         // Remove duplicates by checking for unique topic IDs
         // NOTE: Shouldn't have duplicates, but just in case
