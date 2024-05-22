@@ -80,6 +80,9 @@ struct TopicListView: View {
             }
         }
         .padding(.horizontal)
+        .onTapGesture {
+            onPlay()
+        }
     }
     
     private var isPlayingTopic: Bool {
@@ -89,17 +92,17 @@ struct TopicListView: View {
         return false
     }
 
-//    private func onPlay() {
-//        if isPlayingTopic {
-//            feedModel.playPause()
-//        } else {
-//            feedModel.playTopic(at: topic.id)
-//
-//            if !feedModel.isPlaying {
-//                feedModel.playPause()
-//            }
-//        }
-//    }
+    private func onPlay() {
+        if isPlayingTopic {
+            feedModel.playPause()
+        } else {
+            feedModel.playTopic(at: topic.id)
+
+            if !feedModel.isPlaying {
+                feedModel.playPause()
+            }
+        }
+    }
 
     private func onDelete() {
         feedModel.deleteTopic(id: topic.id)

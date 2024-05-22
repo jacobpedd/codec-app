@@ -186,6 +186,27 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
         feed.append(topic)
     }
     
+    func playTopic(at id: Int) {
+        guard let topicIndex = feed.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+        
+        // Remove the topic from its current position
+        let topic = feed.remove(at: topicIndex)
+
+        // Adjust the nowPlayingIndex if necessary
+        if topicIndex < nowPlayingIndex {
+            nowPlayingIndex -= 1
+        }
+        
+        // Insert the topic right after the nowPlayingIndex
+        let newIndex = min(nowPlayingIndex + 1, feed.count)
+        feed.insert(topic, at: newIndex)
+        
+        // Set the topic as playing
+        nowPlayingIndex = newIndex
+    }
+    
     func deleteTopic(id: Int) {
         if let topicIndex = feed.firstIndex(where: { $0.id == id }) {
             feedService.postView(uuid: feed[topicIndex].uuid, duration: -1.0)
