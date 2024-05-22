@@ -39,6 +39,7 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
     
     // Audio player state
     @Published private(set) var isPlaying = false
+    
     @Published private(set) var currentTime: TimeInterval = 0.0 {
         didSet {
             // Keep feed updated
@@ -48,14 +49,17 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
             NowPlayingHelper.setCurrentTime(currentTime)
         }
     }
+    
     @Published private(set) var duration: Double = 0.0 {
         didSet {
             // Sync with control center
             NowPlayingHelper.setDuration(duration)
         }
     }
-    @Published var playbackSpeed: Double = 1.0 {
+    
+    @Published var playbackSpeed: Double = UserDefaults.standard.double(forKey: "playbackSpeed") {
         didSet {
+            UserDefaults.standard.set(playbackSpeed, forKey: "playbackSpeed")
             audioManager.setRate(rate: isPlaying ? playbackSpeed : 0.0)
         }
     }
@@ -95,6 +99,9 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
     init() {
         audioManager.delegate = self
         setupNowPlayingInfo()
+        if playbackSpeed == 0 { // UserDefaults returns 0 if the key does not exist
+            playbackSpeed = 1.0 // Default playback speed
+        }
     }
         
     
