@@ -130,6 +130,32 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
         }
     }
     
+    func logout() {
+        // Stop any playing audio
+        audioManager.pause()
+
+        // Reset user-related data
+        UserDefaults.standard.removeObject(forKey: "userEmail")
+        UserDefaults.standard.removeObject(forKey: "playbackSpeed")
+        email = ""
+
+        // Clear the feed
+        nowPlayingIndex = 0
+        feed.removeAll()
+        nowPlaying = nil
+
+        // Clear cached artworks
+        topicArtworks.removeAll()
+
+        // Reset playback state
+        currentTime = 0.0
+        duration = 0.0
+        playbackSpeed = 1.0  // Reset to default playback speed
+
+        // Reset FeedService
+        feedService = nil
+    }
+    
     func playPause() {
         if isPlaying {
             audioManager.pause()

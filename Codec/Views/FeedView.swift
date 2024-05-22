@@ -11,6 +11,7 @@ import SwiftUI
 struct FeedView: View {
     @EnvironmentObject private var feedModel: FeedModel
     @State private var fetchingNewTopics: Bool = false
+    @State private var showProfile: Bool = false
 
     var body: some View {
         NavigationStack {
@@ -29,14 +30,16 @@ struct FeedView: View {
                                 }
                             }
                             
-                            Section(header: Text("Now Playing")) {
-                                TopicListView(topic: feedModel.nowPlaying!)
-                                    .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
-                                    .listRowSeparator(.hidden)
-                                    .id(feedModel.nowPlaying!.id)
-                                
+                            if let nowPlaying = feedModel.nowPlaying {
+                                Section(header: Text("Now Playing")) {
+                                    TopicListView(topic: nowPlaying)
+                                        .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
+                                        .listRowSeparator(.hidden)
+                                        .id(nowPlaying.id)
+                                    
+                                }
+                                .headerProminence(.increased)
                             }
-                            .headerProminence(.increased)
                             
                             if feedModel.upNext.count > 0 {
                                 Section(header: Text("Up Next")) {
@@ -96,6 +99,14 @@ struct FeedView: View {
                 }
             }
             .navigationTitle("Codec")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink(destination: ProfileView().environmentObject(feedModel)) {
+                        Image(systemName: "person.crop.circle")
+                            .imageScale(.large)
+                    }
+                }
+            }
         }
     }
     
