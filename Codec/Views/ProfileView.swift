@@ -16,7 +16,7 @@ struct ProfileView: View {
                 Text("Email")
                     .font(.headline)
                 
-                Text(feedModel.email)
+                Text(feedModel.token ?? "not logged in")
                     .font(.body)
                     .padding()
                     .frame(maxWidth: .infinity, alignment: .leading)

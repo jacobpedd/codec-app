@@ -21,10 +21,10 @@ struct FeedView: View {
                         List {
                             if feedModel.history.count > 0 {
                                 Section(header: Text("History")) {
-                                    ForEach(feedModel.history) { topic in
-                                        TopicListView(topic: topic)
+                                    ForEach(feedModel.history) { clip in
+                                        ClipListView(clip: clip)
                                             .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
-                                            .id(topic.id)
+                                            .id(clip.id)
                                     }
                                     .onDelete(perform: deleteFromHistory)
                                 }
@@ -32,7 +32,7 @@ struct FeedView: View {
                             
                             if let nowPlaying = feedModel.nowPlaying {
                                 Section(header: Text("Now Playing")) {
-                                    TopicListView(topic: nowPlaying)
+                                    ClipListView(clip: nowPlaying)
                                         .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
                                         .listRowSeparator(.hidden)
                                         .id(nowPlaying.id)
@@ -43,10 +43,10 @@ struct FeedView: View {
                             
                             if feedModel.upNext.count > 0 {
                                 Section(header: Text("Up Next")) {
-                                    ForEach(feedModel.upNext) { topic in
-                                        TopicListView(topic: topic)
+                                    ForEach(feedModel.upNext) { clip in
+                                        ClipListView(clip: clip)
                                             .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
-                                            .id(topic.id)
+                                            .id(clip.id)
                                     }
                                     .onDelete(perform: deleteFromUpNext)
                                 }
@@ -112,20 +112,20 @@ struct FeedView: View {
     
     private func deleteFromHistory(at offsets: IndexSet) {
         for index in offsets {
-            feedModel.deleteTopic(id: feedModel.history[index].id)
+            feedModel.deleteClip(id: feedModel.history[index].id)
         }
     }
     
     private func deleteFromUpNext(at offsets: IndexSet) {
         for index in offsets {
-            feedModel.deleteTopic(id: feedModel.upNext[index].id)
+            feedModel.deleteClip(id: feedModel.upNext[index].id)
         }
     }
     
     private func fetchMoreTopics() {
         fetchingNewTopics = true
         Task {
-            await feedModel.loadMoreTopics()
+            await feedModel.loadMoreClips()
             DispatchQueue.main.async {
                 fetchingNewTopics = false
             }

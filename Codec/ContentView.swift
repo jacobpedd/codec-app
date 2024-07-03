@@ -10,10 +10,9 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject private var feedModel: FeedModel
     @State private var fetchingNewTopics: Bool = false
-    @State private var emailInput: String = ""
     
     var body: some View {
-        if feedModel.email != "" {
+        if feedModel.token != nil {
             if feedModel.nowPlaying != nil {
                 FeedView()
             } else {
@@ -21,13 +20,11 @@ struct ContentView: View {
                     .task {
                         await feedModel.load()
                     }
+                Text("Loading your feed...")
+                    .padding(.top)
             }
         } else {
-            EmailInputView(emailInput: $emailInput) {
-                feedModel.email = emailInput
-                // Dismiss the keyboard
-                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-            }
+            LoginView()
         }
     }
 }
@@ -35,5 +32,4 @@ struct ContentView: View {
 #Preview {
     return ContentView()
         .environmentObject(FeedModel())
-        .preferredColorScheme(.dark)
 }

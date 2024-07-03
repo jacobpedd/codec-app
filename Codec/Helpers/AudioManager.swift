@@ -45,7 +45,7 @@ class AudioManager {
     func loadAudio(audioKey: String) {
         cleanUp()
         
-        guard let url = URL(string: "https://bucket.wirehead.tech/\(audioKey)") else { return }
+        guard let url = URL(string: "https://bucket.trycodec.com/\(audioKey)") else { return }
         let asset = AVAsset(url: url)
         playerItem = AVPlayerItem(asset: asset)
         guard let playerItem = playerItem else { return }

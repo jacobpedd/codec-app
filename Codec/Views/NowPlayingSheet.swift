@@ -51,7 +51,7 @@ struct NowPlayingSheet: View {
     
     let speeds: [Double] = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
     
-    var topic: Topic? {
+    var clip: Clip? {
         feedModel.nowPlaying
     }
     
@@ -60,9 +60,9 @@ struct NowPlayingSheet: View {
     }
     
     var image: Artwork? {
-        if let topicId = topic?.id {
-            return feedModel.topicArtworks[topicId]
-        }
+//        if let clipId = clip?.id {
+//            return feedModel.clipArtworks[clipId]
+//        }
         return nil
     }
     
@@ -91,26 +91,25 @@ struct NowPlayingSheet: View {
     
     var body: some View {
         VStack() {
-            if let topic {
+            if let clip {
                 GeometryReader { geometry in
                     ZStack {
-                        if let image = image {
-                            Image(uiImage: image.image)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: geometry.size.height, height: geometry.size.height)
-                                .clipped()
-                                .cornerRadius(15)
-                                .shadow(color: image.shadowColor, radius: 20)
-                        } else {
+//                        if let image = image {
+//                            Image(uiImage: image.image)
+//                                .resizable()
+//                                .scaledToFill()
+//                                .frame(width: geometry.size.height, height: geometry.size.height)
+//                                .clipped()
+//                                .cornerRadius(15)
+//                                .shadow(color: image.shadowColor, radius: 20)
+//                        } else {
                             ProgressView()
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        }
+//                        }
                         
                         if isTranscriptShowing {
                             ScrollView(.vertical, showsIndicators: true) {
-                                Text(topic.script.trimmingCharacters(in: .whitespacesAndNewlines))
-                                
+                                Text(clip.summary.trimmingCharacters(in: .whitespacesAndNewlines))
                             }
                             .padding()
                             .padding(.horizontal)
@@ -124,7 +123,7 @@ struct NowPlayingSheet: View {
                 
                 VStack(spacing: 0) {
                     VStack {
-                        Text(topic.title)
+                        Text(clip.name)
                             .font(.title2)
                             .fontWeight(.bold)
                             .lineLimit(3)

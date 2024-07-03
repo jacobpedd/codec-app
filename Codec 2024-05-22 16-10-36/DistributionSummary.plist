@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Codec.ipa</key>
+	<array>
+		<dict>
+			<key>architectures</key>
+			<array>
+				<string>arm64</string>
+			</array>
+			<key>buildNumber</key>
+			<string>1</string>
+			<key>certificate</key>
+			<dict>
+				<key>SHA1</key>
+				<string>78C105849E9920391225AB732B9A641A80024D7B</string>
+				<key>dateExpires</key>
+				<string>5/22/25</string>
+				<key>type</key>
+				<string>Cloud Managed Apple Distribution</string>
+			</dict>
+			<key>entitlements</key>
+			<dict>
+				<key>application-identifier</key>
+				<string>25CX322JVS.com.trycodec.CodecApp</string>
+				<key>com.apple.developer.team-identifier</key>
+				<string>25CX322JVS</string>
+				<key>get-task-allow</key>
+				<false/>
+			</dict>
+			<key>name</key>
+			<string>Codec.app</string>
+			<key>profile</key>
+			<dict>
+				<key>UUID</key>
+				<string>8b4eeb39-2069-4ff0-b240-1d1d190dea63</string>
+				<key>dateExpires</key>
+				<string>5/22/25</string>
+				<key>name</key>
+				<string>iOS Team Ad Hoc Provisioning Profile: com.trycodec.CodecApp</string>
+			</dict>
+			<key>team</key>
+			<dict>
+				<key>id</key>
+				<string>25CX322JVS</string>
+				<key>name</key>
+				<string>Jacob Peddicord</string>
+			</dict>
+			<key>versionNumber</key>
+			<string>0.1.0</string>
+		</dict>
+	</array>
+</dict>
+</plist>
