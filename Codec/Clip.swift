@@ -50,11 +50,12 @@ struct Feed: Codable {
     let id: Int
     let name: String
     let description: String
+    let url: String
     let createdAt: Date
     let updatedAt: Date
 
     enum CodingKeys: String, CodingKey {
-        case id, name, description
+        case id, name, description, url
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }

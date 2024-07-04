@@ -12,29 +12,29 @@ struct NowPlayingView: View {
     @State private var isPlayerShowing: Bool = false
     @EnvironmentObject private var feedModel: FeedModel
     
-//    var image: Artwork? {
-//        if let clip = feedModel.nowPlaying {
-//            return feedModel.clipArtworks[clip.id]
-//        }
-//        return nil
-//    }
+    var image: Artwork? {
+        if let clip = feedModel.nowPlaying {
+            return feedModel.clipArtworks[clip.id]
+        }
+        return nil
+    }
     
     var body: some View {
         VStack {
             if let clip = feedModel.nowPlaying {
                 HStack {
-//                    if let image = image {
-//                        Image(uiImage: image.image)
-//                            .resizable()
-//                            .scaledToFill()
-//                            .frame(width: 40, height: 40)
-//                            .cornerRadius(10)
-//                    } else {
+                    if let image = image {
+                        Image(uiImage: image.image)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 40, height: 40)
+                            .cornerRadius(10)
+                    } else {
                         Rectangle()
                             .fill(Color.gray)
                             .frame(width: 30, height: 30)
                             .cornerRadius(10)
-//                    }
+                    }
                     Text(clip.name)
                         .font(.footnote)
                         .lineLimit(1)

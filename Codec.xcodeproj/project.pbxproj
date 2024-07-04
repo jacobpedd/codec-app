@@ -24,6 +24,7 @@
 		0BB308462BE94A0100EB2494 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0BB308452BE94A0100EB2494 /* Preview Assets.xcassets */; };
 		0BB49B502C36130E00D29B69 /* Clip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B4F2C36130E00D29B69 /* Clip.swift */; };
 		0BB49B522C3613AC00D29B69 /* ClipListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B512C3613AC00D29B69 /* ClipListView.swift */; };
+		0BB49B542C361E3F00D29B69 /* RSSParserDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B532C361E3F00D29B69 /* RSSParserDelegate.swift */; };
 		0BC447A52BEC373800AD25AC /* ColorKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0BC447A42BEC373800AD25AC /* ColorKit */; };
 /* End PBXBuildFile section */
 
@@ -48,6 +49,7 @@
 		0BB308452BE94A0100EB2494 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		0BB49B4F2C36130E00D29B69 /* Clip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clip.swift; sourceTree = "<group>"; };
 		0BB49B512C3613AC00D29B69 /* ClipListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipListView.swift; sourceTree = "<group>"; };
+		0BB49B532C361E3F00D29B69 /* RSSParserDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RSSParserDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -83,6 +85,7 @@
 				0B7D3AA32BFC5253003A3B95 /* FeedService.swift */,
 				0B7D3AAA2BFD5B12003A3B95 /* AudioManager.swift */,
 				0B7D3AAC2BFD704B003A3B95 /* NowPlayingHelper.swift */,
+				0BB49B532C361E3F00D29B69 /* RSSParserDelegate.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -206,6 +209,7 @@
 			files = (
 				0B4E983A2BED78B800B8FDB9 /* Artwork.swift in Sources */,
 				0B076D1E2BEAC66A00EB4063 /* NowPlayingView.swift in Sources */,
+				0BB49B542C361E3F00D29B69 /* RSSParserDelegate.swift in Sources */,
 				0BB3083E2BE94A0000EB2494 /* ContentView.swift in Sources */,
 				0B7D3AB52BFE7B8B003A3B95 /* LoginView.swift in Sources */,
 				0B7D3AAD2BFD704B003A3B95 /* NowPlayingHelper.swift in Sources */,

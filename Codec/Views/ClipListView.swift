@@ -16,21 +16,21 @@ struct ClipListView: View {
         VStack(spacing: 0) {
             HStack {
                 ZStack {
-//                    if let image = feedModel.clipArtworks[clip.id] {
-//                        Image(uiImage: image.image)
-//                            .resizable()
-//                            .scaledToFill()
-//                            .frame(width: 60, height: 60)
-//                            .cornerRadius(10)
-//                            .overlay(isPlayingClip ?
-//                                     Color.black.opacity(0.6).cornerRadius(10) : nil
-//                            )
-//                    } else {
+                    if let image = feedModel.clipArtworks[clip.id] {
+                        Image(uiImage: image.image)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 60, height: 60)
+                            .cornerRadius(10)
+                            .overlay(isPlayingClip ?
+                                     Color.black.opacity(0.6).cornerRadius(10) : nil
+                            )
+                    } else {
                         Rectangle()
                             .fill(Color.gray)
                             .frame(width: 60, height: 60)
                             .cornerRadius(10)
-//                    }
+                    }
 
                     if isPlayingClip {
                         if feedModel.isPlaying {

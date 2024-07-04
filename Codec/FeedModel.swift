@@ -55,13 +55,13 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
             }
         }
     }
-//    @Published private(set) var ClipArtworks = [Int: Artwork]() {
-//        didSet {
-//            guard let ClipId = nowPlaying?.id else { return }
-//            guard let artwork = ClipArtworks[ClipId]?.image else { return }
-//            NowPlayingHelper.setArtwork(artwork)
-//        }
-//    }
+    @Published private(set) var clipArtworks = [Int: Artwork]() {
+        didSet {
+            guard let ClipId = nowPlaying?.id else { return }
+            guard let artwork = clipArtworks[ClipId]?.image else { return }
+            NowPlayingHelper.setArtwork(artwork)
+        }
+    }
     
     // Audio player state
     @Published private(set) var isPlaying = false
@@ -104,7 +104,7 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
             // Sync with control center
             guard let Clip = nowPlaying else { return }
             NowPlayingHelper.setTitle(Clip.name)
-//            guard let artwork = ClipArtworks[Clip.id]?.image else { return }
+//            guard let artwork = clipArtworks[Clip.id]?.image else { return }
 //            NowPlayingHelper.setArtwork(artwork)
             
         }
@@ -162,7 +162,7 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
         nowPlaying = nil
 
         // Clear cached artworks
-//        ClipArtworks.removeAll()
+        clipArtworks.removeAll()
 
         // Reset playback state
         currentTime = 0.0
@@ -310,17 +310,54 @@ extension FeedModel {
 
 extension FeedModel {
     private func loadImageForClip(_ clip: Clip) {
-        print("TODO: Get url")
-//        print(clip.feedItem.feed.url)
-//        guard let image = Clip.image, let url = URL(string: "https://bucket.wirehead.tech/\(image)") else { return }
-//        URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
-//            guard let data = data, error == nil else { return }
-//            DispatchQueue.main.async {
-//                if let image = UIImage(data: data) {
-//                    self?.ClipArtworks[Clip.id] = Artwork(image: image)
-//                }
-//            }
-//        }.resume()
+        guard let feedURL = URL(string: clip.feedItem.feed.url) else {
+            print("Invalid feed URL")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: feedURL) { [weak self] data, response, error in
+            if let error = error {
+                print("Error fetching RSS feed: \(error.localizedDescription)")
+                return
+            }
+            
+            guard let data = data else {
+                print("No data received from RSS feed")
+                return
+            }
+            
+            let parser = XMLParser(data: data)
+            let delegate = RSSParserDelegate()
+            parser.delegate = delegate
+            
+            if parser.parse() {
+                if let imageURLString = delegate.channelImageURL, let imageURL = URL(string: imageURLString) {
+                    print(imageURL)
+                    self?.downloadAndStoreImage(from: imageURL, for: clip)
+                } else {
+                    print("No image URL found in the RSS feed")
+                }
+            } else {
+                print("Failed to parse RSS feed")
+            }
+        }.resume()
+    }
+        
+    private func downloadAndStoreImage(from url: URL, for clip: Clip) {
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
+            guard let data = data, error == nil else {
+                print("Error downloading image: \(error?.localizedDescription ?? "Unknown error")")
+                return
+            }
+            
+            DispatchQueue.main.async {
+                if let image = UIImage(data: data) {
+                    self?.clipArtworks[clip.id] = Artwork(image: image)
+                } else {
+                    print("Failed to create image from data for clip: \(clip.id)")
+                }
+            }
+        }.resume()
     }
 }
 

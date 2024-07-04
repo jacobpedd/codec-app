@@ -60,9 +60,9 @@ struct NowPlayingSheet: View {
     }
     
     var image: Artwork? {
-//        if let clipId = clip?.id {
-//            return feedModel.clipArtworks[clipId]
-//        }
+        if let clipId = clip?.id {
+            return feedModel.clipArtworks[clipId]
+        }
         return nil
     }
     
@@ -94,18 +94,22 @@ struct NowPlayingSheet: View {
             if let clip {
                 GeometryReader { geometry in
                     ZStack {
-//                        if let image = image {
-//                            Image(uiImage: image.image)
-//                                .resizable()
-//                                .scaledToFill()
-//                                .frame(width: geometry.size.height, height: geometry.size.height)
-//                                .clipped()
-//                                .cornerRadius(15)
-//                                .shadow(color: image.shadowColor, radius: 20)
-//                        } else {
-                            ProgressView()
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-//                        }
+                        if let image = image {
+                            Image(uiImage: image.image)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: geometry.size.height, height: geometry.size.height)
+                                .clipped()
+                                .cornerRadius(15)
+                                .shadow(color: image.shadowColor, radius: 20)
+                        } else {
+                                Rectangle()
+                                    .fill(Color.gray)
+                                    .scaledToFill()
+                                    .frame(width: geometry.size.height, height: geometry.size.height)
+                                    .clipped()
+                                    .cornerRadius(15)
+                        }
                         
                         if isTranscriptShowing {
                             ScrollView(.vertical, showsIndicators: true) {
