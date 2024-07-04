@@ -62,6 +62,7 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
             NowPlayingHelper.setArtwork(artwork)
         }
     }
+    private let session: URLSession // for caching image requests
     
     // Audio player state
     @Published private(set) var isPlaying = false
@@ -123,6 +124,16 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
     }
     
     init() {
+        let cache = URLCache(memoryCapacity: 10 * 1024 * 1024,  // 10 MB memory cache
+                             diskCapacity: 100 * 1024 * 1024,   // 100 MB disk cache
+                             diskPath: "imageCache")
+
+        // Configure URLSession
+        let config = URLSessionConfiguration.default
+        config.urlCache = cache
+        config.requestCachePolicy = .returnCacheDataElseLoad
+        self.session = URLSession(configuration: config)
+        
         audioManager.delegate = self
         setupNowPlayingInfo()
         if playbackSpeed == 0 { // UserDefaults returns 0 if the key does not exist
@@ -154,7 +165,8 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
         // Reset user-related data
         UserDefaults.standard.removeObject(forKey: "userEmail")
         UserDefaults.standard.removeObject(forKey: "playbackSpeed")
-        token = ""
+        token = nil
+        username = nil
 
         // Clear the feed
         nowPlayingIndex = 0
@@ -315,7 +327,7 @@ extension FeedModel {
             return
         }
         
-        URLSession.shared.dataTask(with: feedURL) { [weak self] data, response, error in
+        let task = session.dataTask(with: feedURL) { [weak self] data, response, error in
             if let error = error {
                 print("Error fetching RSS feed: \(error.localizedDescription)")
                 return
@@ -330,34 +342,31 @@ extension FeedModel {
             let delegate = RSSParserDelegate()
             parser.delegate = delegate
             
-            if parser.parse() {
-                if let imageURLString = delegate.channelImageURL, let imageURL = URL(string: imageURLString) {
-                    print(imageURL)
-                    self?.downloadAndStoreImage(from: imageURL, for: clip)
-                } else {
-                    print("No image URL found in the RSS feed")
-                }
+            if parser.parse(), let imageURLString = delegate.channelImageURL, let imageURL = URL(string: imageURLString) {
+                self?.downloadImage(from: imageURL, for: clip)
             } else {
-                print("Failed to parse RSS feed")
+                print("No image URL found or failed to parse RSS feed for clip \(clip.id)")
             }
-        }.resume()
+        }
+        task.resume()
     }
         
-    private func downloadAndStoreImage(from url: URL, for clip: Clip) {
-        URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
-            guard let data = data, error == nil else {
-                print("Error downloading image: \(error?.localizedDescription ?? "Unknown error")")
+    private func downloadImage(from url: URL, for clip: Clip) {
+        let task = session.dataTask(with: url) { [weak self] data, response, error in
+            guard let self = self, let data = data, error == nil else {
+                print("Error downloading image for clip \(clip.id): \(error?.localizedDescription ?? "Unknown error")")
                 return
             }
             
-            DispatchQueue.main.async {
-                if let image = UIImage(data: data) {
-                    self?.clipArtworks[clip.id] = Artwork(image: image)
-                } else {
-                    print("Failed to create image from data for clip: \(clip.id)")
+            if let image = UIImage(data: data) {
+                DispatchQueue.main.async {
+                    self.clipArtworks[clip.id] = Artwork(image: image)
                 }
+            } else {
+                print("Failed to create image from data for clip \(clip.id)")
             }
-        }.resume()
+        }
+        task.resume()
     }
 }
 
