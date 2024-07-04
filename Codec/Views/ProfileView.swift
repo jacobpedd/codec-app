@@ -13,10 +13,10 @@ struct ProfileView: View {
     var body: some View {
         VStack(spacing: 20) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Email")
+                Text("Username")
                     .font(.headline)
                 
-                Text(feedModel.token ?? "not logged in")
+                Text(feedModel.username ?? "not logged in")
                     .font(.body)
                     .padding()
                     .frame(maxWidth: .infinity, alignment: .leading)

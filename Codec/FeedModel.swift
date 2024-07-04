@@ -32,11 +32,11 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
     }
     @Published var username: String? = UserDefaults.standard.string(forKey: "username") {
         didSet {
-            guard let token else {
+            guard let username else {
                 UserDefaults.standard.removeObject(forKey: "username")
                 return
             }
-            UserDefaults.standard.set(token, forKey: "username")
+            UserDefaults.standard.set(username, forKey: "username")
         }
     }
     

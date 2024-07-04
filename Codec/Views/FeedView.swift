@@ -99,6 +99,7 @@ struct FeedView: View {
                 }
             }
             .navigationTitle("Codec")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     NavigationLink(destination: ProfileView().environmentObject(feedModel)) {
