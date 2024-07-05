@@ -14,7 +14,7 @@ struct NowPlayingView: View {
     
     var image: Artwork? {
         if let clip = feedModel.nowPlaying {
-            return feedModel.clipArtworks[clip.id]
+            return feedModel.feedArtworks[clip.feedItem.feed.id]
         }
         return nil
     }

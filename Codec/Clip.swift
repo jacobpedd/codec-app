@@ -46,7 +46,7 @@ struct FeedItem: Codable {
     }
 }
 
-struct Feed: Codable {
+struct Feed: Codable, Identifiable, Hashable {
     let id: Int
     let name: String
     let description: String
@@ -58,5 +58,36 @@ struct Feed: Codable {
         case id, name, description, url
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func ==(lhs: Feed, rhs: Feed) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+struct Topic: Codable, Identifiable {
+    let id: Int
+    let text: String
+    var isInterested: Bool
+    
+    enum CodingKeys: String, CodingKey {
+        case id, text
+        case isInterested = "is_interested"
+    }
+}
+
+struct UserFeedFollow: Codable, Identifiable, Hashable {
+    let id: Int
+    let user: Int
+    let feed: Feed
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id, user, feed
+        case createdAt = "created_at"
     }
 }

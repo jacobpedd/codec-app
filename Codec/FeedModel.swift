@@ -9,6 +9,7 @@ import SwiftUI
 import AVFoundation
 import MediaPlayer
 
+@MainActor
 class FeedModel: ObservableObject, AudioManagerDelegate {
     // Properties
     private let audioManager = AudioManager()
@@ -42,6 +43,8 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
     
     // Feed
     @Published private var feed = [Clip]()
+    @Published var interestedTopics: [Topic] = []
+    @Published var followedFeeds: [UserFeedFollow] = []
     @Published private var nowPlayingIndex: Int = 0 {
         didSet {
             // Only reload Clip if it's now
@@ -50,15 +53,15 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
                 nowPlaying = feed[nowPlayingIndex]
                 audioManager.loadAudio(audioKey: feed[nowPlayingIndex].audioBucketKey)
                 
-                guard let feedService else { return }
+//                guard let feedService else { return }
 //                feedService.postView(clipId: feed[nowPlayingIndex].id, duration: 0.0)
             }
         }
     }
-    @Published private(set) var clipArtworks = [Int: Artwork]() {
+    @Published private(set) var feedArtworks = [Int: Artwork]() {
         didSet {
-            guard let ClipId = nowPlaying?.id else { return }
-            guard let artwork = clipArtworks[ClipId]?.image else { return }
+            guard let feedId = nowPlaying?.feedItem.feed.id else { return }
+            guard let artwork = feedArtworks[feedId]?.image else { return }
             NowPlayingHelper.setArtwork(artwork)
         }
     }
@@ -149,12 +152,41 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
     func load() async {
         guard let feedService else { return }
         
-        let (history, queue) = await (feedService.loadHistory(), feedService.loadQueue())
-        print("Loaded \((history + queue).count) total")
+        async let historyTask = feedService.loadHistory()
+        async let queueTask = feedService.loadQueue()
+        async let topicsTask = feedService.loadTopics()
+        async let followedShowsTask = feedService.loadFollowedShows()
+        
+        let (history, queue, topics, followedShows) = await (historyTask, queueTask, topicsTask, followedShowsTask)
+        
+        print("Loaded \((history + queue).count) total clips")
+        print("Loaded \(topics.count) topics")
+        print("Loaded \(followedShows.count) followed shows")
+        
         DispatchQueue.main.async {
             self.feed = history + queue
             self.nowPlayingIndex = max(0, history.count - 1)
-            self.feed.forEach(self.loadImageForClip)
+            let uniqueFeeds = Set(self.feed.map { $0.feedItem.feed })
+            uniqueFeeds.forEach(self.loadFeedArtwork)
+            self.interestedTopics = topics
+            self.followedFeeds = followedShows
+            (self.followedFeeds.map { $0.feed }).forEach(self.loadFeedArtwork)
+        }
+    }
+    
+    func loadProfileData() async {
+        guard let feedService else { return }
+        async let topicsTask = feedService.loadTopics()
+        async let followedShowsTask = feedService.loadFollowedShows()
+        
+        let (topics, followedShows) = await (topicsTask, followedShowsTask)
+        print("Loaded \(topics.count) topics")
+        print("Loaded \(followedShows.count) followed shows")
+        
+        DispatchQueue.main.async {
+            self.interestedTopics = topics
+            self.followedFeeds = followedShows
+            (self.followedFeeds.map { $0.feed }).forEach(self.loadFeedArtwork)
         }
     }
     
@@ -174,7 +206,7 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
         nowPlaying = nil
 
         // Clear cached artworks
-        clipArtworks.removeAll()
+        feedArtworks.removeAll()
 
         // Reset playback state
         currentTime = 0.0
@@ -321,8 +353,15 @@ extension FeedModel {
 }
 
 extension FeedModel {
-    private func loadImageForClip(_ clip: Clip) {
-        guard let feedURL = URL(string: clip.feedItem.feed.url) else {
+    private func loadFeedArtwork(_ feed: Feed) {
+        // Check if clip is already in the dict
+        if (self.feedArtworks.keys.contains(where: { feedId in
+            feedId == feed.id
+        })) {
+            return
+        }
+        
+        guard let feedURL = URL(string: feed.url) else {
             print("Invalid feed URL")
             return
         }
@@ -343,27 +382,27 @@ extension FeedModel {
             parser.delegate = delegate
             
             if parser.parse(), let imageURLString = delegate.channelImageURL, let imageURL = URL(string: imageURLString) {
-                self?.downloadImage(from: imageURL, for: clip)
+                self?.downloadImage(from: imageURL, for: feed)
             } else {
-                print("No image URL found or failed to parse RSS feed for clip \(clip.id)")
+                print("No image URL found or failed to parse RSS feed for feed \(feed.id)")
             }
         }
         task.resume()
     }
         
-    private func downloadImage(from url: URL, for clip: Clip) {
+    private func downloadImage(from url: URL, for feed: Feed) {
         let task = session.dataTask(with: url) { [weak self] data, response, error in
             guard let self = self, let data = data, error == nil else {
-                print("Error downloading image for clip \(clip.id): \(error?.localizedDescription ?? "Unknown error")")
+                print("Error downloading image for feed \(feed.id): \(error?.localizedDescription ?? "Unknown error")")
                 return
             }
             
             if let image = UIImage(data: data) {
                 DispatchQueue.main.async {
-                    self.clipArtworks[clip.id] = Artwork(image: image)
+                    self.feedArtworks[feed.id] = Artwork(image: image)
                 }
             } else {
-                print("Failed to create image from data for clip \(clip.id)")
+                print("Failed to create image from data for feed \(feed.id)")
             }
         }
         task.resume()
@@ -391,6 +430,48 @@ extension FeedModel {
 //        }
     }
     
+    func setInterested(for topicId: Int, isInterested: Bool) async {
+        if let index = interestedTopics.firstIndex(where: { $0.id == topicId }) {
+            interestedTopics[index].isInterested = isInterested
+            // Post the change to the backend if needed
+            await feedService?.setTopicInterest(topicId: topicId, isInterested: isInterested)
+        }
+    }
+    
+    func addNewTopic(text: String, isInterested: Bool) async {
+        let newTopic = Topic(id: UUID().hashValue, text: text, isInterested: isInterested)
+        interestedTopics.append(newTopic)
+        let success = await feedService?.addTopic(text: text, isInterested: isInterested) ?? false
+        if !success {
+            // Handle the failure case, e.g., remove the topic from the list or show an error
+            if let index = interestedTopics.firstIndex(where: { $0.id == newTopic.id }) {
+                interestedTopics.remove(at: index)
+            }
+        }
+    }
+    
+    func deleteTopic(id: Int) async {
+        guard let feedService = feedService else { return }
+        
+        let success = await feedService.deleteTopic(id: id)
+        if success {
+            DispatchQueue.main.async {
+                self.interestedTopics.removeAll { $0.id == id }
+            }
+        }
+    }
+    
+    func unfollowShow(followId: Int) async {
+        guard let feedService = feedService else { return }
+        
+        let success = await feedService.unfollowShow(followId: followId)
+        if success {
+            DispatchQueue.main.async {
+                self.followedFeeds.removeAll { $0.id == followId }
+            }
+        }
+    }
+    
     func loadMoreClips() async {
         guard let feedService else { return }
         let newClips = await feedService.loadQueue()
@@ -400,6 +481,7 @@ extension FeedModel {
         let filteredNewClips = newClips.filter { !existingClipIds.contains($0.id) }
         // Append the filtered new Clips to the feed
         feed.append(contentsOf: filteredNewClips)
-        filteredNewClips.forEach(loadImageForClip)
+        let uniqueFeeds = Set(filteredNewClips.map { $0.feedItem.feed })
+        uniqueFeeds.forEach(self.loadFeedArtwork)
     }
 }

@@ -26,8 +26,24 @@ class FeedService {
         print("Loaded \(history.count) items from history")
         return history
     }
+    
+    func loadTopics() async -> [Topic] {
+        let topics = await loadGeneric(from: "\(baseURL)/topics/", type: Topic.self)
+        print("Loaded \(topics.count) topics")
+        return topics
+    }
+    
+    func loadFollowedShows() async -> [UserFeedFollow] {
+        let follows = await loadGeneric(from: "\(baseURL)/following/", type: UserFeedFollow.self)
+        print("Loaded \(follows.count) followed shows")
+        return follows
+    }
 
     private func load(from urlString: String) async -> [Clip] {
+        await loadGeneric(from: urlString, type: Clip.self)
+    }
+    
+    private func loadGeneric<T: Codable>(from urlString: String, type: T.Type) async -> [T] {
         print("Loading \(urlString)...")
         guard let url = URL(string: urlString) else {
             print("Invalid URL")
@@ -62,19 +78,10 @@ class FeedService {
             }
             
             do {
-                print("Attempting to decode PaginatedResponse<Clip>")
-                let decodedResponse = try decoder.decode(PaginatedResponse<Clip>.self, from: data)
-                print("Successfully decoded PaginatedResponse")
-                print("Number of results: \(decodedResponse.results.count)")
-                
-                if let firstClip = decodedResponse.results.first {
-                    print("First clip: \(firstClip)")
-                }
-                
-                print("Loaded and decoded \(urlString)")
+                let decodedResponse = try decoder.decode(PaginatedResponse<T>.self, from: data)
                 return decodedResponse.results
             } catch {
-                print("Failed to decode PaginatedResponse<Clip>: \(error)")
+                print("Failed to decode PaginatedResponse<\(T.self)>: \(error)")
                 if let decodingError = error as? DecodingError {
                     switch decodingError {
                     case .keyNotFound(let key, let context):
@@ -102,11 +109,129 @@ class FeedService {
     }
     
     func postView(clipId: Int, duration: Double) async -> Bool {
-        guard let url = URL(string: "\(baseURL)/view/") else {
+//        guard let url = URL(string: "\(baseURL)/view/") else {
+//            print("Invalid URL")
+//            return false
+//        }
+//        return true
+        return false
+    }
+    
+    func setTopicInterest(topicId: Int, isInterested: Bool) async -> Bool {
+        guard let url = URL(string: "\(baseURL)/topics/\(topicId)/") else {
             print("Invalid URL")
             return false
         }
-        return true
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = ["is_interested": isInterested]
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
+            
+            let (_, response) = try await URLSession.shared.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                print("Successfully updated interest for topic \(topicId)")
+                return true
+            } else {
+                print("Failed to update interest for topic \(topicId): \(response)")
+                return false
+            }
+        } catch {
+            print("Error updating interest for topic \(topicId): \(error)")
+            return false
+        }
+    }
+    
+    func addTopic(text: String, isInterested: Bool) async -> Bool {
+        guard let url = URL(string: "\(baseURL)/topics/") else {
+            print("Invalid URL")
+            return false
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = [
+            "text": text,
+            "is_interested": isInterested
+        ]
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
+            
+            let (_, response) = try await URLSession.shared.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 201 {
+                print("Successfully added new topic")
+                return true
+            } else {
+                print("Failed to add new topic: \(response)")
+                return false
+            }
+        } catch {
+            print("Error adding new topic: \(error)")
+            return false
+        }
+    }
+    
+    func deleteTopic(id: Int) async -> Bool {
+        guard let url = URL(string: "\(baseURL)/topics/\(id)/") else {
+            print("Invalid URL")
+            return false
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
+        
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 204 {
+                print("Successfully deleted topic")
+                return true
+            } else {
+                print("Failed to delete topic: \(response)")
+                return false
+            }
+        } catch {
+            print("Error deleting topic: \(error)")
+            return false
+        }
+    }
+    
+    func unfollowShow(followId: Int) async -> Bool {
+        guard let url = URL(string: "\(baseURL)/following/\(followId)/") else {
+            print("Invalid URL")
+            return false
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
+        
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 204 {
+                print("Successfully unfollowed show")
+                return true
+            } else {
+                print("Failed to unfollow show: \(response)")
+                return false
+            }
+        } catch {
+            print("Error unfollowing show: \(error)")
+            return false
+        }
     }
 }
 

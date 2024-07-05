@@ -16,7 +16,7 @@ struct ClipListView: View {
         VStack(spacing: 0) {
             HStack {
                 ZStack {
-                    if let image = feedModel.clipArtworks[clip.id] {
+                    if let image = feedModel.feedArtworks[clip.feedItem.feed.id] {
                         Image(uiImage: image.image)
                             .resizable()
                             .scaledToFill()

@@ -60,8 +60,8 @@ struct NowPlayingSheet: View {
     }
     
     var image: Artwork? {
-        if let clipId = clip?.id {
-            return feedModel.clipArtworks[clipId]
+        if let clip {
+            return feedModel.feedArtworks[clip.feedItem.feed.id]
         }
         return nil
     }
