@@ -11,32 +11,40 @@ struct FollowingSection: View {
     @EnvironmentObject private var feedModel: FeedModel
     @Binding var isEditMode: EditMode
     @State private var unfollowingId: Int?
+    @Binding var showSearchView: Bool
 
     var body: some View {
         Section(header: Text("Following")) {
-            if feedModel.followedFeeds.isEmpty {
-                Text("You're not following any shows.")
-                    .foregroundColor(.secondary)
-            } else {
-                ForEach(feedModel.followedFeeds) { follows in
+            ForEach(feedModel.followedFeeds) { follows in
+                HStack {
+                    if let image = feedModel.feedArtworks[follows.feed.id] {
+                        Image(uiImage: image.image)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 40, height: 40)
+                            .cornerRadius(5)
+                    } else {
+                        Rectangle()
+                            .fill(Color.gray)
+                            .frame(width: 40, height: 40)
+                            .cornerRadius(5)
+                    }
+                    Text(follows.feed.name)
+                    Spacer()
+                    if isEditMode == .active {
+                        unfollowButton(for: follows)
+                    }
+                }
+            }
+            if feedModel.followedFeeds.isEmpty || isEditMode == .active {
+                Button(action: { showSearchView = true }) {
                     HStack {
-                        if let image = feedModel.feedArtworks[follows.feed.id] {
-                            Image(uiImage: image.image)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 40, height: 40)
-                                .cornerRadius(5)
-                        } else {
-                            Rectangle()
-                                .fill(Color.gray)
-                                .frame(width: 40, height: 40)
-                                .cornerRadius(5)
-                        }
-                        Text(follows.feed.name)
+                        Text("Add Show")
                         Spacer()
-                        if isEditMode == .active {
-                            unfollowButton(for: follows)
-                        }
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundColor(.blue)
+                            .font(.system(size: 24))
+                            .frame(width: 24, height: 24)
                     }
                 }
             }

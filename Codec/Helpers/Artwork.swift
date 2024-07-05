@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import UIKit
 import SwiftUI
+import UIKit
 
 extension UIImage {
     /// There are two main ways to get the color from an image, just a simple "sum up an average" or by squaring their sums. Each has their advantages, but the 'simple' option *seems* better for average color of entire image and closely mirrors CoreImage. Details: https://sighack.com/post/averaging-rgb-colors-the-right-way\

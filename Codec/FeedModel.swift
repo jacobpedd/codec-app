@@ -126,6 +126,10 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
         }
     }
     
+    // Search related state
+    @Published var searchResults: [Feed] = []
+    @Published var isSearching = false
+    
     init() {
         let cache = URLCache(memoryCapacity: 10 * 1024 * 1024,  // 10 MB memory cache
                              diskCapacity: 100 * 1024 * 1024,   // 100 MB disk cache
@@ -459,6 +463,25 @@ extension FeedModel {
                 self.interestedTopics.removeAll { $0.id == id }
             }
         }
+    }
+    
+    func searchShows(query: String) async {
+        isSearching = true
+        defer { isSearching = false }
+
+        guard let feedService = feedService else { return }
+        let allResults = await feedService.searchShows(query: query)
+        let followedFeedIds = Set(followedFeeds.map { $0.feed.id })
+        searchResults = allResults.filter { !followedFeedIds.contains($0.id) }
+    }
+
+    func followShow(feed: Feed) async -> Bool {
+        guard let feedService = feedService else { return false }
+        let success = await feedService.followShow(feedId: feed.id)
+        if success {
+            await loadProfileData()
+        }
+        return success
     }
     
     func unfollowShow(followId: Int) async {

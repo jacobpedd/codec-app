@@ -58,6 +58,7 @@ struct TopicsSection: View {
                 Image(systemName: topic.isInterested ? "hand.thumbsup.circle.fill" : "hand.thumbsup.circle")
                     .foregroundColor(.green)
                     .font(.system(size: 24))
+                    .frame(width: 24, height: 24)
                     .opacity(topic.isInterested ? 1.0 : 0.5)
             }
             .buttonStyle(PlainButtonStyle())
@@ -110,6 +111,7 @@ struct AddTopicInput: View {
                 Image(systemName: "plus.circle.fill")
                     .foregroundColor(.blue)
                     .font(.system(size: 24))
+                    .frame(width: 24, height: 24)
             }
             .buttonStyle(PlainButtonStyle())
             .disabled(newTopicText.isEmpty)

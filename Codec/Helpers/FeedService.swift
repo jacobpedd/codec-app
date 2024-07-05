@@ -16,7 +16,7 @@ class FeedService {
     }
     
     func loadQueue() async -> [Clip] {
-        let queue = await load(from: "\(baseURL)/feed/")
+        let queue = await load(from: "\(baseURL)/queue/")
         print("Loaded \(queue.count) items from queue")
         return queue
     }
@@ -204,6 +204,78 @@ class FeedService {
             }
         } catch {
             print("Error deleting topic: \(error)")
+            return false
+        }
+    }
+    
+    func searchShows(query: String) async -> [Feed] {
+        guard let url = URL(string: "\(baseURL)/feed/?search=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")") else {
+            print("Invalid URL")
+            return []
+        }
+        
+        print("Searching with url \(url.absoluteString)")
+        
+        var request = URLRequest(url: url)
+        request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .custom { decoder in
+                let container = try decoder.singleValueContainer()
+                let dateString = try container.decode(String.self)
+                
+                let formatters: [(any DateFormatterProtocol)] = [
+                    ISO8601DateFormatter(),
+                    DateFormatter.yyyyMMddTHHmmssSSSSSSZ,
+                    DateFormatter.yyyyMMddTHHmmssZ
+                ]
+                
+                for formatter in formatters {
+                    if let date = formatter.date(from: dateString) {
+                        return date
+                    }
+                }
+                
+                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string \(dateString)")
+            }
+            
+            let searchResults = try decoder.decode(PaginatedResponse<Feed>.self, from: data)
+            return searchResults.results
+        } catch {
+            print("Error searching shows: \(error)")
+            return []
+        }
+    }
+    
+    func followShow(feedId: Int) async -> Bool {
+        guard let url = URL(string: "\(baseURL)/following/") else {
+            print("Invalid URL")
+            return false
+        }
+        print("Follow show: \(feedId)")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = ["feed_id": feedId]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            
+            print(response)
+            
+            if let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) {
+                return true
+            } else {
+                return false
+            }
+        } catch {
+            print("Error following show: \(error)")
             return false
         }
     }

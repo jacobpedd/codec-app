@@ -28,6 +28,7 @@
 		0BB49B5A2C387B9700D29B69 /* FollowingSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B592C387B9700D29B69 /* FollowingSection.swift */; };
 		0BB49B5E2C387BBF00D29B69 /* TopicsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B5D2C387BBF00D29B69 /* TopicsSection.swift */; };
 		0BB49B602C387C0100D29B69 /* ActionSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B5F2C387C0100D29B69 /* ActionSection.swift */; };
+		0BB49B622C38870E00D29B69 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B612C38870E00D29B69 /* SearchView.swift */; };
 		0BC447A52BEC373800AD25AC /* ColorKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0BC447A42BEC373800AD25AC /* ColorKit */; };
 /* End PBXBuildFile section */
 
@@ -56,6 +57,7 @@
 		0BB49B592C387B9700D29B69 /* FollowingSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowingSection.swift; sourceTree = "<group>"; };
 		0BB49B5D2C387BBF00D29B69 /* TopicsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicsSection.swift; sourceTree = "<group>"; };
 		0BB49B5F2C387C0100D29B69 /* ActionSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionSection.swift; sourceTree = "<group>"; };
+		0BB49B612C38870E00D29B69 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,6 +146,7 @@
 				0BB49B592C387B9700D29B69 /* FollowingSection.swift */,
 				0BB49B5D2C387BBF00D29B69 /* TopicsSection.swift */,
 				0BB49B5F2C387C0100D29B69 /* ActionSection.swift */,
+				0BB49B612C38870E00D29B69 /* SearchView.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -224,6 +227,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0BB49B622C38870E00D29B69 /* SearchView.swift in Sources */,
 				0B4E983A2BED78B800B8FDB9 /* Artwork.swift in Sources */,
 				0B076D1E2BEAC66A00EB4063 /* NowPlayingView.swift in Sources */,
 				0BB49B5E2C387BBF00D29B69 /* TopicsSection.swift in Sources */,

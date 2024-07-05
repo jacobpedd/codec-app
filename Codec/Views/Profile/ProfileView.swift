@@ -11,11 +11,12 @@ struct ProfileView: View {
     @EnvironmentObject private var feedModel: FeedModel
     @State private var isLoading = false
     @State private var isEditMode: EditMode = .inactive
+    @State private var showingSearchView = false
 
     var body: some View {
         if let username = feedModel.username {
             List {
-                FollowingSection(isEditMode: $isEditMode)
+                FollowingSection(isEditMode: $isEditMode, showSearchView: showSearchViewBinding)
                 TopicsSection(isEditMode: $isEditMode)
                 ActionSection()
             }
@@ -38,11 +39,28 @@ struct ProfileView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showingSearchView) {
+                NavigationView {
+                    SearchView()
+                }
+            }
         } else {
             Text("Not logged in")
                 .font(.headline)
         }
     }
+    
+    private var showSearchViewBinding: Binding<Bool> {
+        Binding<Bool>(
+            get: { self.showingSearchView },
+            set: { newValue in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self.showingSearchView = newValue
+                }
+            }
+        )
+    }
+    
     
     private func loadProfileData() {
         if feedModel.followedFeeds.isEmpty || feedModel.interestedTopics.isEmpty {
@@ -64,8 +82,10 @@ struct ProfileView: View {
 struct ProfileView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
-            ProfileView()
-                .environmentObject(FeedModel())
+            VStack {
+                ProfileView()
+                    .environmentObject(FeedModel())
+            }
         }
     }
 }
