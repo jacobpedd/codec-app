@@ -22,7 +22,7 @@ class FeedService {
 
     func loadHistory() async -> [UserClipView] {
         let history = await loadGeneric(from: "\(baseURL)/history/", type: UserClipView.self)
-        return history
+        return history.reversed()
     }
     
     func loadTopics() async -> [Topic] {
