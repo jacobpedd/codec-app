@@ -36,30 +36,13 @@ struct TopicsSection: View {
         Group {
             Button(action: {
                 Task {
-                    if (topic.isInterested) {
-                        await feedModel.setInterested(for: topic.id, isInterested: false)
-                    }
+                    await feedModel.setInterested(for: topic.id, isInterested: !topic.isInterested)
                 }
             }) {
-                Image(systemName: topic.isInterested ? "hand.thumbsdown.circle" : "hand.thumbsdown.circle.fill")
-                    .foregroundColor(.red)
+                Image(systemName: topic.isInterested ? "hand.thumbsup.circle.fill" : "hand.thumbsdown.circle.fill")
+                    .foregroundColor(topic.isInterested ? .green : .red)
                     .font(.system(size: 24))
                     .frame(width: 24, height: 24)
-                    .opacity(topic.isInterested ? 0.5 : 1.0)
-            }
-            .buttonStyle(PlainButtonStyle())
-            Button(action: {
-                Task {
-                    if (!topic.isInterested) {
-                        await feedModel.setInterested(for: topic.id, isInterested: true)
-                    }
-                }
-            }) {
-                Image(systemName: topic.isInterested ? "hand.thumbsup.circle.fill" : "hand.thumbsup.circle")
-                    .foregroundColor(.green)
-                    .font(.system(size: 24))
-                    .frame(width: 24, height: 24)
-                    .opacity(topic.isInterested ? 1.0 : 0.5)
             }
             .buttonStyle(PlainButtonStyle())
         }

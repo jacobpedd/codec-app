@@ -61,7 +61,6 @@ struct ProfileView: View {
         )
     }
     
-    
     private func loadProfileData() {
         if feedModel.followedFeeds.isEmpty || feedModel.interestedTopics.isEmpty {
             isLoading = true
@@ -75,17 +74,6 @@ struct ProfileView: View {
     private func toggleEditMode() {
         withAnimation {
             isEditMode = isEditMode == .active ? .inactive : .active
-        }
-    }
-}
-
-struct ProfileView_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationView {
-            VStack {
-                ProfileView()
-                    .environmentObject(FeedModel())
-            }
         }
     }
 }

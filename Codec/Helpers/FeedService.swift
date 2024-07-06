@@ -16,13 +16,13 @@ class FeedService {
     }
     
     func loadQueue() async -> [Clip] {
-        let queue = await load(from: "\(baseURL)/queue/")
+        let queue = await loadGeneric(from: "\(baseURL)/queue/", type: Clip.self)
         print("Loaded \(queue.count) items from queue")
         return queue
     }
 
-    func loadHistory() async -> [Clip] {
-        let history = await load(from: "\(baseURL)/history/")
+    func loadHistory() async -> [UserClipView] {
+        let history = await loadGeneric(from: "\(baseURL)/history/", type: UserClipView.self)
         print("Loaded \(history.count) items from history")
         return history
     }
@@ -37,10 +37,6 @@ class FeedService {
         let follows = await loadGeneric(from: "\(baseURL)/following/", type: UserFeedFollow.self)
         print("Loaded \(follows.count) followed shows")
         return follows
-    }
-
-    private func load(from urlString: String) async -> [Clip] {
-        await loadGeneric(from: urlString, type: Clip.self)
     }
     
     private func loadGeneric<T: Codable>(from urlString: String, type: T.Type) async -> [T] {
@@ -108,13 +104,39 @@ class FeedService {
         }
     }
     
-    func postView(clipId: Int, duration: Double) async -> Bool {
-//        guard let url = URL(string: "\(baseURL)/view/") else {
-//            print("Invalid URL")
-//            return false
-//        }
-//        return true
-        return false
+    func updateView(clipId: Int, duration: Int) async -> Bool {
+        guard let url = URL(string: "\(baseURL)/view/") else {
+            print("Invalid URL")
+            return false
+        }
+        
+        print("Updating view for \(clipId): \(duration)%")
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Any] = [
+            "clip": clipId,
+            "duration": duration
+        ]
+
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+            let (_, response) = try await URLSession.shared.data(for: request)
+
+            if let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) {
+                print("Successfully updated view progress for clip \(clipId): \(duration)%")
+                return true
+            } else {
+                print("Failed to update view progress for clip \(clipId): \(response)")
+                return false
+            }
+        } catch {
+            print("Error updating view progress for clip \(clipId): \(error)")
+            return false
+        }
     }
     
     func setTopicInterest(topicId: Int, isInterested: Bool) async -> Bool {

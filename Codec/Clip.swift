@@ -69,7 +69,7 @@ struct Feed: Codable, Identifiable, Hashable {
     }
 }
 
-struct Topic: Codable, Identifiable {
+struct Topic: Codable, Identifiable, Hashable {
     let id: Int
     let text: String
     var isInterested: Bool
@@ -77,6 +77,10 @@ struct Topic: Codable, Identifiable {
     enum CodingKeys: String, CodingKey {
         case id, text
         case isInterested = "is_interested"
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 
@@ -88,6 +92,17 @@ struct UserFeedFollow: Codable, Identifiable, Hashable {
 
     enum CodingKeys: String, CodingKey {
         case id, user, feed
+        case createdAt = "created_at"
+    }
+}
+
+struct UserClipView: Codable, Identifiable {
+    let id: Int
+    let clip: Clip
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id, clip
         case createdAt = "created_at"
     }
 }
