@@ -1,54 +1,26 @@
-//
-//  FeedModel.swift
-//  Codec
-//
-//  Created by Jacob Peddicord on 5/20/24.
-//
-
 import SwiftUI
 import AVFoundation
 import MediaPlayer
 
 @MainActor
-class FeedModel: ObservableObject, AudioManagerDelegate {
-    // Properties
+class FeedModel: ObservableObject {
+    // MARK: - Properties
     private let audioManager = AudioManager()
-    private var lastViewItemUuid: String?
-    private var lastViewCurrentTime: Double = 0
-    private var feedService: FeedService?
-    
-    // Auth token for backend requests
-    @Published var token: String? = UserDefaults.standard.string(forKey: "token") {
-        didSet {
-            guard let token else {
-                // Remove token if it's being set to nil
-                UserDefaults.standard.removeObject(forKey: "token")
-                feedService = nil
-                return
-            }
-            
-            UserDefaults.standard.set(token, forKey: "token")
-            feedService = FeedService(token: token)
-        }
+    private(set) var feedService: FeedService?
+    private let session: URLSession
+    private let viewTracker: ViewTracker
+    private let artworkLoader: ArtworkLoader
+
+    // MARK: - Published properties
+    @Published var token: String? {
+        didSet { updateFeedService() }
     }
-    @Published var username: String? = UserDefaults.standard.string(forKey: "username") {
-        didSet {
-            guard let username else {
-                UserDefaults.standard.removeObject(forKey: "username")
-                return
-            }
-            UserDefaults.standard.set(username, forKey: "username")
-        }
-    }
-    
-    // Feed
-    @Published private var feed = [Clip]()
+    @Published var username: String?
+    @Published private(set) var feed = [Clip]()
     @Published var interestedTopics: [Topic] = []
     @Published var followedFeeds: [UserFeedFollow] = []
-    @Published private var nowPlayingIndex: Int = 0 {
+    @Published private(set) var nowPlayingIndex: Int = 0 {
         didSet {
-            // Only reload Clip if it's now
-            // Sometimes things get moved but it doesn't really change
             if nowPlaying?.id != feed[nowPlayingIndex].id {
                 nowPlaying = feed[nowPlayingIndex]
                 audioManager.loadAudio(audioKey: feed[nowPlayingIndex].audioBucketKey)
@@ -62,96 +34,58 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
             NowPlayingHelper.setArtwork(artwork)
         }
     }
-    private let session: URLSession // for caching image requests
-    
-    // Audio player state
     @Published private(set) var isPlaying = false
-    
     @Published private(set) var currentTime: TimeInterval = 0.0 {
-        didSet {
-            // Sync with control center
-            NowPlayingHelper.setCurrentTime(currentTime)
-        }
+        didSet { NowPlayingHelper.setCurrentTime(currentTime) }
     }
-    
     @Published private(set) var duration: Double = 0.0 {
         didSet { NowPlayingHelper.setDuration(duration) }
     }
-    
-    @Published var playbackSpeed: Double = UserDefaults.standard.double(forKey: "playbackSpeed") {
+    @Published var playbackSpeed: Double {
         didSet {
             UserDefaults.standard.set(playbackSpeed, forKey: "playbackSpeed")
             audioManager.setRate(rate: isPlaying ? playbackSpeed : 0.0)
         }
     }
-    
-    // Feed vars the views will use
-    var history: [Clip] {
-        if feed.count > 0 {
-            return Array(feed[..<nowPlayingIndex])
-        } else {
-            return []
-        }
-    }
-    
+    @Published var searchResults: [Feed] = []
+    @Published var isSearching = false
+
+    // MARK: - Computed properties
     var nowPlaying: Clip? {
         didSet {
-            // Sync with control center
             guard let clip = nowPlaying else { return }
             NowPlayingHelper.setTitle(clip.name)
             guard let artwork = feedArtworks[clip.feedItem.feed.id]?.image else { return }
             NowPlayingHelper.setArtwork(artwork)
-            
         }
     }
-    
-    var progress: Double {
-        currentTime / duration
-    }
-    
-    var upNext: [Clip] {
-        if feed.count > 0 {
-            return Array(feed[(nowPlayingIndex + 1)...])
-        } else {
-           return []
-        }
-    }
-    
-    // View tracking state
-    private var viewTrackingTimer: Timer?
-    private var lastReportedProgress: Int = 0
-    private let viewTrackingInterval: TimeInterval = 5 // Send update every 5 seconds
-    private let minProgressChange: Int = 5
-    
-    // Search related state
-    @Published var searchResults: [Feed] = []
-    @Published var isSearching = false
-    
-    init() {
-        let cache = URLCache(memoryCapacity: 10 * 1024 * 1024,  // 10 MB memory cache
-                             diskCapacity: 100 * 1024 * 1024,   // 100 MB disk cache
-                             diskPath: "imageCache")
+    var progress: Double { currentTime / duration }
+    var history: [Clip] { Array(feed[..<nowPlayingIndex]) }
+    var upNext: [Clip] { Array(feed[(nowPlayingIndex + 1)...]) }
 
-        // Configure URLSession
+    // MARK: - Initialization
+    init() {
+        let cache = URLCache(memoryCapacity: 10 * 1024 * 1024, diskCapacity: 100 * 1024 * 1024, diskPath: "imageCache")
         let config = URLSessionConfiguration.default
         config.urlCache = cache
         config.requestCachePolicy = .returnCacheDataElseLoad
         self.session = URLSession(configuration: config)
         
-        audioManager.delegate = self
+        self.viewTracker = ViewTracker()
+        self.artworkLoader = ArtworkLoader(session: session)
+        self.token = UserDefaults.standard.string(forKey: "token")
+        self.username = UserDefaults.standard.string(forKey: "username")
+        self.playbackSpeed = UserDefaults.standard.double(forKey: "playbackSpeed")
+        
+        setupAudioManager()
         setupNowPlayingInfo()
-        if playbackSpeed == 0 { // UserDefaults returns 0 if the key does not exist
-            playbackSpeed = 1.0 // Default playback speed
-        }
-        
-        
-        guard let token else { return }
-        feedService = FeedService(token: token)
+        initializePlaybackSpeed()
+        updateFeedService()
     }
-        
-    
+
+    // MARK: - Public methods
     func load() async {
-        guard let feedService else { return }
+        guard let feedService = feedService else { return }
         
         async let historyTask = feedService.loadHistory()
         async let queueTask = feedService.loadQueue()
@@ -161,115 +95,96 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
         let (history, queue, topics, followedShows) = await (historyTask, queueTask, topicsTask, followedShowsTask)
         
         let historyClips = history.map { $0.clip }
-        print("Loaded \((historyClips + queue).count) total clips")
-        print("Loaded \(topics.count) topics")
-        print("Loaded \(followedShows.count) followed shows")
+        print("Loaded \((historyClips + queue).count) clips \(topics.count) topics and \(followedShows.count) followed shows")
         
         DispatchQueue.main.async {
             self.feed = historyClips + queue
             self.nowPlayingIndex = max(0, history.count - 1)
             let uniqueFeeds = Set(self.feed.map { $0.feedItem.feed })
-            uniqueFeeds.forEach(self.loadFeedArtwork)
+            self.loadArtworkForFeeds(Array(uniqueFeeds))
             self.interestedTopics = topics
             self.followedFeeds = followedShows
-            (self.followedFeeds.map { $0.feed }).forEach(self.loadFeedArtwork)
+            self.loadArtworkForFeeds(self.followedFeeds.map { $0.feed })
         }
     }
-    
+
     func loadProfileData() async {
-        guard let feedService else { return }
+        guard let feedService = feedService else { return }
         async let topicsTask = feedService.loadTopics()
         async let followedShowsTask = feedService.loadFollowedShows()
         
         let (topics, followedShows) = await (topicsTask, followedShowsTask)
-        print("Loaded \(topics.count) topics")
-        print("Loaded \(followedShows.count) followed shows")
+        print("Loaded profile with \(topics.count) topics and \(followedShows.count) followed shows")
         
         DispatchQueue.main.async {
             self.interestedTopics = topics
             self.followedFeeds = followedShows
-            (self.followedFeeds.map { $0.feed }).forEach(self.loadFeedArtwork)
+            self.loadArtworkForFeeds(self.followedFeeds.map { $0.feed })
         }
     }
-    
-    func logout() {
-        // Stop any playing audio
-        audioManager.pause()
 
-        // Reset user-related data
+    func logout() {
+        audioManager.pause()
         UserDefaults.standard.removeObject(forKey: "userEmail")
         UserDefaults.standard.removeObject(forKey: "playbackSpeed")
         token = nil
         username = nil
-
-        // Clear the feed
         nowPlayingIndex = 0
         feed.removeAll()
         nowPlaying = nil
-
-        // Clear cached artworks
         feedArtworks.removeAll()
-
-        // Reset playback state
         currentTime = 0.0
         duration = 0.0
-        playbackSpeed = 1.0  // Reset to default playback speed
-
-        // Reset FeedService
+        playbackSpeed = 1.0
         feedService = nil
-    }
-    
-    func startViewTracking() {
-        lastReportedProgress = Int(progress * 100)
-        viewTrackingTimer = Timer.scheduledTimer(withTimeInterval: viewTrackingInterval, repeats: true) { [weak self] _ in
-            self?.updateViewProgress()
-        }
-    }
-
-    func stopViewTracking() {
-        viewTrackingTimer?.invalidate()
-        viewTrackingTimer = nil
-        updateViewProgress()
-    }
-
-    private func updateViewProgress() {
-        guard let nowPlaying = nowPlaying else { return }
-        let currentProgress = Int(progress * 100)
-        
-        if abs(currentProgress - lastReportedProgress) >= minProgressChange {
-            lastReportedProgress = currentProgress
-            Task {
-                await feedService?.updateView(clipId: nowPlaying.id, duration: currentProgress)
-            }
-        }
     }
 
     func playPause() {
         if isPlaying {
             audioManager.pause()
-            stopViewTracking()
+            viewTracker.stopTracking()
         } else {
             audioManager.play()
-            startViewTracking()
+            viewTracker.startTracking(clip: nowPlaying,
+                                      currentTimePublisher: $currentTime,
+                                      durationPublisher: $duration)
         }
         isPlaying.toggle()
     }
 
     func next() {
-        stopViewTracking()
+        viewTracker.stopTracking()
         nowPlayingIndex = min(feed.count - 1, nowPlayingIndex + 1)
-        startViewTracking()
+        if isPlaying {
+            viewTracker.startTracking(clip: nowPlaying,
+                                      currentTimePublisher: $currentTime,
+                                      durationPublisher: $duration)
+        }
     }
 
     func previous() {
-        stopViewTracking()
+        viewTracker.stopTracking()
         nowPlayingIndex = max(0, nowPlayingIndex - 1)
-        startViewTracking()
+        if isPlaying {
+            viewTracker.startTracking(clip: nowPlaying,
+                                      currentTimePublisher: $currentTime,
+                                      durationPublisher: $duration)
+        }
+    }
+
+    func seekToTime(seconds: Double) {
+        audioManager.seekTo(seconds: seconds)
+        currentTime = seconds
+    }
+
+    func seekToProgress(percentage: Double) {
+        let seekTime = duration * percentage
+        seekToTime(seconds: seekTime)
     }
 
     func deleteClip(id: Int) {
         if let clipIndex = feed.firstIndex(where: { $0.id == id }) {
-            stopViewTracking()
+            viewTracker.stopTracking()
             Task {
                 await feedService?.updateView(clipId: id, duration: 0)
             }
@@ -280,98 +195,48 @@ class FeedModel: ObservableObject, AudioManagerDelegate {
             }
             
             nowPlayingIndex = max(0, min(nowPlayingIndex, feed.count - 1))
-            startViewTracking()
         }
-    }
-    
-    func seekToTime(seconds: Double) {
-        audioManager.seekTo(seconds: seconds)
-        
-        currentTime = seconds
     }
 
-    func seekToProgress(percentage: Double) {
-        let seekTime = duration * percentage
-        audioManager.seekTo(seconds: seekTime)
-        
-        currentTime = seekTime
+    // MARK: - Private methods
+    private func setupAudioManager() {
+        audioManager.delegate = self
     }
-    
-    func playNext(at id: Int) {
-        guard let ClipIndex = feed.firstIndex(where: { $0.id == id }) else {
+
+    private func updateFeedService() {
+        guard let token = token else {
+            UserDefaults.standard.removeObject(forKey: "token")
+            feedService = nil
             return
         }
-        
-        // If the Clip is already next, no need to move it
-        if ClipIndex == nowPlayingIndex + 1 {
-            return
-        }
-        
-        // Remove the Clip from its current position
-        let Clip = feed.remove(at: ClipIndex)
-
-        // Adjust the nowPlayingIndex if necessary
-        if ClipIndex < nowPlayingIndex {
-            nowPlayingIndex -= 1
-        }
-
-        
-        // Insert the Clip right after the nowPlayingIndex
-        let newIndex = min(nowPlayingIndex + 1, feed.count)
-        feed.insert(Clip, at: newIndex)
+        UserDefaults.standard.set(token, forKey: "token")
+        feedService = FeedService(token: token)
+        viewTracker.setFeedService(feedService)
     }
-    
-    func playLast(at id: Int) {
-        guard let ClipIndex = feed.firstIndex(where: { $0.id == id }) else {
-            return
-        }
-        
-        // Remove the Clip from its current position
-        let Clip = feed.remove(at: ClipIndex)
-        
-        // Adjust the nowPlayingIndex if necessary
-        if ClipIndex < nowPlayingIndex {
-            nowPlayingIndex -= 1
-        }
-        
-        // Append the Clip to the end of the feed
-        feed.append(Clip)
-    }
-    
-    func playClip(at id: Int) {
-        guard let ClipIndex = feed.firstIndex(where: { $0.id == id }) else {
-            return
-        }
-        
-        // Remove the Clip from its current position
-        let Clip = feed.remove(at: ClipIndex)
 
-        // Adjust the nowPlayingIndex if necessary
-        if ClipIndex < nowPlayingIndex {
-            nowPlayingIndex -= 1
+    private func initializePlaybackSpeed() {
+        if playbackSpeed == 0 {
+            playbackSpeed = 1.0
         }
-        
-        // Insert the Clip right after the nowPlayingIndex
-        let newIndex = min(nowPlayingIndex + 1, feed.count)
-        feed.insert(Clip, at: newIndex)
-        
-        // Set the Clip as playing
-        nowPlayingIndex = newIndex
+    }
+
+    private func setupNowPlayingInfo() {
+        NowPlayingHelper.setArtist("Codec")
     }
 }
 
-extension FeedModel {
+// MARK: - AudioManagerDelegate
+extension FeedModel: AudioManagerDelegate {
     func playbackDidEnd() {
         Task {
-            guard let nowPlaying = nowPlaying else { return }
-            await feedService?.updateView(clipId: nowPlaying.id, duration: 100)
+            guard let clipId = nowPlaying?.id else { return }
+            await feedService?.updateView(clipId: clipId, duration: 100)
         }
         if isPlaying {
             playPause()
             next()
             playPause()
         } else {
-            // Probably not possible
             next()
         }
     }
@@ -383,74 +248,41 @@ extension FeedModel {
     func durationLoaded(_ duration: TimeInterval) {
         self.duration = duration
     }
-    
-    private func setupNowPlayingInfo() {
-        NowPlayingHelper.setArtist("Codec")
-    }
 }
 
+// MARK: - Feed Management
 extension FeedModel {
-    private func loadFeedArtwork(_ feed: Feed) {
-        // Check if clip is already in the dict
-        if (self.feedArtworks.keys.contains(where: { feedId in
-            feedId == feed.id
-        })) {
-            return
-        }
-        
-        guard let feedURL = URL(string: feed.url) else {
-            print("Invalid feed URL")
-            return
-        }
-        
-        let task = session.dataTask(with: feedURL) { [weak self] data, response, error in
-            if let error = error {
-                print("Error fetching RSS feed: \(error.localizedDescription)")
-                return
-            }
-            
-            guard let data = data else {
-                print("No data received from RSS feed")
-                return
-            }
-            
-            let parser = XMLParser(data: data)
-            let delegate = RSSParserDelegate()
-            parser.delegate = delegate
-            
-            if parser.parse(), let imageURLString = delegate.channelImageURL, let imageURL = URL(string: imageURLString) {
-                self?.downloadImage(from: imageURL, for: feed)
-            } else {
-                print("No image URL found or failed to parse RSS feed for feed \(feed.id)")
-            }
-        }
-        task.resume()
+    func playNext(at id: Int) {
+        guard let clipIndex = feed.firstIndex(where: { $0.id == id }) else { return }
+        if clipIndex == nowPlayingIndex + 1 { return }
+        let clip = feed.remove(at: clipIndex)
+        if clipIndex < nowPlayingIndex { nowPlayingIndex -= 1 }
+        let newIndex = min(nowPlayingIndex + 1, feed.count)
+        feed.insert(clip, at: newIndex)
     }
-        
-    private func downloadImage(from url: URL, for feed: Feed) {
-        let task = session.dataTask(with: url) { [weak self] data, response, error in
-            guard let self = self, let data = data, error == nil else {
-                print("Error downloading image for feed \(feed.id): \(error?.localizedDescription ?? "Unknown error")")
-                return
-            }
-            
-            if let image = UIImage(data: data) {
-                DispatchQueue.main.async {
-                    self.feedArtworks[feed.id] = Artwork(image: image)
-                }
-            } else {
-                print("Failed to create image from data for feed \(feed.id)")
-            }
-        }
-        task.resume()
+    
+    func playLast(at id: Int) {
+        guard let clipIndex = feed.firstIndex(where: { $0.id == id }) else { return }
+        let clip = feed.remove(at: clipIndex)
+        if clipIndex < nowPlayingIndex { nowPlayingIndex -= 1 }
+        feed.append(clip)
+    }
+    
+    func playClip(at id: Int) {
+        guard let clipIndex = feed.firstIndex(where: { $0.id == id }) else { return }
+        let clip = feed.remove(at: clipIndex)
+        if clipIndex < nowPlayingIndex { nowPlayingIndex -= 1 }
+        let newIndex = min(nowPlayingIndex + 1, feed.count)
+        feed.insert(clip, at: newIndex)
+        nowPlayingIndex = newIndex
     }
 }
 
+// MARK: - Topic Management
 extension FeedModel {
     func setInterested(for topicId: Int, isInterested: Bool) async {
         if let index = interestedTopics.firstIndex(where: { $0.id == topicId }) {
             interestedTopics[index].isInterested = isInterested
-            // Post the change to the backend if needed
             await feedService?.setTopicInterest(topicId: topicId, isInterested: isInterested)
         }
     }
@@ -460,16 +292,12 @@ extension FeedModel {
         interestedTopics.append(newTopic)
         let success = await feedService?.addTopic(text: text, isInterested: isInterested) ?? false
         if !success {
-            // Handle the failure case, e.g., remove the topic from the list or show an error
-            if let index = interestedTopics.firstIndex(where: { $0.id == newTopic.id }) {
-                interestedTopics.remove(at: index)
-            }
+            interestedTopics.removeAll { $0.id == newTopic.id }
         }
     }
     
     func deleteTopic(id: Int) async {
         guard let feedService = feedService else { return }
-        
         let success = await feedService.deleteTopic(id: id)
         if success {
             DispatchQueue.main.async {
@@ -477,7 +305,10 @@ extension FeedModel {
             }
         }
     }
-    
+}
+
+// MARK: - Show Management
+extension FeedModel {
     func searchShows(query: String) async {
         isSearching = true
         defer { isSearching = false }
@@ -499,7 +330,6 @@ extension FeedModel {
     
     func unfollowShow(followId: Int) async {
         guard let feedService = feedService else { return }
-        
         let success = await feedService.unfollowShow(followId: followId)
         if success {
             DispatchQueue.main.async {
@@ -509,15 +339,31 @@ extension FeedModel {
     }
     
     func loadMoreClips() async {
-        guard let feedService else { return }
+        guard let feedService = feedService else { return }
         let newClips = await feedService.loadQueue()
-        // Remove duplicates by checking for unique Clip IDs
-        // NOTE: Shouldn't have duplicates, but just in case
         let existingClipIds = Set(feed.map { $0.id })
         let filteredNewClips = newClips.filter { !existingClipIds.contains($0.id) }
-        // Append the filtered new Clips to the feed
         feed.append(contentsOf: filteredNewClips)
         let uniqueFeeds = Set(filteredNewClips.map { $0.feedItem.feed })
-        uniqueFeeds.forEach(self.loadFeedArtwork)
+        loadArtworkForFeeds(Array(uniqueFeeds))
+    }
+}
+
+// MARK: - Artwork Loading
+extension FeedModel {
+    func loadArtworkForFeed(_ feed: Feed) {
+        artworkLoader.loadFeedArtwork(for: feed) { [weak self] artwork in
+            DispatchQueue.main.async {
+                if let artwork = artwork {
+                    self?.feedArtworks[feed.id] = artwork
+                }
+            }
+        }
+    }
+
+    func loadArtworkForFeeds(_ feeds: [Feed]) {
+        for feed in feeds {
+            loadArtworkForFeed(feed)
+        }
     }
 }

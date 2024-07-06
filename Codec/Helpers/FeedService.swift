@@ -17,30 +17,25 @@ class FeedService {
     
     func loadQueue() async -> [Clip] {
         let queue = await loadGeneric(from: "\(baseURL)/queue/", type: Clip.self)
-        print("Loaded \(queue.count) items from queue")
         return queue
     }
 
     func loadHistory() async -> [UserClipView] {
         let history = await loadGeneric(from: "\(baseURL)/history/", type: UserClipView.self)
-        print("Loaded \(history.count) items from history")
         return history
     }
     
     func loadTopics() async -> [Topic] {
         let topics = await loadGeneric(from: "\(baseURL)/topics/", type: Topic.self)
-        print("Loaded \(topics.count) topics")
         return topics
     }
     
     func loadFollowedShows() async -> [UserFeedFollow] {
         let follows = await loadGeneric(from: "\(baseURL)/following/", type: UserFeedFollow.self)
-        print("Loaded \(follows.count) followed shows")
         return follows
     }
     
     private func loadGeneric<T: Codable>(from urlString: String, type: T.Type) async -> [T] {
-        print("Loading \(urlString)...")
         guard let url = URL(string: urlString) else {
             print("Invalid URL")
             return []
@@ -51,7 +46,6 @@ class FeedService {
         
         do {
             let (data, _) = try await URLSession.shared.data(for: request)
-            print("Received data from \(urlString)")
             
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .custom { decoder in
@@ -109,8 +103,6 @@ class FeedService {
             print("Invalid URL")
             return false
         }
-        
-        print("Updating view for \(clipId): \(duration)%")
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"

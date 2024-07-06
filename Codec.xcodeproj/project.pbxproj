@@ -29,6 +29,8 @@
 		0BB49B5E2C387BBF00D29B69 /* TopicsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B5D2C387BBF00D29B69 /* TopicsSection.swift */; };
 		0BB49B602C387C0100D29B69 /* ActionSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B5F2C387C0100D29B69 /* ActionSection.swift */; };
 		0BB49B622C38870E00D29B69 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B612C38870E00D29B69 /* SearchView.swift */; };
+		0BB49B642C38D1F600D29B69 /* ViewTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B632C38D1F600D29B69 /* ViewTracker.swift */; };
+		0BB49B662C38D22A00D29B69 /* ArtworkLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B652C38D22A00D29B69 /* ArtworkLoader.swift */; };
 		0BC447A52BEC373800AD25AC /* ColorKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0BC447A42BEC373800AD25AC /* ColorKit */; };
 /* End PBXBuildFile section */
 
@@ -58,6 +60,8 @@
 		0BB49B5D2C387BBF00D29B69 /* TopicsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicsSection.swift; sourceTree = "<group>"; };
 		0BB49B5F2C387C0100D29B69 /* ActionSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionSection.swift; sourceTree = "<group>"; };
 		0BB49B612C38870E00D29B69 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
+		0BB49B632C38D1F600D29B69 /* ViewTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewTracker.swift; sourceTree = "<group>"; };
+		0BB49B652C38D22A00D29B69 /* ArtworkLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkLoader.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +98,8 @@
 				0B7D3AAA2BFD5B12003A3B95 /* AudioManager.swift */,
 				0B7D3AAC2BFD704B003A3B95 /* NowPlayingHelper.swift */,
 				0BB49B532C361E3F00D29B69 /* RSSParserDelegate.swift */,
+				0BB49B632C38D1F600D29B69 /* ViewTracker.swift */,
+				0BB49B652C38D22A00D29B69 /* ArtworkLoader.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -238,10 +244,12 @@
 				0BB3083C2BE94A0000EB2494 /* CodecApp.swift in Sources */,
 				0B7D3AA22BFC42D7003A3B95 /* FeedModel.swift in Sources */,
 				0B7D3AAB2BFD5B12003A3B95 /* AudioManager.swift in Sources */,
+				0BB49B662C38D22A00D29B69 /* ArtworkLoader.swift in Sources */,
 				0BB49B582C387B7E00D29B69 /* ProfileView.swift in Sources */,
 				0B7D3AA42BFC5253003A3B95 /* FeedService.swift in Sources */,
 				0B7D3AA62BFD0AED003A3B95 /* CustomDate.swift in Sources */,
 				0BB49B602C387C0100D29B69 /* ActionSection.swift in Sources */,
+				0BB49B642C38D1F600D29B69 /* ViewTracker.swift in Sources */,
 				0B7D3AAF2BFE648A003A3B95 /* FeedView.swift in Sources */,
 				0BB49B5A2C387B9700D29B69 /* FollowingSection.swift in Sources */,
 				0BB49B522C3613AC00D29B69 /* ClipListView.swift in Sources */,
