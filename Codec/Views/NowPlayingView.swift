@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-
 struct NowPlayingView: View {
     @State private var isPlayerShowing: Bool = false
     @EnvironmentObject private var feedModel: FeedModel
@@ -54,10 +53,9 @@ struct NowPlayingView: View {
                     
                 }
                 .padding(10)
-                .background()
+                .background(.thinMaterial)
                 .cornerRadius(10)
                 .frame(maxWidth: .infinity)
-                .shadow(color: Color.gray.opacity(0.3), radius: 10)
                 .padding(.horizontal)
                 .padding(.bottom)
                 .onTapGesture {
@@ -67,6 +65,10 @@ struct NowPlayingView: View {
                     isPlayerShowing = false
                 }) {
                     NowPlayingSheet()
+                        .presentationDetents([.large])
+                        .presentationDragIndicator(.visible)
+                        .presentationCornerRadius(25)
+                        .presentationBackground(.clear)
                 }
             }
         }
