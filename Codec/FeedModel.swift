@@ -19,14 +19,14 @@ class FeedModel: ObservableObject {
     @Published private(set) var feed = [Clip]()
     @Published var interestedTopics: [Topic] = []
     @Published var followedFeeds: [UserFeedFollow] = []
-    @Published private(set) var nowPlayingIndex: Int = 0 {
-        didSet {
-            if nowPlaying?.id != feed[nowPlayingIndex].id {
-                nowPlaying = feed[nowPlayingIndex]
-                audioManager.loadAudio(audioKey: feed[nowPlayingIndex].audioBucketKey)
+    @Published var nowPlayingIndex: Int = 0 {
+            willSet {
+                objectWillChange.send()
+            }
+            didSet {
+                updateNowPlaying(to: nowPlayingIndex)
             }
         }
-    }
     @Published private(set) var feedArtworks = [Int: Artwork]() {
         didSet {
             guard let feedId = nowPlaying?.feedItem.feed.id else { return }
@@ -152,24 +152,64 @@ class FeedModel: ObservableObject {
         isPlaying.toggle()
     }
 
-    func next() {
+    private func updateNowPlaying(to index: Int) {
+        guard index >= 0 && index < feed.count else { return }
+        
         viewTracker.stopTracking()
-        nowPlayingIndex = min(feed.count - 1, nowPlayingIndex + 1)
+        
+        if nowPlaying?.id != feed[index].id {
+            nowPlaying = feed[index]
+            audioManager.loadAudio(audioKey: feed[index].audioBucketKey)
+        }
+        
         if isPlaying {
             viewTracker.startTracking(clip: nowPlaying,
                                       currentTimePublisher: $currentTime,
                                       durationPublisher: $duration)
+            audioManager.play()
         }
     }
 
+    // Add this new method to set nowPlayingIndex safely
+    func setNowPlayingIndex(_ index: Int) {
+        guard index >= 0 && index < feed.count else { return }
+        nowPlayingIndex = index
+    }
+
+    // Update these methods to use setNowPlayingIndex
+    func next() {
+        setNowPlayingIndex(min(feed.count - 1, nowPlayingIndex + 1))
+    }
+
     func previous() {
-        viewTracker.stopTracking()
-        nowPlayingIndex = max(0, nowPlayingIndex - 1)
-        if isPlaying {
-            viewTracker.startTracking(clip: nowPlaying,
-                                      currentTimePublisher: $currentTime,
-                                      durationPublisher: $duration)
+        setNowPlayingIndex(max(0, nowPlayingIndex - 1))
+    }
+
+    // Update this method to use setNowPlayingIndex
+    func deleteClip(id: Int) {
+        if let clipIndex = feed.firstIndex(where: { $0.id == id }) {
+            viewTracker.stopTracking()
+            Task {
+                await feedService?.updateView(clipId: id, duration: 0)
+            }
+            feed.remove(at: clipIndex)
+            
+            if nowPlayingIndex >= clipIndex {
+                setNowPlayingIndex(max(0, nowPlayingIndex - 1))
+            }
         }
+    }
+
+    // Update this method to use setNowPlayingIndex
+    func playClip(at id: Int) {
+        guard let clipIndex = feed.firstIndex(where: { $0.id == id }) else { return }
+        let clip = feed.remove(at: clipIndex)
+        if clipIndex < nowPlayingIndex {
+            setNowPlayingIndex(nowPlayingIndex - 1)
+        }
+        let newIndex = min(nowPlayingIndex + 1, feed.count)
+        feed.insert(clip, at: newIndex)
+        setNowPlayingIndex(newIndex)
     }
 
     func seekToTime(seconds: Double) {
@@ -180,22 +220,6 @@ class FeedModel: ObservableObject {
     func seekToProgress(percentage: Double) {
         let seekTime = duration * percentage
         seekToTime(seconds: seekTime)
-    }
-
-    func deleteClip(id: Int) {
-        if let clipIndex = feed.firstIndex(where: { $0.id == id }) {
-            viewTracker.stopTracking()
-            Task {
-                await feedService?.updateView(clipId: id, duration: 0)
-            }
-            feed.remove(at: clipIndex)
-            
-            if nowPlayingIndex >= clipIndex {
-                nowPlayingIndex -= 1
-            }
-            
-            nowPlayingIndex = max(0, min(nowPlayingIndex, feed.count - 1))
-        }
     }
 
     // MARK: - Private methods
@@ -266,15 +290,6 @@ extension FeedModel {
         let clip = feed.remove(at: clipIndex)
         if clipIndex < nowPlayingIndex { nowPlayingIndex -= 1 }
         feed.append(clip)
-    }
-    
-    func playClip(at id: Int) {
-        guard let clipIndex = feed.firstIndex(where: { $0.id == id }) else { return }
-        let clip = feed.remove(at: clipIndex)
-        if clipIndex < nowPlayingIndex { nowPlayingIndex -= 1 }
-        let newIndex = min(nowPlayingIndex + 1, feed.count)
-        feed.insert(clip, at: newIndex)
-        nowPlayingIndex = newIndex
     }
 }
 
