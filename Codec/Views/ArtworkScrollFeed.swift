@@ -31,9 +31,11 @@ struct ArtworkScrollFeed: View {
                 VStack {
                     progressiveBlurView(startPoint: .top, endPoint: .bottom)
                         .frame(height: 150)
+                        .onTapGesture { feedModel.previous() }
                     Spacer()
                     progressiveBlurView(startPoint: .bottom, endPoint: .top)
                         .frame(height: 150)
+                        .onTapGesture { feedModel.next() }
                 }
             }
         }
