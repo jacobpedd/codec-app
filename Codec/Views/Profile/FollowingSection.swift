@@ -30,6 +30,7 @@ struct FollowingSection: View {
                             .cornerRadius(5)
                     }
                     Text(follows.feed.name)
+                        .lineLimit(1)
                     Spacer()
                     if isEditMode == .active {
                         unfollowButton(for: follows)
@@ -41,9 +42,8 @@ struct FollowingSection: View {
                     HStack {
                         Text("Add Show")
                         Spacer()
-                        Image(systemName: "plus.circle.fill")
+                        Image(systemName: "plus")
                             .foregroundColor(.blue)
-                            .font(.system(size: 24))
                             .frame(width: 24, height: 24)
                     }
                 }
@@ -64,9 +64,8 @@ struct FollowingSection: View {
                     .progressViewStyle(CircularProgressViewStyle())
                     .frame(width: 24, height: 24)
             } else {
-                Image(systemName: "trash.circle.fill")
+                Image(systemName: "trash.fill")
                     .foregroundColor(.red)
-                    .font(.system(size: 24))
                     .frame(width: 24, height: 24)
             }
         }

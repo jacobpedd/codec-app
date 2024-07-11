@@ -47,11 +47,10 @@ struct SearchView: View {
                             Text(show.name)
                                 .foregroundStyle(.foreground)
                             Spacer()
-                            Image(systemName: "plus.circle.fill")
+                            Image(systemName: "plus")
                                 .foregroundColor(.blue)
                         }
                     }
-                    .buttonStyle(PlainButtonStyle())
                 }
             }
         }

@@ -39,9 +39,8 @@ struct TopicsSection: View {
                     await feedModel.setInterested(for: topic.id, isInterested: !topic.isInterested)
                 }
             }) {
-                Image(systemName: topic.isInterested ? "hand.thumbsup.circle.fill" : "hand.thumbsdown.circle.fill")
+                Image(systemName: topic.isInterested ? "hand.thumbsup.fill" : "hand.thumbsdown.fill")
                     .foregroundColor(topic.isInterested ? .green : .red)
-                    .font(.system(size: 24))
                     .frame(width: 24, height: 24)
             }
             .buttonStyle(PlainButtonStyle())
@@ -61,9 +60,8 @@ struct TopicsSection: View {
                     .progressViewStyle(CircularProgressViewStyle())
                     .frame(width: 24, height: 24)
             } else {
-                Image(systemName: "trash.circle.fill")
+                Image(systemName: "trash.fill")
                     .foregroundColor(.red)
-                    .font(.system(size: 24))
                     .frame(width: 24, height: 24)
             }
         }
@@ -85,15 +83,14 @@ struct AddTopicInput: View {
             Button(action: {
                 isInterested.toggle()
             }) {
-                Image(systemName: isInterested ? "hand.thumbsup.circle.fill" : "hand.thumbsdown.circle.fill")
+                Image(systemName: isInterested ? "hand.thumbsup.fill" : "hand.thumbsdown.fill")
                     .foregroundColor(isInterested ? .green : .red)
-                    .font(.system(size: 24))
+                    .frame(width: 24, height: 24)
             }
             .buttonStyle(PlainButtonStyle())
             Button(action: addNewTopic) {
-                Image(systemName: "plus.circle.fill")
+                Image(systemName: "plus")
                     .foregroundColor(.blue)
-                    .font(.system(size: 24))
                     .frame(width: 24, height: 24)
             }
             .buttonStyle(PlainButtonStyle())
