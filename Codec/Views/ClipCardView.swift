@@ -46,6 +46,9 @@ struct ClipCardView: View {
         .frame(width: cardSize, height: cardSize)
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .animation(.easeInOut(duration: 0.3), value: index == feedModel.nowPlayingIndex)
+        .onTapGesture {
+            handleTap()
+        }
     }
     
     private var progressBar: some View {
@@ -87,6 +90,14 @@ struct ClipCardView: View {
             }
             .shadow(color: .clear, radius: 0)
             Spacer()
+        }
+    }
+    
+    private func handleTap() {
+        if index == feedModel.nowPlayingIndex - 1 {
+            feedModel.previous()
+        } else if index == feedModel.nowPlayingIndex + 1 {
+            feedModel.next()
         }
     }
 }
