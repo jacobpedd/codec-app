@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		0B076D1E2BEAC66A00EB4063 /* NowPlayingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B076D1D2BEAC66A00EB4063 /* NowPlayingView.swift */; };
+		0B36CFFC2C3F57A400C2C1D5 /* ArtworkScrollFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B36CFFB2C3F57A400C2C1D5 /* ArtworkScrollFeed.swift */; };
+		0B36D0092C3F9CD100C2C1D5 /* SwiftUIX in Frameworks */ = {isa = PBXBuildFile; productRef = 0B36D0082C3F9CD100C2C1D5 /* SwiftUIX */; };
+		0B36D00B2C3FAF3200C2C1D5 /* ClipCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B36D00A2C3FAF3200C2C1D5 /* ClipCardView.swift */; };
 		0B4E983A2BED78B800B8FDB9 /* Artwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4E98392BED78B800B8FDB9 /* Artwork.swift */; };
 		0B7D3A9C2BF7DEDC003A3B95 /* NowPlayingSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7D3A9B2BF7DEDC003A3B95 /* NowPlayingSheet.swift */; };
 		0B7D3AA22BFC42D7003A3B95 /* FeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7D3AA12BFC42D7003A3B95 /* FeedModel.swift */; };
@@ -17,11 +20,12 @@
 		0B7D3AAD2BFD704B003A3B95 /* NowPlayingHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7D3AAC2BFD704B003A3B95 /* NowPlayingHelper.swift */; };
 		0B7D3AAF2BFE648A003A3B95 /* FeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7D3AAE2BFE648A003A3B95 /* FeedView.swift */; };
 		0B7D3AB52BFE7B8B003A3B95 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7D3AB42BFE7B8B003A3B95 /* LoginView.swift */; };
+		0BAEC7932C38DF4D007A0343 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAEC7922C38DF4D007A0343 /* Models.swift */; };
+		0BAEC7952C39AB91007A0343 /* ArtworkFlowFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAEC7942C39AB91007A0343 /* ArtworkFlowFeed.swift */; };
 		0BB3083C2BE94A0000EB2494 /* CodecApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB3083B2BE94A0000EB2494 /* CodecApp.swift */; };
 		0BB3083E2BE94A0000EB2494 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB3083D2BE94A0000EB2494 /* ContentView.swift */; };
 		0BB308422BE94A0100EB2494 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0BB308412BE94A0100EB2494 /* Assets.xcassets */; };
 		0BB308462BE94A0100EB2494 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0BB308452BE94A0100EB2494 /* Preview Assets.xcassets */; };
-		0BB49B502C36130E00D29B69 /* Clip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B4F2C36130E00D29B69 /* Clip.swift */; };
 		0BB49B522C3613AC00D29B69 /* ClipListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B512C3613AC00D29B69 /* ClipListView.swift */; };
 		0BB49B542C361E3F00D29B69 /* RSSParserDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B532C361E3F00D29B69 /* RSSParserDelegate.swift */; };
 		0BB49B582C387B7E00D29B69 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B572C387B7E00D29B69 /* ProfileView.swift */; };
@@ -36,6 +40,8 @@
 
 /* Begin PBXFileReference section */
 		0B076D1D2BEAC66A00EB4063 /* NowPlayingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingView.swift; sourceTree = "<group>"; };
+		0B36CFFB2C3F57A400C2C1D5 /* ArtworkScrollFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkScrollFeed.swift; sourceTree = "<group>"; };
+		0B36D00A2C3FAF3200C2C1D5 /* ClipCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipCardView.swift; sourceTree = "<group>"; };
 		0B4E98392BED78B800B8FDB9 /* Artwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Artwork.swift; sourceTree = "<group>"; };
 		0B7D3A9B2BF7DEDC003A3B95 /* NowPlayingSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingSheet.swift; sourceTree = "<group>"; };
 		0B7D3AA12BFC42D7003A3B95 /* FeedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedModel.swift; sourceTree = "<group>"; };
@@ -46,13 +52,14 @@
 		0B7D3AAC2BFD704B003A3B95 /* NowPlayingHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingHelper.swift; sourceTree = "<group>"; };
 		0B7D3AAE2BFE648A003A3B95 /* FeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedView.swift; sourceTree = "<group>"; };
 		0B7D3AB42BFE7B8B003A3B95 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		0BAEC7922C38DF4D007A0343 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		0BAEC7942C39AB91007A0343 /* ArtworkFlowFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkFlowFeed.swift; sourceTree = "<group>"; };
 		0BB308382BE94A0000EB2494 /* Codec.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Codec.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0BB3083B2BE94A0000EB2494 /* CodecApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodecApp.swift; sourceTree = "<group>"; };
 		0BB3083D2BE94A0000EB2494 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		0BB308412BE94A0100EB2494 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0BB308432BE94A0100EB2494 /* Codec.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Codec.entitlements; sourceTree = "<group>"; };
 		0BB308452BE94A0100EB2494 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		0BB49B4F2C36130E00D29B69 /* Clip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clip.swift; sourceTree = "<group>"; };
 		0BB49B512C3613AC00D29B69 /* ClipListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipListView.swift; sourceTree = "<group>"; };
 		0BB49B532C361E3F00D29B69 /* RSSParserDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RSSParserDelegate.swift; sourceTree = "<group>"; };
 		0BB49B572C387B7E00D29B69 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
@@ -70,6 +77,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0BC447A52BEC373800AD25AC /* ColorKit in Frameworks */,
+				0B36D0092C3F9CD100C2C1D5 /* SwiftUIX in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -85,6 +93,9 @@
 				0B7D3A9B2BF7DEDC003A3B95 /* NowPlayingSheet.swift */,
 				0B7D3AB42BFE7B8B003A3B95 /* LoginView.swift */,
 				0BB49B512C3613AC00D29B69 /* ClipListView.swift */,
+				0BAEC7942C39AB91007A0343 /* ArtworkFlowFeed.swift */,
+				0B36CFFB2C3F57A400C2C1D5 /* ArtworkScrollFeed.swift */,
+				0B36D00A2C3FAF3200C2C1D5 /* ClipCardView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -129,7 +140,7 @@
 				0BB3083B2BE94A0000EB2494 /* CodecApp.swift */,
 				0BB3083D2BE94A0000EB2494 /* ContentView.swift */,
 				0B7D3AA12BFC42D7003A3B95 /* FeedModel.swift */,
-				0BB49B4F2C36130E00D29B69 /* Clip.swift */,
+				0BAEC7922C38DF4D007A0343 /* Models.swift */,
 				0BB308412BE94A0100EB2494 /* Assets.xcassets */,
 				0BB308432BE94A0100EB2494 /* Codec.entitlements */,
 				0BB308442BE94A0100EB2494 /* Preview Content */,
@@ -175,6 +186,7 @@
 			name = Codec;
 			packageProductDependencies = (
 				0BC447A42BEC373800AD25AC /* ColorKit */,
+				0B36D0082C3F9CD100C2C1D5 /* SwiftUIX */,
 			);
 			productName = Codec;
 			productReference = 0BB308382BE94A0000EB2494 /* Codec.app */;
@@ -206,6 +218,7 @@
 			mainGroup = 0BB3082F2BE94A0000EB2494;
 			packageReferences = (
 				0BC447A32BEC373800AD25AC /* XCRemoteSwiftPackageReference "ColorKit" */,
+				0B36D0072C3F9CD100C2C1D5 /* XCRemoteSwiftPackageReference "SwiftUIX" */,
 			);
 			productRefGroup = 0BB308392BE94A0000EB2494 /* Products */;
 			projectDirPath = "";
@@ -240,20 +253,23 @@
 				0BB49B542C361E3F00D29B69 /* RSSParserDelegate.swift in Sources */,
 				0BB3083E2BE94A0000EB2494 /* ContentView.swift in Sources */,
 				0B7D3AB52BFE7B8B003A3B95 /* LoginView.swift in Sources */,
+				0BAEC7952C39AB91007A0343 /* ArtworkFlowFeed.swift in Sources */,
 				0B7D3AAD2BFD704B003A3B95 /* NowPlayingHelper.swift in Sources */,
 				0BB3083C2BE94A0000EB2494 /* CodecApp.swift in Sources */,
 				0B7D3AA22BFC42D7003A3B95 /* FeedModel.swift in Sources */,
 				0B7D3AAB2BFD5B12003A3B95 /* AudioManager.swift in Sources */,
+				0BAEC7932C38DF4D007A0343 /* Models.swift in Sources */,
 				0BB49B662C38D22A00D29B69 /* ArtworkLoader.swift in Sources */,
 				0BB49B582C387B7E00D29B69 /* ProfileView.swift in Sources */,
+				0B36CFFC2C3F57A400C2C1D5 /* ArtworkScrollFeed.swift in Sources */,
 				0B7D3AA42BFC5253003A3B95 /* FeedService.swift in Sources */,
 				0B7D3AA62BFD0AED003A3B95 /* CustomDate.swift in Sources */,
+				0B36D00B2C3FAF3200C2C1D5 /* ClipCardView.swift in Sources */,
 				0BB49B602C387C0100D29B69 /* ActionSection.swift in Sources */,
 				0BB49B642C38D1F600D29B69 /* ViewTracker.swift in Sources */,
 				0B7D3AAF2BFE648A003A3B95 /* FeedView.swift in Sources */,
 				0BB49B5A2C387B9700D29B69 /* FollowingSection.swift in Sources */,
 				0BB49B522C3613AC00D29B69 /* ClipListView.swift in Sources */,
-				0BB49B502C36130E00D29B69 /* Clip.swift in Sources */,
 				0B7D3A9C2BF7DEDC003A3B95 /* NowPlayingSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -483,6 +499,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		0B36D0072C3F9CD100C2C1D5 /* XCRemoteSwiftPackageReference "SwiftUIX" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SwiftUIX/SwiftUIX.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.2.1;
+			};
+		};
 		0BC447A32BEC373800AD25AC /* XCRemoteSwiftPackageReference "ColorKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Boris-Em/ColorKit.git";
@@ -494,6 +518,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		0B36D0082C3F9CD100C2C1D5 /* SwiftUIX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0B36D0072C3F9CD100C2C1D5 /* XCRemoteSwiftPackageReference "SwiftUIX" */;
+			productName = SwiftUIX;
+		};
 		0BC447A42BEC373800AD25AC /* ColorKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 0BC447A32BEC373800AD25AC /* XCRemoteSwiftPackageReference "ColorKit" */;
