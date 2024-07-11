@@ -28,22 +28,12 @@ struct ClipCardView: View {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
-                    VStack {
+                    VStack(spacing: 0) {
                         Spacer()
-                        HStack {
-                            VStack (alignment: .leading) {
-                                Text(clip.name)
-                                    .foregroundColor(.primary)
-                                    .fontWeight(.bold)
-                                    .lineLimit(2)
-                                Text(clip.feedItem.feed.name)
-                                    .foregroundColor(.primary)
-                                    .lineLimit(1)
-                            }
-                            Spacer()
-                        }
-                        .padding()
-                        .background(.thinMaterial)
+                        progressBar
+                        label
+                            .padding()
+                            .background(.thinMaterial)
                         }
                     .opacity(labelOpacity)
                 }
@@ -55,6 +45,45 @@ struct ClipCardView: View {
         .frame(width: cardSize, height: cardSize)
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .animation(.easeInOut(duration: 0.3), value: index == feedModel.nowPlayingIndex)
+    }
+    
+    private var progressBar: some View {
+        GeometryReader { geometry in
+            HStack(spacing: 0) {
+                VStack(spacing: 0) {
+                    Spacer()
+                    Rectangle()
+                        .fill(.thinMaterial)
+                        .brightness(0.5)
+                        .frame(width: geometry.size.width * feedModel.progress, height: 5)
+                }
+                
+                Rectangle()
+                    .fill(.thinMaterial)
+                    .brightness(0.8)
+                    .frame(width: 5, height: 15)
+                    .cornerRadius(.topLeading, 5)
+                    .cornerRadius(.topTrailing, 5)
+                Spacer()
+            }
+            
+        }
+        .frame(width: cardSize, height: 15)
+    }
+    
+    private var label: some View {
+        HStack {
+            VStack (alignment: .leading) {
+                Text(clip.name)
+                    .foregroundColor(.primary)
+                    .fontWeight(.bold)
+                    .lineLimit(2)
+                Text(clip.feedItem.feed.name)
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+            }
+            Spacer()
+        }
     }
 }
 
