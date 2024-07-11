@@ -1,5 +1,5 @@
 //
-//  Clip.swift
+//  Models.swift
 //  Codec
 //
 //  Created by Jacob Peddicord on 7/3/24.
@@ -36,11 +36,13 @@ struct FeedItem: Codable {
     let id: Int
     let name: String
     let feed: Feed
+    let postedAt: Date
     let createdAt: Date
     let updatedAt: Date
 
     enum CodingKeys: String, CodingKey {
         case id, name, feed
+        case postedAt = "posted_at"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
@@ -106,3 +108,4 @@ struct UserClipView: Codable, Identifiable {
         case createdAt = "created_at"
     }
 }
+
