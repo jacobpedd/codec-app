@@ -49,8 +49,11 @@ struct ClipListView: View {
                     Text(clip.name)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
-
-                    Text("\(clip.createdAt.customFormatted()) • \(formatTimeStatus())")
+                    Text("\(clip.feedItem.feed.name)")
+                        .font(.caption)
+                        .lineLimit(1)
+                        .foregroundColor(.secondary)
+                    Text("\(clip.feedItem.postedAt.customFormatted()) • \(formatTimeStatus())")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
