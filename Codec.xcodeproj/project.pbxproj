@@ -9,8 +9,9 @@
 /* Begin PBXBuildFile section */
 		0B076D1E2BEAC66A00EB4063 /* NowPlayingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B076D1D2BEAC66A00EB4063 /* NowPlayingView.swift */; };
 		0B36CFFC2C3F57A400C2C1D5 /* ArtworkScrollFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B36CFFB2C3F57A400C2C1D5 /* ArtworkScrollFeed.swift */; };
-		0B36D0092C3F9CD100C2C1D5 /* SwiftUIX in Frameworks */ = {isa = PBXBuildFile; productRef = 0B36D0082C3F9CD100C2C1D5 /* SwiftUIX */; };
 		0B36D00B2C3FAF3200C2C1D5 /* ClipCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B36D00A2C3FAF3200C2C1D5 /* ClipCardView.swift */; };
+		0B36D0112C3FB69E00C2C1D5 /* ColorKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0B36D0102C3FB69E00C2C1D5 /* ColorKit */; };
+		0B36D0132C3FB6AA00C2C1D5 /* SwiftUIX in Frameworks */ = {isa = PBXBuildFile; productRef = 0B36D0122C3FB6AA00C2C1D5 /* SwiftUIX */; };
 		0B4E983A2BED78B800B8FDB9 /* Artwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4E98392BED78B800B8FDB9 /* Artwork.swift */; };
 		0B7D3A9C2BF7DEDC003A3B95 /* NowPlayingSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7D3A9B2BF7DEDC003A3B95 /* NowPlayingSheet.swift */; };
 		0B7D3AA22BFC42D7003A3B95 /* FeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7D3AA12BFC42D7003A3B95 /* FeedModel.swift */; };
@@ -35,7 +36,6 @@
 		0BB49B622C38870E00D29B69 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B612C38870E00D29B69 /* SearchView.swift */; };
 		0BB49B642C38D1F600D29B69 /* ViewTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B632C38D1F600D29B69 /* ViewTracker.swift */; };
 		0BB49B662C38D22A00D29B69 /* ArtworkLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB49B652C38D22A00D29B69 /* ArtworkLoader.swift */; };
-		0BC447A52BEC373800AD25AC /* ColorKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0BC447A42BEC373800AD25AC /* ColorKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -76,8 +76,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0BC447A52BEC373800AD25AC /* ColorKit in Frameworks */,
-				0B36D0092C3F9CD100C2C1D5 /* SwiftUIX in Frameworks */,
+				0B36D0112C3FB69E00C2C1D5 /* ColorKit in Frameworks */,
+				0B36D0132C3FB6AA00C2C1D5 /* SwiftUIX in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -185,8 +185,8 @@
 			);
 			name = Codec;
 			packageProductDependencies = (
-				0BC447A42BEC373800AD25AC /* ColorKit */,
-				0B36D0082C3F9CD100C2C1D5 /* SwiftUIX */,
+				0B36D0102C3FB69E00C2C1D5 /* ColorKit */,
+				0B36D0122C3FB6AA00C2C1D5 /* SwiftUIX */,
 			);
 			productName = Codec;
 			productReference = 0BB308382BE94A0000EB2494 /* Codec.app */;
@@ -518,15 +518,15 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		0B36D0082C3F9CD100C2C1D5 /* SwiftUIX */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 0B36D0072C3F9CD100C2C1D5 /* XCRemoteSwiftPackageReference "SwiftUIX" */;
-			productName = SwiftUIX;
-		};
-		0BC447A42BEC373800AD25AC /* ColorKit */ = {
+		0B36D0102C3FB69E00C2C1D5 /* ColorKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 0BC447A32BEC373800AD25AC /* XCRemoteSwiftPackageReference "ColorKit" */;
 			productName = ColorKit;
+		};
+		0B36D0122C3FB6AA00C2C1D5 /* SwiftUIX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0B36D0072C3F9CD100C2C1D5 /* XCRemoteSwiftPackageReference "SwiftUIX" */;
+			productName = SwiftUIX;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

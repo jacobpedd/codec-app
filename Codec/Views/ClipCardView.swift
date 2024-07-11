@@ -34,6 +34,7 @@ struct ClipCardView: View {
                         label
                             .padding()
                             .background(.thinMaterial)
+                            .shadow(color: .gray, radius: 10)
                         }
                     .opacity(labelOpacity)
                 }
@@ -56,6 +57,7 @@ struct ClipCardView: View {
                         .fill(.thinMaterial)
                         .brightness(0.5)
                         .frame(width: geometry.size.width * feedModel.progress, height: 5)
+                        .shadow(color: .black, radius: 10)
                 }
                 
                 Rectangle()
@@ -64,6 +66,7 @@ struct ClipCardView: View {
                     .frame(width: 5, height: 15)
                     .cornerRadius(.topLeading, 5)
                     .cornerRadius(.topTrailing, 5)
+                    .shadow(color: .black, radius: 10)
                 Spacer()
             }
             
@@ -82,6 +85,7 @@ struct ClipCardView: View {
                     .foregroundColor(.primary)
                     .lineLimit(1)
             }
+            .shadow(color: .clear, radius: 0)
             Spacer()
         }
     }
