@@ -27,6 +27,14 @@ struct ArtworkScrollFeed: View {
                 } else {
                     scrollContent
                 }
+                
+                VStack {
+                    progressiveBlurView(startPoint: .top, endPoint: .bottom)
+                        .frame(height: 150)
+                    Spacer()
+                    progressiveBlurView(startPoint: .bottom, endPoint: .top)
+                        .frame(height: 150)
+                }
             }
         }
         .edgesIgnoringSafeArea(.all)
@@ -84,6 +92,18 @@ struct ArtworkScrollFeed: View {
             }
         }
         .frame(height: cardSize)
+    }
+    
+    private func progressiveBlurView(startPoint: UnitPoint, endPoint: UnitPoint) -> some View {
+        Rectangle()
+            .fill(.ultraThinMaterial)
+            .mask(
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.black, Color.black.opacity(0)]),
+                    startPoint: startPoint,
+                    endPoint: endPoint
+                )
+            )
     }
     
     private func handleDragEnd() {
