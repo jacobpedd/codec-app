@@ -20,9 +20,6 @@ class FeedModel: ObservableObject {
     @Published var interestedTopics: [Topic] = []
     @Published var followedFeeds: [UserFeedFollow] = []
     @Published var nowPlayingIndex: Int = 0 {
-            willSet {
-                objectWillChange.send()
-            }
             didSet {
                 updateNowPlaying(to: nowPlayingIndex)
             }
@@ -198,18 +195,6 @@ class FeedModel: ObservableObject {
                 setNowPlayingIndex(max(0, nowPlayingIndex - 1))
             }
         }
-    }
-
-    // Update this method to use setNowPlayingIndex
-    func playClip(at id: Int) {
-        guard let clipIndex = feed.firstIndex(where: { $0.id == id }) else { return }
-        let clip = feed.remove(at: clipIndex)
-        if clipIndex < nowPlayingIndex {
-            setNowPlayingIndex(nowPlayingIndex - 1)
-        }
-        let newIndex = min(nowPlayingIndex + 1, feed.count)
-        feed.insert(clip, at: newIndex)
-        setNowPlayingIndex(newIndex)
     }
 
     func seekToTime(seconds: Double) {
