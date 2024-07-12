@@ -46,6 +46,7 @@ class FeedModel: ObservableObject {
     }
     @Published var searchResults: [Feed] = []
     @Published var isSearching = false
+    @Published private(set) var isLoading = false
 
     // MARK: - Computed properties
     var nowPlaying: Clip? {
@@ -86,21 +87,17 @@ class FeedModel: ObservableObject {
         
         async let historyTask = feedService.loadHistory()
         async let queueTask = feedService.loadQueue()
-        async let topicsTask = feedService.loadTopics()
-        async let followedShowsTask = feedService.loadFollowedShows()
         
-        let (history, queue, topics, followedShows) = await (historyTask, queueTask, topicsTask, followedShowsTask)
+        let (history, queue) = await (historyTask, queueTask)
         
         let historyClips = history.map { $0.clip }
-        print("Loaded \((historyClips + queue).count) clips \(topics.count) topics and \(followedShows.count) followed shows")
+        print("Loaded \((historyClips + queue).count) clip")
         
         DispatchQueue.main.async {
             self.feed = historyClips + queue
             self.nowPlayingIndex = max(0, history.count - 1)
             let uniqueFeeds = Set(self.feed.map { $0.feedItem.feed })
             self.loadArtworkForFeeds(Array(uniqueFeeds))
-            self.interestedTopics = topics
-            self.followedFeeds = followedShows
             self.loadArtworkForFeeds(self.followedFeeds.map { $0.feed })
         }
     }
@@ -151,6 +148,12 @@ class FeedModel: ObservableObject {
 
     private func updateNowPlaying(to index: Int) {
         guard index >= 0 && index < feed.count else { return }
+        
+        if (feed.count - index < 5) {
+            Task {
+                await loadMoreClips()
+            }
+        }
         
         viewTracker.stopTracking()
         
@@ -339,13 +342,19 @@ extension FeedModel {
     }
     
     func loadMoreClips() async {
-        guard let feedService = feedService else { return }
+        guard let feedService = feedService, !isLoading else { return }
+        isLoading = true
+        if isLoading { return }
+        
         let newClips = await feedService.loadQueue()
         let existingClipIds = Set(feed.map { $0.id })
         let filteredNewClips = newClips.filter { !existingClipIds.contains($0.id) }
-        feed.append(contentsOf: filteredNewClips)
-        let uniqueFeeds = Set(filteredNewClips.map { $0.feedItem.feed })
-        loadArtworkForFeeds(Array(uniqueFeeds))
+        
+        DispatchQueue.main.async {
+            self.feed.append(contentsOf: filteredNewClips)
+            let uniqueFeeds = Set(filteredNewClips.map { $0.feedItem.feed })
+            self.loadArtworkForFeeds(Array(uniqueFeeds))
+        }
     }
 }
 

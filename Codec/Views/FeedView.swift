@@ -10,7 +10,7 @@ struct FeedView: View {
                 // Main content
                 GeometryReader { geometry in
                     ZStack {
-                        ArtworkScrollFeed()
+                        ArtworkFeed()
                         
                         VStack {
                             Spacer()

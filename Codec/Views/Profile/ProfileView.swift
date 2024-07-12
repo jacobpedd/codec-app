@@ -16,13 +16,13 @@ struct ProfileView: View {
     var body: some View {
         if let username = feedModel.username {
             List {
-                FollowingSection(isEditMode: $isEditMode, showSearchView: showSearchViewBinding)
-                TopicsSection(isEditMode: $isEditMode)
+//                FollowingSection(isEditMode: $isEditMode, showSearchView: showSearchViewBinding)
+//                TopicsSection(isEditMode: $isEditMode)
                 ActionSection()
             }
             .listStyle(InsetGroupedListStyle())
             .navigationBarTitle("@\(username)", displayMode: .inline)
-            .onAppear(perform: loadProfileData)
+//            .onAppear(perform: loadProfileData)
             .overlay(
                 Group {
                     if isLoading {
@@ -32,13 +32,13 @@ struct ProfileView: View {
             )
             .environment(\.editMode, $isEditMode)
             .animation(.default, value: isEditMode)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: toggleEditMode) {
-                        Text(isEditMode == .active ? "Done" : "Edit")
-                    }
-                }
-            }
+//            .toolbar {
+//                ToolbarItem(placement: .navigationBarTrailing) {
+//                    Button(action: toggleEditMode) {
+//                        Text(isEditMode == .active ? "Done" : "Edit")
+//                    }
+//                }
+//            }
             .sheet(isPresented: $showingSearchView) {
                 NavigationView {
                     SearchView()

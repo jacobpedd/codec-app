@@ -8,10 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		0B076D1E2BEAC66A00EB4063 /* NowPlayingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B076D1D2BEAC66A00EB4063 /* NowPlayingView.swift */; };
-		0B36CFFC2C3F57A400C2C1D5 /* ArtworkScrollFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B36CFFB2C3F57A400C2C1D5 /* ArtworkScrollFeed.swift */; };
+		0B31F79C2C40BA7F00AE48C6 /* ArtworkFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B31F79B2C40BA7F00AE48C6 /* ArtworkFeed.swift */; };
 		0B36D00B2C3FAF3200C2C1D5 /* ClipCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B36D00A2C3FAF3200C2C1D5 /* ClipCardView.swift */; };
 		0B36D0112C3FB69E00C2C1D5 /* ColorKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0B36D0102C3FB69E00C2C1D5 /* ColorKit */; };
-		0B36D0132C3FB6AA00C2C1D5 /* SwiftUIX in Frameworks */ = {isa = PBXBuildFile; productRef = 0B36D0122C3FB6AA00C2C1D5 /* SwiftUIX */; };
 		0B4E983A2BED78B800B8FDB9 /* Artwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4E98392BED78B800B8FDB9 /* Artwork.swift */; };
 		0B7D3A9C2BF7DEDC003A3B95 /* NowPlayingSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7D3A9B2BF7DEDC003A3B95 /* NowPlayingSheet.swift */; };
 		0B7D3AA22BFC42D7003A3B95 /* FeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7D3AA12BFC42D7003A3B95 /* FeedModel.swift */; };
@@ -38,7 +37,7 @@
 
 /* Begin PBXFileReference section */
 		0B076D1D2BEAC66A00EB4063 /* NowPlayingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingView.swift; sourceTree = "<group>"; };
-		0B36CFFB2C3F57A400C2C1D5 /* ArtworkScrollFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkScrollFeed.swift; sourceTree = "<group>"; };
+		0B31F79B2C40BA7F00AE48C6 /* ArtworkFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkFeed.swift; sourceTree = "<group>"; };
 		0B36D00A2C3FAF3200C2C1D5 /* ClipCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipCardView.swift; sourceTree = "<group>"; };
 		0B4E98392BED78B800B8FDB9 /* Artwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Artwork.swift; sourceTree = "<group>"; };
 		0B7D3A9B2BF7DEDC003A3B95 /* NowPlayingSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingSheet.swift; sourceTree = "<group>"; };
@@ -73,7 +72,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				0B36D0112C3FB69E00C2C1D5 /* ColorKit in Frameworks */,
-				0B36D0132C3FB6AA00C2C1D5 /* SwiftUIX in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -88,8 +86,8 @@
 				0B076D1D2BEAC66A00EB4063 /* NowPlayingView.swift */,
 				0B7D3A9B2BF7DEDC003A3B95 /* NowPlayingSheet.swift */,
 				0B7D3AB42BFE7B8B003A3B95 /* LoginView.swift */,
-				0B36CFFB2C3F57A400C2C1D5 /* ArtworkScrollFeed.swift */,
 				0B36D00A2C3FAF3200C2C1D5 /* ClipCardView.swift */,
+				0B31F79B2C40BA7F00AE48C6 /* ArtworkFeed.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -180,7 +178,6 @@
 			name = Codec;
 			packageProductDependencies = (
 				0B36D0102C3FB69E00C2C1D5 /* ColorKit */,
-				0B36D0122C3FB6AA00C2C1D5 /* SwiftUIX */,
 			);
 			productName = Codec;
 			productReference = 0BB308382BE94A0000EB2494 /* Codec.app */;
@@ -212,7 +209,6 @@
 			mainGroup = 0BB3082F2BE94A0000EB2494;
 			packageReferences = (
 				0BC447A32BEC373800AD25AC /* XCRemoteSwiftPackageReference "ColorKit" */,
-				0B36D0072C3F9CD100C2C1D5 /* XCRemoteSwiftPackageReference "SwiftUIX" */,
 			);
 			productRefGroup = 0BB308392BE94A0000EB2494 /* Products */;
 			projectDirPath = "";
@@ -241,6 +237,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0BB49B622C38870E00D29B69 /* SearchView.swift in Sources */,
+				0B31F79C2C40BA7F00AE48C6 /* ArtworkFeed.swift in Sources */,
 				0B4E983A2BED78B800B8FDB9 /* Artwork.swift in Sources */,
 				0B076D1E2BEAC66A00EB4063 /* NowPlayingView.swift in Sources */,
 				0BB49B5E2C387BBF00D29B69 /* TopicsSection.swift in Sources */,
@@ -254,7 +251,6 @@
 				0BAEC7932C38DF4D007A0343 /* Models.swift in Sources */,
 				0BB49B662C38D22A00D29B69 /* ArtworkLoader.swift in Sources */,
 				0BB49B582C387B7E00D29B69 /* ProfileView.swift in Sources */,
-				0B36CFFC2C3F57A400C2C1D5 /* ArtworkScrollFeed.swift in Sources */,
 				0B7D3AA42BFC5253003A3B95 /* FeedService.swift in Sources */,
 				0B7D3AA62BFD0AED003A3B95 /* CustomDate.swift in Sources */,
 				0B36D00B2C3FAF3200C2C1D5 /* ClipCardView.swift in Sources */,
@@ -491,14 +487,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		0B36D0072C3F9CD100C2C1D5 /* XCRemoteSwiftPackageReference "SwiftUIX" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SwiftUIX/SwiftUIX.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.2.1;
-			};
-		};
 		0BC447A32BEC373800AD25AC /* XCRemoteSwiftPackageReference "ColorKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Boris-Em/ColorKit.git";
@@ -514,11 +502,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0BC447A32BEC373800AD25AC /* XCRemoteSwiftPackageReference "ColorKit" */;
 			productName = ColorKit;
-		};
-		0B36D0122C3FB6AA00C2C1D5 /* SwiftUIX */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 0B36D0072C3F9CD100C2C1D5 /* XCRemoteSwiftPackageReference "SwiftUIX" */;
-			productName = SwiftUIX;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

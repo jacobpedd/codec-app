@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Clip: Codable, Identifiable {
+struct Clip: Codable, Identifiable, Hashable {
     let id: Int
     let name: String
     let body: String
@@ -29,6 +29,14 @@ struct Clip: Codable, Identifiable {
         case score
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func ==(lhs: Clip, rhs: Clip) -> Bool {
+        return lhs.id == rhs.id
     }
 }
 

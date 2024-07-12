@@ -40,7 +40,11 @@ struct ClipCardView: View {
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 20))
             } else {
-                ProgressView()
+                ZStack {
+                    Rectangle()
+                        .fill(.ultraThinMaterial)
+                    ProgressView()
+                }
             }
         }
         .frame(width: cardSize, height: cardSize)
