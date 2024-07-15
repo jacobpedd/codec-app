@@ -70,15 +70,13 @@ struct ClipCardView: View {
                 Rectangle()
                     .fill(.thinMaterial)
                     .brightness(0.8)
-                    .frame(width: 5, height: 15)
-                    .cornerRadius(.topLeading, 5)
-                    .cornerRadius(.topTrailing, 5)
+                    .frame(width: 5, height: 12)
                     .shadow(color: .black, radius: 10)
                 Spacer()
             }
             
         }
-        .frame(width: cardSize, height: 15)
+        .frame(width: cardSize, height: 12)
     }
     
     private var label: some View {
