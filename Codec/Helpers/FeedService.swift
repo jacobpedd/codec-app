@@ -111,7 +111,6 @@ class FeedService {
     }
     
     func updateView(clipId: Int, duration: Int) async -> Bool {
-        return true // TODO: REMOVE WHEN DONE TESTING
         guard let url = URL(string: "\(baseURL)/view/") else {
             print("Invalid URL")
             return false

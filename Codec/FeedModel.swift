@@ -139,6 +139,7 @@ class FeedModel: ObservableObject {
             viewTracker.stopTracking()
         } else {
             audioManager.play()
+            audioManager.setRate(rate: playbackSpeed)
             viewTracker.startTracking(clip: nowPlaying,
                                       currentTimePublisher: $currentTime,
                                       durationPublisher: $duration)
@@ -227,8 +228,9 @@ class FeedModel: ObservableObject {
     }
 
     private func initializePlaybackSpeed() {
-        if playbackSpeed == 0 {
-            playbackSpeed = 1.0
+        self.playbackSpeed = UserDefaults.standard.double(forKey: "playbackSpeed")
+        if self.playbackSpeed == 0 {
+           self.playbackSpeed = 1.0 // Default to 1.0 if not set
         }
     }
 
@@ -259,25 +261,6 @@ extension FeedModel: AudioManagerDelegate {
     
     func durationLoaded(_ duration: TimeInterval) {
         self.duration = duration
-    }
-}
-
-// MARK: - Feed Management
-extension FeedModel {
-    func playNext(at id: Int) {
-        guard let clipIndex = feed.firstIndex(where: { $0.id == id }) else { return }
-        if clipIndex == nowPlayingIndex + 1 { return }
-        let clip = feed.remove(at: clipIndex)
-        if clipIndex < nowPlayingIndex { nowPlayingIndex -= 1 }
-        let newIndex = min(nowPlayingIndex + 1, feed.count)
-        feed.insert(clip, at: newIndex)
-    }
-    
-    func playLast(at id: Int) {
-        guard let clipIndex = feed.firstIndex(where: { $0.id == id }) else { return }
-        let clip = feed.remove(at: clipIndex)
-        if clipIndex < nowPlayingIndex { nowPlayingIndex -= 1 }
-        feed.append(clip)
     }
 }
 
