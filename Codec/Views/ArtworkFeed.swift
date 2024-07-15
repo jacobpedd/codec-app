@@ -95,22 +95,30 @@ extension ArtworkFeed {
     private var backgroundView: some View {
         GeometryReader { geo in
             ZStack {
-                if let image = feedModel.feedArtworks[feedModel.feed[feedModel.nowPlayingIndex].feedItem.feed.id]?.image {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: geo.size.width, height: geo.size.height)
-                        .clipped()
-                        .blur(radius: 50)
-                } else {
-                    Color.gray
+                ForEach(-1...1, id: \.self) { offset in
+                    let index = feedModel.nowPlayingIndex + offset
+                    if index >= 0 && index < feedModel.feed.count,
+                       let image = feedModel.feedArtworks[feedModel.feed[index].feedItem.feed.id]?.image {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .clipped()
+                            .blur(radius: 50)
+                            .opacity(self.imageOpacity(for: offset))
+                            .animation(.easeInOut, value: dragOffset)
+                    }
                 }
                 
                 Rectangle()
                     .fill(.ultraThinMaterial)
             }
         }
-        .animation(.easeInOut(duration: 0.6), value: feedModel.nowPlayingIndex)
+    }
+    
+    private func imageOpacity(for offset: Int) -> Double {
+        // NOTE: This actually seems like it does the right thing
+        return labelOpacity(for: offset)
     }
     
     private func progressiveBlurView(startPoint: UnitPoint, endPoint: UnitPoint) -> some View {
