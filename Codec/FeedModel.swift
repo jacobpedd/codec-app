@@ -344,7 +344,7 @@ extension FeedModel {
     func loadMoreClips() async {
         guard let feedService = feedService, !isLoading else { return }
         isLoading = true
-        if isLoading { return }
+        defer { isLoading = false }
         
         let newClips = await feedService.loadQueue()
         let existingClipIds = Set(feed.map { $0.id })
