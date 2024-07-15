@@ -10,6 +10,7 @@ class FeedModel: ObservableObject {
     private let session: URLSession
     private let viewTracker: ViewTracker
     private let artworkLoader: ArtworkLoader
+    private let debug: Bool
 
     // MARK: - Published properties
     @Published var token: String? {
@@ -62,7 +63,7 @@ class FeedModel: ObservableObject {
     var upNext: [Clip] { Array(feed[(nowPlayingIndex + 1)...]) }
 
     // MARK: - Initialization
-    init() {
+    init(debug: Bool = false) {
         let cache = URLCache(memoryCapacity: 10 * 1024 * 1024, diskCapacity: 100 * 1024 * 1024, diskPath: "imageCache")
         let config = URLSessionConfiguration.default
         config.urlCache = cache
@@ -74,6 +75,7 @@ class FeedModel: ObservableObject {
         self.token = UserDefaults.standard.string(forKey: "token")
         self.username = UserDefaults.standard.string(forKey: "username")
         self.playbackSpeed = UserDefaults.standard.double(forKey: "playbackSpeed")
+        self.debug = debug
         
         setupAudioManager()
         setupNowPlayingInfo()
@@ -223,7 +225,7 @@ class FeedModel: ObservableObject {
             return
         }
         UserDefaults.standard.set(token, forKey: "token")
-        feedService = FeedService(token: token)
+        feedService = FeedService(token: token, debug: self.debug)
         viewTracker.setFeedService(feedService)
     }
 

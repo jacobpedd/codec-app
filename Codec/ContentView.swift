@@ -31,5 +31,5 @@ struct ContentView: View {
 
 #Preview {
     return ContentView()
-        .environmentObject(FeedModel())
+        .environmentObject(FeedModel(debug: true))
 }

@@ -10,9 +10,11 @@ import Foundation
 class FeedService {
     var token: String
     private let baseURL = "https://codec.fly.dev"
+    private let debug: Bool
     
-    init(token: String) {
+    init(token: String, debug: Bool = false) {
         self.token = token
+        self.debug = debug
     }
     
     func loadQueue(excludeClipIds: [Int]? = nil) async -> [Clip] {
@@ -111,6 +113,7 @@ class FeedService {
     }
     
     func updateView(clipId: Int, duration: Int) async -> Bool {
+        if debug { return true }
         guard let url = URL(string: "\(baseURL)/view/") else {
             print("Invalid URL")
             return false
