@@ -346,7 +346,16 @@ extension FeedModel {
         isLoading = true
         defer { isLoading = false }
         
-        let newClips = await feedService.loadQueue()
+        // Collect all clip IDs in history, now playing, and up next
+        let historyClipIds = history.map { $0.id }
+        let nowPlayingClipId = nowPlaying?.id ?? nil
+        let upNextClipIds = upNext.map { $0.id }
+        var excludeClipIds = historyClipIds + upNextClipIds
+        if let clipId = nowPlayingClipId {
+            excludeClipIds += [clipId]
+        }
+        
+        let newClips = await feedService.loadQueue(excludeClipIds: excludeClipIds)
         let existingClipIds = Set(feed.map { $0.id })
         let filteredNewClips = newClips.filter { !existingClipIds.contains($0.id) }
         

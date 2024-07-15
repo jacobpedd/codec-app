@@ -15,8 +15,20 @@ class FeedService {
         self.token = token
     }
     
-    func loadQueue() async -> [Clip] {
-        let queue = await loadGeneric(from: "\(baseURL)/queue/", type: Clip.self)
+    func loadQueue(excludeClipIds: [Int]? = nil) async -> [Clip] {
+        // Base URL
+        var urlString = "\(baseURL)/queue/"
+        
+        // Check if excludeClipIds exists and is not empty
+        if let ids = excludeClipIds, !ids.isEmpty {
+            // Join the ids into a comma-separated string
+            let idsString = ids.map { String($0) }.joined(separator: ",")
+            // Append the query parameter to the URL
+            urlString += "?exclude_clip_ids=\(idsString)"
+        }
+
+        // Call the loadGeneric function with the constructed URL
+        let queue = await loadGeneric(from: urlString, type: Clip.self)
         return queue
     }
 
