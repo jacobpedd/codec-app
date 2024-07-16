@@ -29,33 +29,36 @@ struct LoginView: View {
             SecureField("Password", text: $password)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
             
+            Button(action: {
+                validateAndLogin()
+            }) {
+                ZStack {
+                    if isLoggingIn {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    } else {
+                        Text("Login")
+                    }
+                }
+                .font(.headline)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                .disabled(isLoggingIn)
+            }
+            
             if let errorMessage = errorMessage {
                 Text(errorMessage)
                     .foregroundColor(.red)
                     .font(.footnote)
             }
             
-            Button(action: {
-                validateAndLogin()
-            }) {
-                if isLoggingIn {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                } else {
-                    Text("Login")
-                }
-            }
-            .disabled(isLoggingIn)
-            .font(.headline)
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(10)
-            
             Spacer()
         }
         .padding(.horizontal, 40)
+        .animation(.easeInOut, value: errorMessage)
     }
     
     private func validateAndLogin() {
