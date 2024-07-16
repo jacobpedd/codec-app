@@ -10,12 +10,19 @@ import UIKit
 
 class ArtworkLoader {
     private let session: URLSession
+    private let cache: ArtworkCache
 
     init(session: URLSession = .shared) {
         self.session = session
+        self.cache = ArtworkCache()
     }
 
     func loadFeedArtwork(for feed: Feed, completion: @escaping (Artwork?) -> Void) {
+        if let cachedImage = cache.getCachedArtwork(for: feed.id) {
+            completion(Artwork(image: cachedImage))
+            return
+        }
+
         guard let feedURL = URL(string: feed.url) else {
             print("Invalid feed URL")
             completion(nil)
@@ -41,7 +48,12 @@ class ArtworkLoader {
             
             if parser.parse(), let imageURLString = delegate.channelImageURL, let imageURL = URL(string: imageURLString) {
                 self.downloadImage(from: imageURL) { image in
-                    completion(image.map { Artwork(image: $0) })
+                    if let image = image {
+                        self.cache.cacheArtwork(image, for: feed.id)
+                        completion(Artwork(image: image))
+                    } else {
+                        completion(nil)
+                    }
                 }
             } else {
                 print("No image URL found or failed to parse RSS feed for feed \(feed.id)")
