@@ -152,25 +152,28 @@ class FeedModel: ObservableObject {
     private func updateNowPlaying(to index: Int) {
         guard index >= 0 && index < feed.count else { return }
         
+        // Check if we need to load more clips into the queue
         if (feed.count - index < 5) {
             Task {
                 await loadMoreClips()
             }
         }
         
-        viewTracker.stopTracking()
+        var wasPlaying = false
+        if isPlaying {
+            wasPlaying = true
+            playPause()
+        }
         
         if nowPlaying?.id != feed[index].id {
             nowPlaying = feed[index]
-            audioManager.loadAudio(audioKey: feed[index].audioBucketKey)
             currentTime = 0.0
+            audioManager.loadAudio(audioKey: feed[index].audioBucketKey)
         }
         
-        if isPlaying {
-            viewTracker.startTracking(clip: nowPlaying,
-                                      currentTimePublisher: $currentTime,
-                                      durationPublisher: $duration)
-            audioManager.play()
+        if wasPlaying {
+            // Resume play beacuse we paused it above
+            playPause()
         }
     }
 
@@ -179,7 +182,6 @@ class FeedModel: ObservableObject {
         nowPlayingIndex = index
     }
 
-    // Update these methods to use setNowPlayingIndex
     func next() {
         setNowPlayingIndex(min(feed.count - 1, nowPlayingIndex + 1))
     }
@@ -248,13 +250,7 @@ extension FeedModel: AudioManagerDelegate {
             guard let clipId = nowPlaying?.id else { return }
             await feedService?.updateView(clipId: clipId, duration: 100)
         }
-        if isPlaying {
-            playPause()
-            next()
-            playPause()
-        } else {
-            next()
-        }
+        next()
     }
     
     func currentTimeUpdated(_ currentTime: TimeInterval) {
