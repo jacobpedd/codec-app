@@ -155,7 +155,7 @@ struct NowPlayingSheet: View {
                                         .frame(width: geometry.size.width * feedModel.progress, height: 5)
                                         .foregroundColor(.gray)
                                         .brightness(colorScheme == .light ? 0.0 : 0.3)
-                                        .animation(.linear, value: feedModel.progress)
+                                        .animation(.easeInOut(duration: 0.25), value: feedModel.progress)
                                     
                                     RoundedRectangle(cornerRadius: 10)
                                         .opacity(0.01)

@@ -163,6 +163,7 @@ class FeedModel: ObservableObject {
         if nowPlaying?.id != feed[index].id {
             nowPlaying = feed[index]
             audioManager.loadAudio(audioKey: feed[index].audioBucketKey)
+            currentTime = 0.0
         }
         
         if isPlaying {
@@ -173,7 +174,6 @@ class FeedModel: ObservableObject {
         }
     }
 
-    // Add this new method to set nowPlayingIndex safely
     func setNowPlayingIndex(_ index: Int) {
         guard index >= 0 && index < feed.count else { return }
         nowPlayingIndex = index
