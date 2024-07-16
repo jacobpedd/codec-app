@@ -169,10 +169,15 @@ class FeedModel: ObservableObject {
             nowPlaying = feed[index]
             currentTime = 0.0
             audioManager.loadAudio(audioKey: feed[index].audioBucketKey)
+            
+            // Pre-load next 3 clips and previous 1 clip
+            let preloadRange = max(0, index - 1)...min(feed.count - 1, index + 3)
+            let preloadKeys = preloadRange.map { feed[$0].audioBucketKey }
+            audioManager.preloadAudio(audioKeys: preloadKeys)
         }
         
         if wasPlaying {
-            // Resume play beacuse we paused it above
+            // Resume play because we paused it above
             playPause()
         }
     }

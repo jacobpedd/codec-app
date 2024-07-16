@@ -26,6 +26,10 @@ class AudioManager {
     var playerItem: AVPlayerItem?
     var timeObserverToken: Any?
     
+    private var cachedPlayers: [String: AVPlayer] = [:]
+    private var cacheOrder: [String] = []
+    private let maxCachedPlayers = 5
+    
     init() {
         setupControlCenterControls()
         configureAudioSession()
@@ -41,13 +45,23 @@ class AudioManager {
         }
     }
 
-
     func loadAudio(audioKey: String) {
         cleanUp()
         
-        guard let url = URL(string: "https://bucket.trycodec.com/\(audioKey)") else { return }
-        let asset = AVAsset(url: url)
-        playerItem = AVPlayerItem(asset: asset)
+        if let cachedPlayer = cachedPlayers[audioKey] {
+            audioPlayer = cachedPlayer
+            playerItem = cachedPlayer.currentItem
+            updateCacheOrder(audioKey)
+        } else {
+            guard let url = URL(string: "https://bucket.trycodec.com/\(audioKey)") else { return }
+            let asset = AVAsset(url: url)
+            playerItem = AVPlayerItem(asset: asset)
+            audioPlayer = AVPlayer(playerItem: playerItem)
+            
+            // Cache the new player
+            cachePlayer(audioKey: audioKey, player: audioPlayer!)
+        }
+        
         guard let playerItem = playerItem else { return }
         
         NotificationCenter.default.addObserver(
@@ -67,6 +81,38 @@ class AudioManager {
         
         setupProgressListener()
         loadDuration()
+    }
+
+    func preloadAudio(audioKeys: [String]) {
+        for audioKey in audioKeys {
+            if cachedPlayers[audioKey] == nil {
+                guard let url = URL(string: "https://bucket.trycodec.com/\(audioKey)") else { continue }
+                let asset = AVAsset(url: url)
+                let playerItem = AVPlayerItem(asset: asset)
+                let player = AVPlayer(playerItem: playerItem)
+                
+                cachePlayer(audioKey: audioKey, player: player)
+            } else {
+                updateCacheOrder(audioKey)
+            }
+        }
+    }
+
+    private func cachePlayer(audioKey: String, player: AVPlayer) {
+        cachedPlayers[audioKey] = player
+        cacheOrder.append(audioKey)
+        
+        if cachedPlayers.count > maxCachedPlayers {
+            let oldestKey = cacheOrder.removeFirst()
+            cachedPlayers.removeValue(forKey: oldestKey)
+        }
+    }
+
+    private func updateCacheOrder(_ audioKey: String) {
+        if let index = cacheOrder.firstIndex(of: audioKey) {
+            cacheOrder.remove(at: index)
+        }
+        cacheOrder.append(audioKey)
     }
 
     func play() {
