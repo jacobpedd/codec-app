@@ -12,7 +12,7 @@ struct ArtworkFeed: View {
             backgroundView
             
             ForEach(feedModel.feed.indices, id: \.self) { index in
-                let offset = index - feedModel.nowPlayingIndex
+                let offset = index - feedModel.nowPlayingIndex!
                 if abs(offset) <= 2 {
                     ClipCardView(index: index, cardSize: cardSize, labelOpacity: labelOpacity(for: offset))
                         .matchedGeometryEffect(id: feedModel.feed[index].id, in: animation)
@@ -96,7 +96,7 @@ extension ArtworkFeed {
         GeometryReader { geo in
             ZStack {
                 ForEach(-1...1, id: \.self) { offset in
-                    let index = feedModel.nowPlayingIndex + offset
+                    let index = feedModel.nowPlayingIndex! + offset
                     if index >= 0 && index < feedModel.feed.count,
                        let image = feedModel.feedArtworks[feedModel.feed[index].feedItem.feed.id]?.image {
                         Image(uiImage: image)

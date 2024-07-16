@@ -96,9 +96,9 @@ struct ClipCardView: View {
     }
     
     private func handleTap() {
-        if index == feedModel.nowPlayingIndex - 1 {
+        if index == feedModel.nowPlayingIndex! - 1 {
             feedModel.previous()
-        } else if index == feedModel.nowPlayingIndex + 1 {
+        } else if index == feedModel.nowPlayingIndex! + 1 {
             feedModel.next()
         }
     }

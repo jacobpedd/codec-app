@@ -20,11 +20,15 @@ class FeedModel: ObservableObject {
     @Published private(set) var feed = [Clip]()
     @Published var interestedTopics: [Topic] = []
     @Published var followedFeeds: [UserFeedFollow] = []
-    @Published var nowPlayingIndex: Int = 0 {
-            didSet {
-                updateNowPlaying(to: nowPlayingIndex)
+    @Published var nowPlayingIndex: Int? {
+        didSet {
+            if let index = nowPlayingIndex {
+                updateNowPlaying(to: index)
+            } else {
+                nowPlaying = nil
             }
         }
+    }
     @Published private(set) var feedArtworks = [Int: Artwork]() {
         didSet {
             guard let feedId = nowPlaying?.feedItem.feed.id else { return }
@@ -59,8 +63,14 @@ class FeedModel: ObservableObject {
         }
     }
     var progress: Double { currentTime / duration }
-    var history: [Clip] { Array(feed[..<nowPlayingIndex]) }
-    var upNext: [Clip] { Array(feed[(nowPlayingIndex + 1)...]) }
+    var history: [Clip] {
+        guard let index = nowPlayingIndex else { return [] }
+        return Array(feed[..<index])
+    }
+    var upNext: [Clip] {
+        guard let index = nowPlayingIndex else { return feed }
+        return index + 1 < feed.count ? Array(feed[(index + 1)...]) : []
+    }
 
     // MARK: - Initialization
     init(debug: Bool = false) {
@@ -120,19 +130,44 @@ class FeedModel: ObservableObject {
     }
 
     func logout() {
+        // Stop any ongoing audio playback
         audioManager.pause()
-        UserDefaults.standard.removeObject(forKey: "userEmail")
+        viewTracker.stopTracking()
+        
+        // Clear user defaults
+        UserDefaults.standard.removeObject(forKey: "token")
+        UserDefaults.standard.removeObject(forKey: "username")
         UserDefaults.standard.removeObject(forKey: "playbackSpeed")
-        token = nil
-        username = nil
-        nowPlayingIndex = 0
-        feed.removeAll()
-        nowPlaying = nil
-        feedArtworks.removeAll()
-        currentTime = 0.0
-        duration = 0.0
-        playbackSpeed = 1.0
-        feedService = nil
+        
+        // Reset all properties on the main thread
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {
+                print("Self is nil in async block")
+                return
+            }
+            
+            self.token = nil
+            self.username = nil
+            self.feedArtworks.removeAll()
+            self.nowPlaying = nil
+            self.currentTime = 0.0
+            self.duration = 0.0
+            self.playbackSpeed = 1.0
+            self.isPlaying = false
+            self.isSearching = false
+            self.isLoading = false
+            
+            self.interestedTopics.removeAll()
+            self.followedFeeds.removeAll()
+            self.searchResults.removeAll()
+            self.feedService = nil
+            
+            // UI crashes if these aren't delayed
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                self.nowPlayingIndex = nil
+                self.feed.removeAll()
+            }
+        }
     }
 
     func playPause() {
@@ -150,7 +185,10 @@ class FeedModel: ObservableObject {
     }
 
     private func updateNowPlaying(to index: Int) {
-        guard index >= 0 && index < feed.count else { return }
+        guard index >= 0 && index < feed.count else {
+            nowPlaying = nil
+            return
+        }
         
         // Check if we need to load more clips into the queue
         if (feed.count - index < 5) {
@@ -182,32 +220,18 @@ class FeedModel: ObservableObject {
         }
     }
 
-    func setNowPlayingIndex(_ index: Int) {
-        guard index >= 0 && index < feed.count else { return }
+    func setNowPlayingIndex(_ index: Int?) {
         nowPlayingIndex = index
     }
 
     func next() {
+        guard let nowPlayingIndex, !feed.isEmpty else { return }
         setNowPlayingIndex(min(feed.count - 1, nowPlayingIndex + 1))
     }
 
     func previous() {
+        guard let nowPlayingIndex, !feed.isEmpty else { return }
         setNowPlayingIndex(max(0, nowPlayingIndex - 1))
-    }
-
-    // Update this method to use setNowPlayingIndex
-    func deleteClip(id: Int) {
-        if let clipIndex = feed.firstIndex(where: { $0.id == id }) {
-            viewTracker.stopTracking()
-            Task {
-                await feedService?.updateView(clipId: id, duration: 0)
-            }
-            feed.remove(at: clipIndex)
-            
-            if nowPlayingIndex >= clipIndex {
-                setNowPlayingIndex(max(0, nowPlayingIndex - 1))
-            }
-        }
     }
 
     func seekToTime(seconds: Double) {

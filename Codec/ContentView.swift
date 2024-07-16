@@ -12,7 +12,7 @@ struct ContentView: View {
     @State private var fetchingNewTopics: Bool = false
     
     var body: some View {
-        if feedModel.token != nil {
+        if feedModel.token != nil && feedModel.username != nil {
             if feedModel.nowPlaying != nil {
                 FeedView()
             } else {
