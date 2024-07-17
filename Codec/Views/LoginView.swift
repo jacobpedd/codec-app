@@ -78,7 +78,7 @@ struct LoginView: View {
             Spacer()
         }
         .padding(.horizontal, 40)
-        .animation(.easeInOut, value: errorMessage)
+        .animation(.easeInOut, value: hasAccount)
     }
     
     private func submit() {
