@@ -137,8 +137,8 @@ struct LoginView: View {
                 
                 do {
                     let result = try JSONDecoder().decode(AuthResponse.self, from: data)
-                    feedModel.token = result.token
                     feedModel.username = result.username
+                    feedModel.token = result.token
                 } catch {
                     errorMessage = "Invalid response from server"
                 }
@@ -215,8 +215,8 @@ struct LoginView: View {
                 
                 do {
                     let result = try JSONDecoder().decode(AuthResponse.self, from: data)
-                    feedModel.token = result.token
                     feedModel.username = result.username
+                    feedModel.token = result.token
                 } catch {
                     if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
                         errorMessage = errorResponse.error

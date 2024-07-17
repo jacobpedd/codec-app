@@ -252,10 +252,12 @@ class FeedModel: ObservableObject {
     private func updateFeedService() {
         guard let token = token else {
             UserDefaults.standard.removeObject(forKey: "token")
+            UserDefaults.standard.removeObject(forKey: "username")
             feedService = nil
             return
         }
         UserDefaults.standard.set(token, forKey: "token")
+        UserDefaults.standard.set(username, forKey: "username")
         feedService = FeedService(token: token, debug: self.debug)
         viewTracker.setFeedService(feedService)
     }
