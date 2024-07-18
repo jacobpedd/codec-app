@@ -4,6 +4,7 @@ struct ArtworkFeed: View {
     @EnvironmentObject private var feedModel: FeedModel
     @State private var dragOffset: CGFloat = 0
     @Namespace private var animation
+    @State private var isPlayerShowing: Bool = false
     
     private let cardSize: CGFloat = UIScreen.main.bounds.width * 0.8
     
@@ -14,7 +15,7 @@ struct ArtworkFeed: View {
             ForEach(feedModel.feed.indices, id: \.self) { index in
                 let offset = index - feedModel.nowPlayingIndex!
                 if abs(offset) <= 2 {
-                    ClipCardView(index: index, cardSize: cardSize, labelOpacity: labelOpacity(for: offset))
+                    ClipCardView(isPlayerShowing: $isPlayerShowing, index: index, cardSize: cardSize, labelOpacity: labelOpacity(for: offset))
                         .matchedGeometryEffect(id: feedModel.feed[index].id, in: animation)
                         .scaleEffect(scale(for: offset))
                         .offset(y: self.yOffset(for: offset))
@@ -51,6 +52,13 @@ struct ArtworkFeed: View {
                 }
         )
         .edgesIgnoringSafeArea(.all)
+        .sheet(isPresented: $isPlayerShowing) {
+            NowPlayingSheet()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(25)
+                .presentationBackground(.clear)
+        }
     }
     
     private func yOffset(for offset: Int) -> Double {

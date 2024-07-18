@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ClipCardView: View {
     @EnvironmentObject private var feedModel: FeedModel
+    @Binding var isPlayerShowing: Bool
     let index: Int
     let cardSize: CGFloat
     let labelOpacity: CGFloat
@@ -96,7 +97,9 @@ struct ClipCardView: View {
     }
     
     private func handleTap() {
-        if index == feedModel.nowPlayingIndex! - 1 {
+        if index == feedModel.nowPlayingIndex {
+            isPlayerShowing = true
+        } else if index == feedModel.nowPlayingIndex! - 1 {
             feedModel.previous()
         } else if index == feedModel.nowPlayingIndex! + 1 {
             feedModel.next()
