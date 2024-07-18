@@ -266,8 +266,8 @@ class FeedModel: ObservableObject {
 // MARK: - AudioManagerDelegate
 extension FeedModel: AudioManagerDelegate {
     func playbackDidEnd() {
+        guard let clipId = nowPlaying?.id else { return }
         Task {
-            guard let clipId = nowPlaying?.id else { return }
             await feedService?.updateView(clipId: clipId, duration: 100)
         }
         next()
