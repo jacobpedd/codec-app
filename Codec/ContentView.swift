@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-
 struct ContentView: View {
     @EnvironmentObject private var feedModel: FeedModel
+    @State private var showOnboarding = false
     
     var body: some View {
         Group {
@@ -30,8 +30,13 @@ struct ContentView: View {
                 LoginView()
             }
         }
-        .sheet(isPresented: $feedModel.needsOnboarding) {
-            OnboardingSheet()
+        .onChange(of: feedModel.needsOnboarding) {
+            if feedModel.needsOnboarding {
+                showOnboarding = true
+            }
+        }
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingSheet(isPresented: $showOnboarding)
                 .interactiveDismissDisabled()
         }
     }

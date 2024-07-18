@@ -9,6 +9,7 @@ import SwiftUI
 
 struct OnboardingSheet: View {
     @EnvironmentObject private var feedModel: FeedModel
+    @Binding var isPresented: Bool
     @State private var searchText = ""
     @State private var isLoading = false
     @State private var isEditMode: EditMode = .active
@@ -85,6 +86,7 @@ struct OnboardingSheet: View {
             isLoading = true
             await feedModel.load()
             isLoading = false
+            isPresented = false
         }
     }
 }
