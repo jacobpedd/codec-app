@@ -52,6 +52,7 @@ class FeedModel: ObservableObject {
     @Published var searchResults: [Feed] = []
     @Published var isSearching = false
     @Published private(set) var isLoading = false
+    @Published var needsOnboarding = false
 
     // MARK: - Computed properties
     var nowPlaying: Clip? {
@@ -99,32 +100,20 @@ class FeedModel: ObservableObject {
         
         async let historyTask = feedService.loadHistory()
         async let queueTask = feedService.loadQueue()
+        async let followedTask = feedService.loadFollowedShows()
         
-        let (history, queue) = await (historyTask, queueTask)
+        let (history, queue, followedFeeds) = await (historyTask, queueTask, followedTask)
         
         let historyClips = history.map { $0.clip }
         print("Loaded \((historyClips + queue).count) clip")
         
         DispatchQueue.main.async {
+            self.needsOnboarding = queue.isEmpty
             self.feed = historyClips + queue
+            self.followedFeeds = followedFeeds
             self.nowPlayingIndex = max(0, history.count - 1)
             let uniqueFeeds = Set(self.feed.map { $0.feedItem.feed })
             self.loadArtworkForFeeds(Array(uniqueFeeds))
-            self.loadArtworkForFeeds(self.followedFeeds.map { $0.feed })
-        }
-    }
-
-    func loadProfileData() async {
-        guard let feedService = feedService else { return }
-        async let topicsTask = feedService.loadTopics()
-        async let followedShowsTask = feedService.loadFollowedShows()
-        
-        let (topics, followedShows) = await (topicsTask, followedShowsTask)
-        print("Loaded profile with \(topics.count) topics and \(followedShows.count) followed shows")
-        
-        DispatchQueue.main.async {
-            self.interestedTopics = topics
-            self.followedFeeds = followedShows
             self.loadArtworkForFeeds(self.followedFeeds.map { $0.feed })
         }
     }
@@ -337,8 +326,9 @@ extension FeedModel {
     func followShow(feed: Feed) async -> Bool {
         guard let feedService = feedService else { return false }
         let success = await feedService.followShow(feedId: feed.id)
+        print("Success following show \(success)")
         if success {
-            await loadProfileData()
+            await load()
         }
         return success
     }

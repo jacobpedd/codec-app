@@ -28,12 +28,12 @@ class FeedService {
             // Append the query parameter to the URL
             urlString += "?exclude_clip_ids=\(idsString)"
         }
-
+        
         // Call the loadGeneric function with the constructed URL
         let queue = await loadGeneric(from: urlString, type: Clip.self)
         return queue
     }
-
+    
     func loadHistory() async -> [UserClipView] {
         let history = await loadGeneric(from: "\(baseURL)/history/", type: UserClipView.self)
         return history.reversed()
@@ -118,21 +118,21 @@ class FeedService {
             print("Invalid URL")
             return false
         }
-
+        
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
+        
         let body: [String: Any] = [
             "clip": clipId,
             "duration": duration
         ]
-
+        
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
             let (_, response) = try await URLSession.shared.data(for: request)
-
+            
             if let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) {
                 print("Successfully updated view progress for clip \(clipId): \(duration)%")
                 return true
@@ -290,7 +290,7 @@ class FeedService {
         request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let body: [String: Any] = ["feed_id": feedId]
+        let body: [String: Any] = ["feed_id": feedId, "is_interested": true]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         
         do {

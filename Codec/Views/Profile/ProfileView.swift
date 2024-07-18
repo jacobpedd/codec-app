@@ -65,7 +65,7 @@ struct ProfileView: View {
         if feedModel.followedFeeds.isEmpty || feedModel.interestedTopics.isEmpty {
             isLoading = true
             Task {
-                await feedModel.loadProfileData()
+                await feedModel.load()
                 isLoading = false
             }
         }

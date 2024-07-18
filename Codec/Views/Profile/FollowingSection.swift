@@ -16,18 +16,22 @@ struct FollowingSection: View {
     var body: some View {
         Section(header: Text("Following")) {
             ForEach(feedModel.followedFeeds) { follows in
-                HStack {
+                HStack() {
                     if let image = feedModel.feedArtworks[follows.feed.id] {
                         Image(uiImage: image.image)
                             .resizable()
                             .scaledToFill()
-                            .frame(width: 40, height: 40)
+                            .frame(width: 60, height: 60)
                             .cornerRadius(5)
                     } else {
-                        Rectangle()
-                            .fill(Color.gray)
-                            .frame(width: 40, height: 40)
-                            .cornerRadius(5)
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 5)
+                                .fill(.ultraThickMaterial)
+                                .frame(width: 60, height: 60)
+                            
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                        }
                     }
                     Text(follows.feed.name)
                         .lineLimit(1)

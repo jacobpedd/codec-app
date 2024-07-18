@@ -45,10 +45,9 @@ struct SearchView: View {
                     }) {
                         HStack {
                             Text(show.name)
-                                .foregroundStyle(.foreground)
+                                .lineLimit(2)
                             Spacer()
                             Image(systemName: "plus")
-                                .foregroundColor(.blue)
                         }
                     }
                 }
@@ -68,10 +67,7 @@ struct SearchView: View {
     private func followShow(_ show: Feed) {
         Task {
             let success = await feedModel.followShow(feed: show)
-            if success {
-                await feedModel.loadProfileData()
-                presentationMode.wrappedValue.dismiss()
-            }
+            presentationMode.wrappedValue.dismiss()
         }
     }
 

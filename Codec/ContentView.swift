@@ -7,24 +7,33 @@
 
 import SwiftUI
 
+
 struct ContentView: View {
     @EnvironmentObject private var feedModel: FeedModel
     @State private var fetchingNewTopics: Bool = false
     
     var body: some View {
-        if feedModel.token != nil && feedModel.username != nil {
-            if feedModel.nowPlaying != nil {
-                FeedView()
-            } else {
-                ProgressView()
-                    .task {
-                        await feedModel.load()
+        Group {
+            if feedModel.token != nil && feedModel.username != nil {
+                if feedModel.nowPlaying != nil {
+                    FeedView()
+                } else {
+                    VStack {
+                        ProgressView()
+                            .task {
+                                await feedModel.load()
+                            }
+                        Text("Loading your feed...")
+                            .padding(.top)
                     }
-                Text("Loading your feed...")
-                    .padding(.top)
+                }
+            } else {
+                LoginView()
             }
-        } else {
-            LoginView()
+        }
+        .sheet(isPresented: $feedModel.needsOnboarding) {
+            OnboardingSheet()
+                .interactiveDismissDisabled()
         }
     }
 }
