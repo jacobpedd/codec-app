@@ -73,12 +73,10 @@ struct OnboardingSheet: View {
     }
     
     private func loadProfileData() {
-        if feedModel.followedFeeds.isEmpty || feedModel.interestedTopics.isEmpty {
-            isLoading = true
-            Task {
-                await feedModel.load()
-                isLoading = false
-            }
+        isLoading = true
+        Task {
+            await feedModel.load()
+            isLoading = false
         }
     }
     

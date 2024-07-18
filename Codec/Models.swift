@@ -79,21 +79,6 @@ struct Feed: Codable, Identifiable, Hashable {
     }
 }
 
-struct Topic: Codable, Identifiable, Hashable {
-    let id: Int
-    let text: String
-    var isInterested: Bool
-    
-    enum CodingKeys: String, CodingKey {
-        case id, text
-        case isInterested = "is_interested"
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-}
-
 struct UserFeedFollow: Codable, Identifiable, Hashable {
     let id: Int
     let user: Int

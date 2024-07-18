@@ -18,7 +18,6 @@ class FeedModel: ObservableObject {
     }
     @Published var username: String?
     @Published private(set) var feed = [Clip]()
-    @Published var interestedTopics: [Topic] = []
     @Published var followedFeeds: [UserFeedFollow] = []
     @Published var nowPlayingIndex: Int? {
         didSet {
@@ -146,7 +145,6 @@ class FeedModel: ObservableObject {
             self.isSearching = false
             self.isLoading = false
             
-            self.interestedTopics.removeAll()
             self.followedFeeds.removeAll()
             self.searchResults.removeAll()
             self.feedService = nil
@@ -279,35 +277,6 @@ extension FeedModel: AudioManagerDelegate {
     
     func durationLoaded(_ duration: TimeInterval) {
         self.duration = duration
-    }
-}
-
-// MARK: - Topic Management
-extension FeedModel {
-    func setInterested(for topicId: Int, isInterested: Bool) async {
-        if let index = interestedTopics.firstIndex(where: { $0.id == topicId }) {
-            interestedTopics[index].isInterested = isInterested
-            await feedService?.setTopicInterest(topicId: topicId, isInterested: isInterested)
-        }
-    }
-    
-    func addNewTopic(text: String, isInterested: Bool) async {
-        let newTopic = Topic(id: UUID().hashValue, text: text, isInterested: isInterested)
-        interestedTopics.append(newTopic)
-        let success = await feedService?.addTopic(text: text, isInterested: isInterested) ?? false
-        if !success {
-            interestedTopics.removeAll { $0.id == newTopic.id }
-        }
-    }
-    
-    func deleteTopic(id: Int) async {
-        guard let feedService = feedService else { return }
-        let success = await feedService.deleteTopic(id: id)
-        if success {
-            DispatchQueue.main.async {
-                self.interestedTopics.removeAll { $0.id == id }
-            }
-        }
     }
 }
 

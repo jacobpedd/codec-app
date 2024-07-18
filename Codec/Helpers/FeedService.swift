@@ -39,11 +39,6 @@ class FeedService {
         return history.reversed()
     }
     
-    func loadTopics() async -> [Topic] {
-        let topics = await loadGeneric(from: "\(baseURL)/topics/", type: Topic.self)
-        return topics
-    }
-    
     func loadFollowedShows() async -> [UserFeedFollow] {
         let follows = await loadGeneric(from: "\(baseURL)/following/", type: UserFeedFollow.self)
         return follows
@@ -142,97 +137,6 @@ class FeedService {
             }
         } catch {
             print("Error updating view progress for clip \(clipId): \(error)")
-            return false
-        }
-    }
-    
-    func setTopicInterest(topicId: Int, isInterested: Bool) async -> Bool {
-        guard let url = URL(string: "\(baseURL)/topics/\(topicId)/") else {
-            print("Invalid URL")
-            return false
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "PATCH"
-        request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let body: [String: Any] = ["is_interested": isInterested]
-        
-        do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
-            
-            let (_, response) = try await URLSession.shared.data(for: request)
-            
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-                print("Successfully updated interest for topic \(topicId)")
-                return true
-            } else {
-                print("Failed to update interest for topic \(topicId): \(response)")
-                return false
-            }
-        } catch {
-            print("Error updating interest for topic \(topicId): \(error)")
-            return false
-        }
-    }
-    
-    func addTopic(text: String, isInterested: Bool) async -> Bool {
-        guard let url = URL(string: "\(baseURL)/topics/") else {
-            print("Invalid URL")
-            return false
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let body: [String: Any] = [
-            "text": text,
-            "is_interested": isInterested
-        ]
-        
-        do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
-            
-            let (_, response) = try await URLSession.shared.data(for: request)
-            
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 201 {
-                print("Successfully added new topic")
-                return true
-            } else {
-                print("Failed to add new topic: \(response)")
-                return false
-            }
-        } catch {
-            print("Error adding new topic: \(error)")
-            return false
-        }
-    }
-    
-    func deleteTopic(id: Int) async -> Bool {
-        guard let url = URL(string: "\(baseURL)/topics/\(id)/") else {
-            print("Invalid URL")
-            return false
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "DELETE"
-        request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
-        
-        do {
-            let (_, response) = try await URLSession.shared.data(for: request)
-            
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 204 {
-                print("Successfully deleted topic")
-                return true
-            } else {
-                print("Failed to delete topic: \(response)")
-                return false
-            }
-        } catch {
-            print("Error deleting topic: \(error)")
             return false
         }
     }

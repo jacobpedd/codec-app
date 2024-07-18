@@ -10,7 +10,6 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var feedModel: FeedModel
-    @State private var fetchingNewTopics: Bool = false
     
     var body: some View {
         Group {
