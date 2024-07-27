@@ -108,7 +108,10 @@ class FeedService {
     }
     
     func updateView(clipId: Int, duration: Int) async -> Bool {
-        if debug { return true }
+        if debug {
+            print("Viewed \(clipId): \(duration)%")
+            return true
+        }
         guard let url = URL(string: "\(baseURL)/view/") else {
             print("Invalid URL")
             return false

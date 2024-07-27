@@ -21,20 +21,48 @@ class ViewTracker {
     private var currentTime: Double = 0
     private var duration: Double = 1  // Default to 1 to avoid division by zero
     
-    func startTracking(clip: Clip?, currentTimePublisher: Published<TimeInterval>.Publisher, durationPublisher: Published<Double>.Publisher) {
-        stopTracking()
+    private var currentTimePublisher: Published<TimeInterval>.Publisher?
+    private var durationPublisher: Published<Double>.Publisher?
+    
+    func setCurrentClip(_ clip: Clip?, currentTimePublisher: Published<TimeInterval>.Publisher, durationPublisher: Published<Double>.Publisher) {
+        // If the clip has changed, submit a zero view for the new clip
+        if let newClip = clip, newClip.id != currentClip?.id {
+            submitZeroView(for: newClip)
+        }
+        
         currentClip = clip
+        self.currentTimePublisher = currentTimePublisher
+        self.durationPublisher = durationPublisher
+        
+        // Reset tracking-related variables
+        lastReportedProgress = 0
+        currentTime = 0
+        duration = 1
+        
+        print("Current clip set to: \(clip?.name ?? "nil")")
+    }
+    
+    func startTracking() {
+        stopTracking() // Ensure we're not already tracking
+        
+        guard currentClip != nil else {
+            print("Cannot start tracking: No current clip set")
+            return
+        }
+        
         lastUpdateTime = Date()
         
+        print("Start tracking")
+        
         // Subscribe to currentTime and duration publishers
-        currentTimePublisher
+        currentTimePublisher?
             .sink { [weak self] time in
                 self?.currentTime = time
                 self?.checkAndUpdateProgress()
             }
             .store(in: &cancellables)
         
-        durationPublisher
+        durationPublisher?
             .sink { [weak self] duration in
                 self?.duration = max(duration, 1)  // Ensure duration is never zero
                 self?.checkAndUpdateProgress()
@@ -52,6 +80,7 @@ class ViewTracker {
         timer = nil
         cancellables.removeAll()
         updateProgress()
+        print("Stopped tracking")
     }
 
     private func checkAndUpdateProgress() {
@@ -78,5 +107,11 @@ class ViewTracker {
 
     func setFeedService(_ service: FeedService?) {
         self.feedService = service
+    }
+    
+    private func submitZeroView(for clip: Clip) {
+        Task {
+            await feedService?.updateView(clipId: clip.id, duration: 0)
+        }
     }
 }

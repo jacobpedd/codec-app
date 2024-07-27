@@ -164,9 +164,7 @@ class FeedModel: ObservableObject {
         } else {
             audioManager.play()
             audioManager.setRate(rate: playbackSpeed)
-            viewTracker.startTracking(clip: nowPlaying,
-                                      currentTimePublisher: $currentTime,
-                                      durationPublisher: $duration)
+            viewTracker.startTracking()
         }
         isPlaying.toggle()
     }
@@ -194,6 +192,8 @@ class FeedModel: ObservableObject {
             nowPlaying = feed[index]
             currentTime = 0.0
             audioManager.loadAudio(audioKey: feed[index].audioBucketKey)
+            viewTracker.setCurrentClip(feed[index], currentTimePublisher: $currentTime, durationPublisher: $duration)
+
             
             // Pre-load next 3 clips and previous 1 clip
             let preloadRange = max(0, index - 1)...min(feed.count - 1, index + 3)
