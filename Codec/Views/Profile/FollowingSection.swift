@@ -12,10 +12,21 @@ struct FollowingSection: View {
     @Binding var isEditMode: EditMode
     @State private var unfollowingId: Int?
     @Binding var showSearchView: Bool
+    @Binding var isAddingToBlocked: Bool
 
     var body: some View {
-        Section(header: Text("Following")) {
-            ForEach(feedModel.followedFeeds) { follows in
+        Group {
+            followSection(isInterested: true)
+            followSection(isInterested: false)
+        }
+    }
+    
+    private func followSection(isInterested: Bool) -> some View {
+        let feeds = feedModel.followedFeeds.filter { $0.isInterested == isInterested }
+        let title = isInterested ? "Following" : "Blocked"
+        
+        return Section(header: Text(title)) {
+            ForEach(feeds) { follows in
                 HStack() {
                     if let image = feedModel.feedArtworks[follows.feed.id] {
                         Image(uiImage: image.image)
@@ -37,12 +48,15 @@ struct FollowingSection: View {
                         .lineLimit(1)
                     Spacer()
                     if isEditMode == .active {
-                        unfollowButton(for: follows)
+                        actionButton(for: follows, isInterested: isInterested)
                     }
                 }
             }
-            if feedModel.followedFeeds.isEmpty || isEditMode == .active {
-                Button(action: { showSearchView = true }) {
+            if feeds.isEmpty || isEditMode == .active {
+                Button(action: {
+                    isAddingToBlocked = !isInterested
+                    showSearchView = true
+                }) {
                     HStack {
                         Text("Add Show")
                         Spacer()
@@ -55,7 +69,7 @@ struct FollowingSection: View {
         }
     }
     
-    private func unfollowButton(for follows: UserFeedFollow) -> some View {
+    private func actionButton(for follows: UserFeedFollow, isInterested: Bool) -> some View {
         Button(action: {
             unfollowingId = follows.id
             Task {

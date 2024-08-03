@@ -31,7 +31,7 @@ class ArtworkLoader {
         
         let task = session.dataTask(with: feedURL) { data, response, error in
             if let error = error {
-                print("Error fetching RSS feed: \(error.localizedDescription)")
+                print("Error fetching RSS feed \(feedURL): \(error.localizedDescription)")
                 completion(nil)
                 return
             }

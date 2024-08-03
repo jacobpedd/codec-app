@@ -185,7 +185,7 @@ class FeedService {
         }
     }
     
-    func followShow(feedId: Int) async -> Bool {
+    func followShow(feedId: Int, isInterested: Bool = true) async -> Bool {
         guard let url = URL(string: "\(baseURL)/following/") else {
             print("Invalid URL")
             return false
@@ -197,7 +197,7 @@ class FeedService {
         request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let body: [String: Any] = ["feed_id": feedId, "is_interested": true]
+        let body: [String: Any] = ["feed_id": feedId, "is_interested": isInterested]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         
         do {

@@ -31,6 +31,7 @@ struct SearchView: View {
     @EnvironmentObject private var feedModel: FeedModel
     @State private var searchText = ""
     @Environment(\.presentationMode) var presentationMode
+    @Binding var isAddingToBlocked: Bool
     private let debounceManager = DebounceManager()
 
     var body: some View {
@@ -41,7 +42,7 @@ struct SearchView: View {
             } else {
                 ForEach(feedModel.searchResults) { show in
                     Button(action: {
-                        followShow(show)
+                        followOrBlockShow(show)
                     }) {
                         HStack {
                             Text(show.name)
@@ -53,7 +54,7 @@ struct SearchView: View {
                 }
             }
         }
-        .navigationTitle("Add Show")
+        .navigationTitle(isAddingToBlocked ? "Block Show" : "Add Show")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search for shows")
         .onChange(of: searchText) {
@@ -64,9 +65,9 @@ struct SearchView: View {
         }
     }
 
-    private func followShow(_ show: Feed) {
+    private func followOrBlockShow(_ show: Feed) {
         Task {
-            let success = await feedModel.followShow(feed: show)
+            let success = await feedModel.followShow(feed: show, isInterested: !isAddingToBlocked)
             presentationMode.wrappedValue.dismiss()
         }
     }
@@ -84,15 +85,3 @@ struct SearchView: View {
         }
     }
 }
-
-struct SearchView_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationView {
-            VStack {
-                SearchView()
-                    .environmentObject(FeedModel())
-            }
-        }
-    }
-}
-

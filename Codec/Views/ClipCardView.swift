@@ -10,6 +10,7 @@ import SwiftUI
 struct ClipCardView: View {
     @EnvironmentObject private var feedModel: FeedModel
     @Binding var isPlayerShowing: Bool
+    @State private var dragOffset: CGFloat = 0.0
     let index: Int
     let cardSize: CGFloat
     let labelOpacity: CGFloat

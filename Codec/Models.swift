@@ -84,10 +84,12 @@ struct UserFeedFollow: Codable, Identifiable, Hashable {
     let user: Int
     let feed: Feed
     let createdAt: Date
+    let isInterested: Bool
 
     enum CodingKeys: String, CodingKey {
         case id, user, feed
         case createdAt = "created_at"
+        case isInterested = "is_interested"
     }
 }
 
@@ -95,9 +97,10 @@ struct UserClipView: Codable, Identifiable {
     let id: Int
     let clip: Clip
     let createdAt: Date
+    let duration: Int
 
     enum CodingKeys: String, CodingKey {
-        case id, clip
+        case id, clip, duration
         case createdAt = "created_at"
     }
 }

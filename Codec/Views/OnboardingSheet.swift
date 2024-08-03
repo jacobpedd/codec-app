@@ -14,6 +14,8 @@ struct OnboardingSheet: View {
     @State private var isLoading = false
     @State private var isEditMode: EditMode = .active
     @State private var showingSearchView = false
+    @State private var isAddingToBlocked = false
+    @State private var followedFeedsCount = 0
     
     private var canContinue: Bool {
         !feedModel.needsOnboarding && !isLoading
@@ -29,7 +31,7 @@ struct OnboardingSheet: View {
                     .padding(.bottom)
                 
                 List {
-                    FollowingSection(isEditMode: $isEditMode, showSearchView: $showingSearchView)
+                    FollowingSection(isEditMode: $isEditMode, showSearchView: $showingSearchView, isAddingToBlocked: $isAddingToBlocked)
                         .disabled(isLoading)
                 }
                 .listStyle(InsetGroupedListStyle())
@@ -67,13 +69,26 @@ struct OnboardingSheet: View {
         .onAppear(perform: loadProfileData)
         .sheet(isPresented: $showingSearchView) {
             NavigationStack {
-                SearchView()
+                SearchView(isAddingToBlocked: $isAddingToBlocked)
             }
         }
         .disabled(isLoading)
+        .onChange(of: feedModel.followedFeeds) {
+            if feedModel.followedFeeds.count >= 3 && !isLoading {
+                loadFeedWhenReady()
+            }
+        }
     }
     
     private func loadProfileData() {
+        isLoading = true
+        Task {
+            await feedModel.load()
+            isLoading = false
+        }
+    }
+    
+    private func loadFeedWhenReady() {
         isLoading = true
         Task {
             await feedModel.load()

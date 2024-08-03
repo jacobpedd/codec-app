@@ -12,11 +12,12 @@ struct ProfileView: View {
     @State private var isLoading = false
     @State private var isEditMode: EditMode = .inactive
     @State private var showingSearchView = false
+    @State private var isAddingToBlocked = false
 
     var body: some View {
         if let username = feedModel.username {
             List {
-                FollowingSection(isEditMode: $isEditMode, showSearchView: showSearchViewBinding)
+                FollowingSection(isEditMode: $isEditMode, showSearchView: showSearchViewBinding, isAddingToBlocked: $isAddingToBlocked)
                 ActionSection()
             }
             .listStyle(InsetGroupedListStyle())
@@ -40,7 +41,7 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showingSearchView) {
                 NavigationView {
-                    SearchView()
+                    SearchView(isAddingToBlocked: $isAddingToBlocked)
                 }
             }
         } else {

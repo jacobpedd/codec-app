@@ -292,12 +292,16 @@ extension FeedModel {
         searchResults = allResults.filter { !followedFeedIds.contains($0.id) }
     }
 
-    func followShow(feed: Feed) async -> Bool {
+    func followShow(feed: Feed, isInterested: Bool = true) async -> Bool {
         guard let feedService = feedService else { return false }
-        let success = await feedService.followShow(feedId: feed.id)
+        let success = await feedService.followShow(feedId: feed.id, isInterested: isInterested)
         print("Success following show \(success)")
         if success {
-            await load()
+            let followedFeeds = await feedService.loadFollowedShows()
+            DispatchQueue.main.async {
+                self.followedFeeds = followedFeeds
+                self.loadArtworkForFeeds(self.followedFeeds.map { $0.feed })
+            }
         }
         return success
     }
