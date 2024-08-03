@@ -53,7 +53,11 @@ class AudioManager {
             playerItem = cachedPlayer.currentItem
             updateCacheOrder(audioKey)
         } else {
-            guard let url = URL(string: "https://bucket.trycodec.com/\(audioKey)") else { return }
+            guard let encodedAudioKey = audioKey.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+                  let url = URL(string: "https://bucket.trycodec.com/\(encodedAudioKey)") else {
+                print("Error: Invalid URL")
+                return
+            }
             let asset = AVAsset(url: url)
             playerItem = AVPlayerItem(asset: asset)
             audioPlayer = AVPlayer(playerItem: playerItem)
@@ -86,7 +90,11 @@ class AudioManager {
     func preloadAudio(audioKeys: [String]) {
         for audioKey in audioKeys {
             if cachedPlayers[audioKey] == nil {
-                guard let url = URL(string: "https://bucket.trycodec.com/\(audioKey)") else { continue }
+                guard let encodedAudioKey = audioKey.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+                      let url = URL(string: "https://bucket.trycodec.com/\(encodedAudioKey)") else {
+                    print("Error: Invalid URL for key: \(audioKey)")
+                    continue
+                }
                 let asset = AVAsset(url: url)
                 let playerItem = AVPlayerItem(asset: asset)
                 let player = AVPlayer(playerItem: playerItem)
@@ -144,7 +152,7 @@ class AudioManager {
                     }
                 }
             } catch {
-                print("Error loading duration")
+                print("Error loading duration: \(error)")
             }
         }
     }
