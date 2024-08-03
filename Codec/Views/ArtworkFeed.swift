@@ -7,6 +7,7 @@ struct ArtworkFeed: View {
     @State private var isConfirmed: Bool = false
     @Namespace private var animation
     @State private var isPlayerShowing: Bool = false
+    @State private var isAnimating: Bool = false  // New state variable
     
     private let cardSize: CGFloat = UIScreen.main.bounds.width * 0.8
     private let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
@@ -38,51 +39,75 @@ struct ArtworkFeed: View {
             VStack {
                 progressiveBlurView(startPoint: .top, endPoint: .bottom)
                     .frame(height: 150)
-                    .onTapGesture { feedModel.previous() }
+                    .onTapGesture {
+                        if !isAnimating {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                isAnimating = true
+                                feedModel.previous()
+                            }
+                        }
+                    }
                 Spacer()
                 progressiveBlurView(startPoint: .bottom, endPoint: .top)
                     .frame(height: 150)
-                    .onTapGesture { feedModel.next() }
+                    .onTapGesture {
+                        if !isAnimating {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                isAnimating = true
+                                feedModel.next()
+                            }
+                        }
+                    }
             }
             .zIndex(2000)
         }
         .animation(.easeInOut, value: feedModel.nowPlayingIndex)
+        .onChange(of: feedModel.nowPlayingIndex) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                isAnimating = false
+            }
+        }
         .gesture(
             DragGesture()
                 .onChanged { value in
-                    if dragDirection == .none {
-                        dragDirection = abs(value.translation.width) > abs(value.translation.height) ? .horizontal : .vertical
-                    }
-                    
-                    switch dragDirection {
-                    case .horizontal:
-                        dragOffset = max(min(value.translation.width, cardSize), -cardSize)
-                        checkConfirmationPoint()
-                    case .vertical:
-                        dragOffset = max(min(value.translation.height, cardSize), -cardSize)
-                    case .none:
-                        break
+                    if !isAnimating {
+                        if dragDirection == .none {
+                            dragDirection = abs(value.translation.width) > abs(value.translation.height) ? .horizontal : .vertical
+                        }
+                        
+                        switch dragDirection {
+                        case .horizontal:
+                            dragOffset = max(min(value.translation.width, cardSize), -cardSize)
+                            checkConfirmationPoint()
+                        case .vertical:
+                            dragOffset = max(min(value.translation.height, cardSize), -cardSize)
+                        case .none:
+                            break
+                        }
                     }
                 }
                 .onEnded { value in
-                    withAnimation(.easeInOut) {
-                        if dragDirection == .vertical {
-                            if dragOffset > cardSize / 2 {
-                                feedModel.previous()
-                            } else if dragOffset < -cardSize / 2 {
-                                feedModel.next()
-                            }
-                        } else if dragDirection == .horizontal && isConfirmed {
-                            let isInterested = dragOffset > 0 ? true : false
-                            if let nowPlaying = feedModel.nowPlaying {
-                                Task {
-                                    await feedModel.followShow(feed: nowPlaying.feedItem.feed, isInterested: isInterested)
+                    if !isAnimating {
+                        withAnimation(.easeInOut) {
+                            isAnimating = true
+                            if dragDirection == .vertical {
+                                if dragOffset > cardSize / 2 {
+                                    feedModel.previous()
+                                } else if dragOffset < -cardSize / 2 {
+                                    feedModel.next()
+                                }
+                            } else if dragDirection == .horizontal && isConfirmed {
+                                let isInterested = dragOffset > 0 ? true : false
+                                if let nowPlaying = feedModel.nowPlaying {
+                                    Task {
+                                        await feedModel.followShow(feed: nowPlaying.feedItem.feed, isInterested: isInterested)
+                                    }
                                 }
                             }
+                            dragOffset = 0
+                            dragDirection = .none
+                            isConfirmed = false
                         }
-                        dragOffset = 0
-                        dragDirection = .none
-                        isConfirmed = false
                     }
                 }
         )
