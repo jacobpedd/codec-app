@@ -61,11 +61,13 @@ struct Feed: Codable, Identifiable, Hashable {
     let name: String
     let description: String
     let url: String
+    let artworkBucketKey: String
     let createdAt: Date
     let updatedAt: Date
 
     enum CodingKeys: String, CodingKey {
         case id, name, description, url
+        case artworkBucketKey = "artwork_bucket_key"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
