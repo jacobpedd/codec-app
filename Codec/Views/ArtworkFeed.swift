@@ -2,12 +2,12 @@ import SwiftUI
 
 struct ArtworkFeed: View {
     @EnvironmentObject private var feedModel: FeedModel
-    @State private var dragOffset: CGFloat = 0
+    @State private var dragOffset: CGPoint = .zero
     @State private var dragDirection: DragDirection = .none
     @State private var isConfirmed: Bool = false
     @Namespace private var animation
     @State private var isPlayerShowing: Bool = false
-    @State private var isAnimating: Bool = false  // New state variable
+    @State private var isAnimating: Bool = false
     
     private let cardSize: CGFloat = UIScreen.main.bounds.width * 0.8
     private let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
@@ -24,11 +24,16 @@ struct ArtworkFeed: View {
                 let offset = index - feedModel.nowPlayingIndex!
                 if abs(offset) <= 2 {
                     ZStack {
-                        ClipCardView(isPlayerShowing: $isPlayerShowing, index: index, cardSize: cardSize, labelOpacity: labelOpacity(for: offset))
+                        ClipCardView(index: index, cardSize: cardSize, labelOpacity: labelOpacity(for: offset))
                             .matchedGeometryEffect(id: feedModel.feed[index].id, in: animation)
                             .scaleEffect(scale(for: offset))
                             .offset(x: horizontalOffset(for: offset), y: verticalOffset(for: offset))
                             .zIndex(Double(1000 - abs(offset)))
+                            .onTapGesture {
+                                if offset == 0 && !isAnimating {
+                                    isPlayerShowing = true
+                                }
+                            }
                         if offset == 0 {
                             directionFeedbackView
                         }
@@ -40,74 +45,69 @@ struct ArtworkFeed: View {
                 progressiveBlurView(startPoint: .top, endPoint: .bottom)
                     .frame(height: 150)
                     .onTapGesture {
-                        if !isAnimating {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                isAnimating = true
-                                feedModel.previous()
-                            }
+                        animateWithTracking {
+                            feedModel.previous()
                         }
                     }
                 Spacer()
                 progressiveBlurView(startPoint: .bottom, endPoint: .top)
                     .frame(height: 150)
                     .onTapGesture {
-                        if !isAnimating {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                isAnimating = true
-                                feedModel.next()
-                            }
+                        animateWithTracking {
+                            feedModel.next()
                         }
                     }
             }
             .zIndex(2000)
         }
         .animation(.easeInOut, value: feedModel.nowPlayingIndex)
-        .onChange(of: feedModel.nowPlayingIndex) {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                isAnimating = false
-            }
-        }
         .gesture(
             DragGesture()
                 .onChanged { value in
-                    if !isAnimating {
-                        if dragDirection == .none {
-                            dragDirection = abs(value.translation.width) > abs(value.translation.height) ? .horizontal : .vertical
-                        }
-                        
-                        switch dragDirection {
-                        case .horizontal:
-                            dragOffset = max(min(value.translation.width, cardSize), -cardSize)
-                            checkConfirmationPoint()
-                        case .vertical:
-                            dragOffset = max(min(value.translation.height, cardSize), -cardSize)
-                        case .none:
-                            break
-                        }
+                    let translation = value.translation
+                    
+                    if abs(translation.width) < 1 && abs(translation.height) < 1 {
+                        dragDirection = .none
                     }
+                    
+                    if dragDirection == .none {
+                        dragDirection = abs(translation.width) > abs(translation.height) ? .horizontal : .vertical
+                    }
+                    
+                    guard !isAnimating else { return }
+                    
+                    switch dragDirection {
+                    case .horizontal:
+                        dragOffset = CGPoint(x: max(min(translation.width, cardSize), -cardSize), y: 0)
+                    case .vertical:
+                        dragOffset = CGPoint(x: 0, y: max(min(translation.height, cardSize), -cardSize))
+                    case .none:
+                        break
+                    }
+                    
+                    checkConfirmationPoint()
                 }
                 .onEnded { value in
-                    if !isAnimating {
-                        withAnimation(.easeInOut) {
-                            isAnimating = true
-                            if dragDirection == .vertical {
-                                if dragOffset > cardSize / 2 {
-                                    feedModel.previous()
-                                } else if dragOffset < -cardSize / 2 {
-                                    feedModel.next()
-                                }
-                            } else if dragDirection == .horizontal && isConfirmed {
-                                let isInterested = dragOffset > 0 ? true : false
-                                if let nowPlaying = feedModel.nowPlaying {
-                                    Task {
-                                        await feedModel.followShow(feed: nowPlaying.feedItem.feed, isInterested: isInterested)
-                                    }
+                    guard !isAnimating else { return }
+                    
+                    animateWithTracking {
+                        if dragDirection == .vertical {
+                            if dragOffset.y > cardSize / 2 {
+                                feedModel.previous()
+                            } else if dragOffset.y < -cardSize / 2 {
+                                feedModel.next()
+                            }
+                        } else if dragDirection == .horizontal && isConfirmed {
+                            let isInterested = dragOffset.x > 0
+                            if let nowPlaying = feedModel.nowPlaying {
+                                Task {
+                                    await feedModel.followShow(feed: nowPlaying.feedItem.feed, isInterested: isInterested)
                                 }
                             }
-                            dragOffset = 0
-                            dragDirection = .none
-                            isConfirmed = false
                         }
+                        dragOffset = .zero
+                        dragDirection = .none
+                        isConfirmed = false
                     }
                 }
         )
@@ -121,20 +121,33 @@ struct ArtworkFeed: View {
         }
     }
     
+    private func animateWithTracking(_ action: @escaping () -> Void) {
+        if !isAnimating {
+            let duration = 0.3
+            withAnimation(.easeInOut(duration: duration)) {
+                isAnimating = true
+                action()
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
+                isAnimating = false
+            }
+        }
+    }
+    
     private func verticalOffset(for offset: Int) -> Double {
         guard dragDirection == .vertical else { return CGFloat(offset) * cardSize }
         let baseOffset = CGFloat(offset) * cardSize
-        return baseOffset + dragOffset
+        return baseOffset + dragOffset.y
     }
     
     private func horizontalOffset(for offset: Int) -> Double {
         guard dragDirection == .horizontal && offset == 0 else { return 0 }
-        return dragOffset
+        return dragOffset.x
     }
     
     private func checkConfirmationPoint() {
         let wasConfirmed = isConfirmed
-        isConfirmed = abs(dragOffset) >= cardSize / 2
+        isConfirmed = abs(dragDirection == .horizontal ? dragOffset.x : dragOffset.y) >= cardSize / 2
         
         if isConfirmed && !wasConfirmed {
             impactFeedback.impactOccurred()
@@ -144,11 +157,11 @@ struct ArtworkFeed: View {
     private func scale(for offset: Int) -> Double {
         let maxScale = 1.0
         let minScale = 0.8
-        if dragOffset == 0 || dragDirection == .horizontal {
+        if dragOffset == .zero || dragDirection == .horizontal {
             return offset == 0 ? 1.0 : 0.8
         } else {
-            let effect = abs(dragOffset / cardSize)
-            if (((offset == -1 && dragOffset > 0) || (offset == 1 && dragOffset < 0))  && dragDirection == .vertical) {
+            let effect = abs(dragOffset.y / cardSize)
+            if (((offset == -1 && dragOffset.y > 0) || (offset == 1 && dragOffset.y < 0))  && dragDirection == .vertical) {
                 return minScale + (maxScale - minScale) * effect
             } else if offset == 0 {
                 return maxScale - (maxScale - minScale) * effect
@@ -159,11 +172,11 @@ struct ArtworkFeed: View {
     }
     
     private func labelOpacity(for offset: Int) -> Double {
-        if dragOffset == 0 || dragDirection == .horizontal {
+        if dragOffset == .zero || dragDirection == .horizontal {
             return offset == 0 ? 1.0 : 0.0
         } else {
-            let effect = abs(dragOffset / cardSize)
-            if (offset == -1 && dragOffset > 0) || (offset == 1 && dragOffset < 0) {
+            let effect = abs(dragOffset.y / cardSize)
+            if (offset == -1 && dragOffset.y > 0) || (offset == 1 && dragOffset.y < 0) {
                 return 1.0 * effect
             } else if offset == 0 {
                 return 1.0 - 1.0 * effect
@@ -200,7 +213,6 @@ extension ArtworkFeed {
     }
     
     private func imageOpacity(for offset: Int) -> Double {
-        // NOTE: This actually seems like it does the right thing
         return labelOpacity(for: offset)
     }
     
@@ -224,9 +236,9 @@ extension ArtworkFeed {
                 .fill(feedbackColor)
             HStack(alignment: .center) {
                 if dragDirection == .horizontal {
-                    if dragOffset < 0 {
+                    if dragOffset.x < 0 {
                         Spacer()
-                        VStack(alignment: dragOffset > 0 ? .leading : .trailing, spacing: 10) {
+                        VStack(alignment: dragOffset.x > 0 ? .leading : .trailing, spacing: 10) {
                             Image(systemName: "hand.raised")
                                 .foregroundColor(.white)
                                 .font(.system(size: 32))
@@ -234,11 +246,11 @@ extension ArtworkFeed {
                                 .font(.headline)
                                 .foregroundColor(.white)
                                 .lineLimit(1)
-                                .multilineTextAlignment(dragOffset > 0 ? .leading : .trailing)
+                                .multilineTextAlignment(dragOffset.x > 0 ? .leading : .trailing)
                         }
                         .padding()
-                    } else if dragOffset > 0 {
-                        VStack(alignment: dragOffset > 0 ? .leading : .trailing, spacing: 10) {
+                    } else if dragOffset.x > 0 {
+                        VStack(alignment: dragOffset.x > 0 ? .leading : .trailing, spacing: 10) {
                             Image(systemName: "plus")
                                 .foregroundColor(.white)
                                 .font(.system(size: 32))
@@ -246,7 +258,7 @@ extension ArtworkFeed {
                                 .font(.headline)
                                 .foregroundColor(.white)
                                 .lineLimit(1)
-                                .multilineTextAlignment(dragOffset > 0 ? .leading : .trailing)
+                                .multilineTextAlignment(dragOffset.x > 0 ? .leading : .trailing)
                         }
                         .padding()
                         Spacer()
@@ -261,11 +273,11 @@ extension ArtworkFeed {
     
     private var feedbackColor: Color {
         guard dragDirection == .horizontal else { return .clear }
-        return dragOffset > 0 ? .green : .red
+        return dragOffset.x > 0 ? .green : .red
     }
     
     private var feedbackOpacity: Double {
         guard dragDirection == .horizontal else { return 0 }
-        return isConfirmed ? 1.0 : min(abs(dragOffset) / (cardSize / 2), 0.8)
+        return isConfirmed ? 1.0 : min(abs(dragOffset.x) / (cardSize / 2), 0.8)
     }
 }

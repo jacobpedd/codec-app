@@ -9,7 +9,6 @@ import SwiftUI
 
 struct ClipCardView: View {
     @EnvironmentObject private var feedModel: FeedModel
-    @Binding var isPlayerShowing: Bool
     @State private var dragOffset: CGFloat = 0.0
     let index: Int
     let cardSize: CGFloat
@@ -52,9 +51,6 @@ struct ClipCardView: View {
         .frame(width: cardSize, height: cardSize)
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .animation(.easeInOut(duration: 0.3), value: index == feedModel.nowPlayingIndex)
-        .onTapGesture {
-            handleTap()
-        }
     }
     
     private var progressBar: some View {
@@ -94,16 +90,6 @@ struct ClipCardView: View {
             }
             .shadow(color: .clear, radius: 0)
             Spacer()
-        }
-    }
-    
-    private func handleTap() {
-        if index == feedModel.nowPlayingIndex {
-            isPlayerShowing = true
-        } else if index == feedModel.nowPlayingIndex! - 1 {
-            feedModel.previous()
-        } else if index == feedModel.nowPlayingIndex! + 1 {
-            feedModel.next()
         }
     }
 }
