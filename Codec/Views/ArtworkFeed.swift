@@ -43,15 +43,14 @@ struct ArtworkFeed: View {
             
             VStack {
                 progressiveBlurView(startPoint: .top, endPoint: .bottom)
-                    .frame(height: 150)
                     .onTapGesture {
                         animateWithTracking {
                             feedModel.previous()
                         }
                     }
                 Spacer()
+                    .frame(height: cardSize)
                 progressiveBlurView(startPoint: .bottom, endPoint: .top)
-                    .frame(height: 150)
                     .onTapGesture {
                         animateWithTracking {
                             feedModel.next()
@@ -218,10 +217,10 @@ extension ArtworkFeed {
     
     private func progressiveBlurView(startPoint: UnitPoint, endPoint: UnitPoint) -> some View {
         Rectangle()
-            .fill(.ultraThinMaterial)
+            .fill(.thinMaterial)
             .mask(
                 LinearGradient(
-                    gradient: Gradient(colors: [Color.black, Color.black.opacity(0)]),
+                    gradient: Gradient(colors: [Color.black, Color.black.opacity(0), Color.black.opacity(0)]),
                     startPoint: startPoint,
                     endPoint: endPoint
                 )
