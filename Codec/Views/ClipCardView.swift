@@ -80,16 +80,39 @@ struct ClipCardView: View {
     private var label: some View {
         HStack {
             VStack (alignment: .leading) {
+                Text("\(clip.feedItem.postedAt.formattedAsDayAndMonth()) • \(clip.feedItem.feed.name)")
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .font(.caption)
                 Text(clip.name)
                     .foregroundColor(.primary)
                     .fontWeight(.bold)
-                    .lineLimit(2)
-                Text(clip.feedItem.feed.name)
-                    .foregroundColor(.primary)
-                    .lineLimit(1)
+                    .lineLimit(3)
             }
             .shadow(color: .clear, radius: 0)
             Spacer()
+        }
+    }
+}
+
+extension Date {
+    func formattedAsDayAndMonth() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E MMM d"
+        let dayString = formatter.string(from: self)
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateFormat = "d"
+        let day = Int(dayFormatter.string(from: self))!
+        
+        switch day % 10 {
+        case 1:
+            return dayString + (day == 11 ? "th" : "st")
+        case 2:
+            return dayString + (day == 12 ? "th" : "nd")
+        case 3:
+            return dayString + (day == 13 ? "th" : "rd")
+        default:
+            return dayString + "th"
         }
     }
 }
