@@ -67,7 +67,7 @@ struct SearchView: View {
 
     private func followOrBlockShow(_ show: Feed) {
         Task {
-            let success = await feedModel.followShow(feed: show, isInterested: !isAddingToBlocked)
+            _ = await feedModel.followShow(feed: show, isInterested: !isAddingToBlocked)
             presentationMode.wrappedValue.dismiss()
         }
     }
