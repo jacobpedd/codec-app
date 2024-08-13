@@ -1,0 +1,38 @@
+# Xcode
+.DS_Store
+build/
+DerivedData/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+*.xcuserstate
+*.xcscmblueprint
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+
+# Xcode 11+
+# .xcresult bundles (Xcode 11) are stored in DerivedData
+*.xcresult
+
+# Swift Package Manager
+# Add this line if you are using Swift Package Manager
+Packages/
+Package.pins
+Package.resolved
+.build/
+
+# Sentry
+.sentryclirc
+
+# macOS
+*.swp
+*.lock
+*.lock/*
