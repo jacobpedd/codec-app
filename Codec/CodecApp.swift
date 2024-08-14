@@ -14,8 +14,13 @@ struct CodecApp: App {
     init() {
         SentrySDK.start { options in
             options.dsn = "https://6b83b70f653851a2662bb1b9e74c0534@o4507612284059648.ingest.us.sentry.io/4507767057678336"
-            options.debug = true // Enabled debug when first installing is always helpful
 
+            #if DEBUG
+            options.environment = "development"
+            #else
+            options.environment = "production"
+            #endif
+            
             // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
             // We recommend adjusting this value in production.
             options.tracesSampleRate = 1.0
