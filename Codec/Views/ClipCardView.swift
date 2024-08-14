@@ -10,9 +10,12 @@ import SwiftUI
 struct ClipCardView: View {
     @EnvironmentObject private var feedModel: FeedModel
     @State private var dragOffset: CGFloat = 0.0
+    @State private var isPlayingClip: Bool = false
     let index: Int
-    let cardSize: CGFloat
+    let cardSize: CGSize
     let labelOpacity: CGFloat
+    
+    var labelHeight: CGFloat { return cardSize.height - cardSize.width }
     
     var clip: Clip {
         return feedModel.feed[index]
@@ -22,24 +25,25 @@ struct ClipCardView: View {
         return feedModel.feedArtworks[clip.feedItem.feed.id]
     }
     
+    var gradientColor: Color {
+        return artwork?.shadowColor ?? .black
+    }
+    
     var body: some View {
-        VStack {
+        ZStack() {
             if let image = artwork?.image {
-                ZStack {
+                VStack {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
-                    VStack(spacing: 0) {
-                        Spacer()
-                        progressBar
-                        label
-                            .padding()
-                            .background(.thinMaterial)
-                            .shadow(color: .gray, radius: 10)
-                        }
-                    .opacity(labelOpacity)
+                        .frame(width: cardSize.width, height: cardSize.width)
+                    Spacer()
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 20))
+                VStack {
+                    Spacer()
+                        .frame(height: cardSize.width * 0.6)
+                    labelOverlay
+                }
             } else {
                 ZStack {
                     Rectangle()
@@ -48,49 +52,111 @@ struct ClipCardView: View {
                 }
             }
         }
-        .frame(width: cardSize, height: cardSize)
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .animation(.easeInOut(duration: 0.3), value: index == feedModel.nowPlayingIndex)
+        .frame(width: cardSize.width, height: cardSize.height)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .onChange(of: feedModel.isPlaying) { updatePlayingState() }
+        .onChange(of: feedModel.nowPlayingIndex) { updatePlayingState() }
     }
     
-    private var progressBar: some View {
-        GeometryReader { geometry in
-            HStack(spacing: 0) {
-                VStack(spacing: 0) {
-                    Spacer()
-                    Rectangle()
-                        .fill(.thinMaterial)
-                        .brightness(0.5)
-                        .frame(width: geometry.size.width * feedModel.progress, height: 5)
-                        .shadow(color: .black, radius: 10)
-                }
-                
-                Rectangle()
-                    .fill(.thinMaterial)
-                    .brightness(0.8)
-                    .frame(width: 5, height: 12)
-                    .shadow(color: .black, radius: 10)
-                Spacer()
-            }
-            
+    private func updatePlayingState() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            isPlayingClip = feedModel.isPlaying && feedModel.nowPlayingIndex == index
         }
-        .frame(width: cardSize, height: 12)
+    }
+    
+    
+    private var labelOverlay: some View {
+        LinearGradient(
+            gradient: Gradient(stops: [
+                .init(color: gradientColor.opacity(0), location: 0),
+                .init(color: gradientColor.opacity(0.2), location: 0.1),
+                .init(color: gradientColor.opacity(0.5), location: 0.2),
+                .init(color: gradientColor.opacity(0.9), location: 0.35),
+                .init(color: gradientColor, location: 1)
+            ]),
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .overlay(label)
     }
     
     private var label: some View {
-        HStack {
-            VStack (alignment: .leading) {
-                Text("\(clip.feedItem.postedAt.formattedAsDayAndMonth()) • \(clip.feedItem.feed.name)")
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .font(.caption)
-                Text(clip.name)
-                    .foregroundColor(.primary)
-                    .fontWeight(.bold)
-                    .lineLimit(3)
-            }
-            .shadow(color: .clear, radius: 0)
+        VStack(alignment: .leading, spacing: 0) {
             Spacer()
+            Text("\(clip.feedItem.postedAt.formattedAsDayAndMonth()) • \(clip.feedItem.feed.name)")
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .font(.caption)
+            Spacer()
+                .frame(height: 2)
+            Text(clip.name)
+                .foregroundColor(.white)
+                .fontWeight(.bold)
+                .lineLimit(2)
+            Spacer()
+                .frame(height: 10)
+            playButton
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    private var playButton: some View {
+        Button(action: {
+            feedModel.playPause()
+        }) {
+            HStack(spacing: 5) {
+                ZStack {
+                    Image(systemName: "play.fill")
+                        .opacity(isPlayingClip ? 0 : 1)
+                    Image(systemName: "waveform")
+                        .opacity(isPlayingClip ? 1 : 0)
+                        .symbolEffect(.variableColor.iterative.dimInactiveLayers.nonReversing, isActive: isPlayingClip)
+                }
+                .frame(width: 16, height: 16)
+                .font(Font.system(size: 16))
+                .foregroundColor(gradientColor)
+                
+                if isPlayingClip {
+                    ZStack {
+                        GeometryReader { geometry in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .frame(height: 5)
+                                    .foregroundColor(gradientColor)
+                                    .opacity(0.3)
+                                
+                                RoundedRectangle(cornerRadius: 10)
+                                    .frame(width: geometry.size.width * feedModel.progress, height: 5)
+                                    .foregroundColor(gradientColor)
+                            }
+                        }
+                    }
+                    .frame(width: 50, height: 5)
+                    .animation(.easeInOut(duration: 0.3), value: isPlayingClip)
+                }
+                
+                Text(formattedDuration(isPlayingClip ? feedModel.duration - feedModel.currentTime : feedModel.duration))
+                    .font(.system(size: 14))
+                    .fontWeight(.bold)
+                    .foregroundColor(gradientColor)
+            }
+            .padding(.vertical, 5)
+            .padding(.horizontal, 10)
+            .background(Color.white)
+            .cornerRadius(15)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    private func formattedDuration(_ totalSeconds: Double) -> String {
+        let minutes = Int(totalSeconds) / 60
+        let seconds = Int(totalSeconds) % 60
+        
+        if minutes > 0 {
+            return "\(minutes)m \(seconds)s"
+        } else {
+            return "\(seconds)s"
         }
     }
 }
@@ -130,4 +196,3 @@ extension Date {
         }
     }
 }
-
