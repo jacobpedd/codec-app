@@ -97,22 +97,36 @@ struct ClipCardView: View {
 
 extension Date {
     func formattedAsDayAndMonth() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E MMM d"
-        let dayString = formatter.string(from: self)
-        let dayFormatter = DateFormatter()
-        dayFormatter.dateFormat = "d"
-        let day = Int(dayFormatter.string(from: self))!
-        
-        switch day % 10 {
-        case 1:
-            return dayString + (day == 11 ? "th" : "st")
-        case 2:
-            return dayString + (day == 12 ? "th" : "nd")
-        case 3:
-            return dayString + (day == 13 ? "th" : "rd")
-        default:
-            return dayString + "th"
+        let calendar = Calendar.current
+        let now = Date()
+
+        if calendar.isDateInToday(self) {
+            return "Today"
+        } else if calendar.isDateInYesterday(self) {
+            return "Yesterday"
+        } else {
+            let components = calendar.dateComponents([.day], from: self, to: now)
+            if let daysAgo = components.day, daysAgo < 10 {
+                return "\(daysAgo) days ago"
+            } else {
+                let formatter = DateFormatter()
+                formatter.dateFormat = "E MMM d"
+                let dayString = formatter.string(from: self)
+                let dayFormatter = DateFormatter()
+                dayFormatter.dateFormat = "d"
+                let day = Int(dayFormatter.string(from: self))!
+                
+                switch day % 10 {
+                case 1:
+                    return dayString + (day == 11 ? "th" : "st")
+                case 2:
+                    return dayString + (day == 12 ? "th" : "nd")
+                case 3:
+                    return dayString + (day == 13 ? "th" : "rd")
+                default:
+                    return dayString + "th"
+                }
+            }
         }
     }
 }
