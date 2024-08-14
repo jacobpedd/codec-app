@@ -63,7 +63,12 @@ class FeedModel: ObservableObject {
             NowPlayingHelper.setArtwork(artwork)
         }
     }
-    var progress: Double { currentTime / duration }
+    var progress: Double {
+        if duration == 0 {
+            return 1
+        }
+        return currentTime / duration
+    }
     var history: [Clip] {
         guard let index = nowPlayingIndex else { return [] }
         return Array(feed[..<index])

@@ -86,6 +86,58 @@ extension UIImage {
     }
 }
 
+extension UIImage {
+    func findAverageNonWhiteColor() -> UIColor? {
+        guard let cgImage = cgImage else { return nil }
+        
+        let size = CGSize(width: 40, height: 40)
+        let width = Int(size.width)
+        let height = Int(size.height)
+        
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo: UInt32 = CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue
+        
+        guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4, space: colorSpace, bitmapInfo: bitmapInfo) else { return nil }
+        
+        context.draw(cgImage, in: CGRect(origin: .zero, size: size))
+        
+        guard let pixelBuffer = context.data else { return nil }
+        let pointer = pixelBuffer.bindMemory(to: UInt32.self, capacity: width * height)
+        
+        var totalRed = 0
+        var totalBlue = 0
+        var totalGreen = 0
+        var totalPixels = 0
+        
+        for x in 0 ..< width {
+            for y in 0 ..< height {
+                let pixel = pointer[(y * width) + x]
+                let r = red(for: pixel)
+                let g = green(for: pixel)
+                let b = blue(for: pixel)
+                
+                // Skip white-ish pixels
+                if r > 200 && g > 200 && b > 200 {
+                    continue
+                }
+                
+                totalRed += Int(r)
+                totalBlue += Int(b)
+                totalGreen += Int(g)
+                totalPixels += 1
+            }
+        }
+        
+        guard totalPixels > 0 else { return UIColor.gray } // Fallback if all pixels were white
+        
+        let averageRed = CGFloat(totalRed) / CGFloat(totalPixels)
+        let averageGreen = CGFloat(totalGreen) / CGFloat(totalPixels)
+        let averageBlue = CGFloat(totalBlue) / CGFloat(totalPixels)
+        
+        return UIColor(red: averageRed / 255.0, green: averageGreen / 255.0, blue: averageBlue / 255.0, alpha: 1.0)
+    }
+}
+
 extension Color {
     static func darkerColor(for color: UIColor, amount: CGFloat = 0.2) -> Color {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
@@ -103,7 +155,8 @@ struct Artwork {
     
     init(image: UIImage) {
         self.image = image
-        self.bgColor = Color(image.findAverageColor() ?? UIColor.gray)
-        self.shadowColor = Color.darkerColor(for: UIColor(bgColor)).opacity(0.3)
+        let averageColor = image.findAverageNonWhiteColor() ?? UIColor.gray
+        self.bgColor = Color(averageColor)
+        self.shadowColor = Color.darkerColor(for: averageColor)
     }
 }

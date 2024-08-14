@@ -106,7 +106,7 @@ struct NowPlayingSheet: View {
                                     .frame(width: geometry.size.height, height: geometry.size.height)
                                     .clipped()
                                     .cornerRadius(15)
-                                    .shadow(color: image.shadowColor, radius: 20)
+                                    .shadow(color: image.shadowColor.opacity(0.6), radius: 20)
                             } else {
                                     Rectangle()
                                         .fill(Color.gray)

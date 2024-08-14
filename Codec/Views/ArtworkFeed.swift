@@ -9,7 +9,9 @@ struct ArtworkFeed: View {
     @State private var isPlayerShowing: Bool = false
     @State private var isAnimating: Bool = false
     
-    private let cardSize: CGFloat = UIScreen.main.bounds.width * 0.8
+    private let cardWidth: CGFloat = UIScreen.main.bounds.width * 0.9
+    private var cardHeight: CGFloat { cardWidth + 25 }
+    private var cardSize: CGSize { CGSize(width: cardWidth, height: cardHeight) }
     private let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
     
     enum DragDirection {
@@ -42,6 +44,7 @@ struct ArtworkFeed: View {
             }
             
             VStack {
+                // TODO: Make sure these line up with the new card size
                 progressiveBlurView(startPoint: .top, endPoint: .bottom)
                     .onTapGesture {
                         animateWithTracking {
@@ -49,7 +52,7 @@ struct ArtworkFeed: View {
                         }
                     }
                 Spacer()
-                    .frame(height: cardSize)
+                    .frame(height: cardSize.height)
                 progressiveBlurView(startPoint: .bottom, endPoint: .top)
                     .onTapGesture {
                         animateWithTracking {
@@ -77,9 +80,9 @@ struct ArtworkFeed: View {
                     
                     switch dragDirection {
                     case .horizontal:
-                        dragOffset = CGPoint(x: max(min(translation.width, cardSize), -cardSize), y: 0)
+                        dragOffset = CGPoint(x: max(min(translation.width, cardSize.width), -cardSize.width), y: 0)
                     case .vertical:
-                        dragOffset = CGPoint(x: 0, y: max(min(translation.height, cardSize), -cardSize))
+                        dragOffset = CGPoint(x: 0, y: max(min(translation.height, cardSize.height), -cardSize.height))
                     case .none:
                         break
                     }
@@ -91,9 +94,9 @@ struct ArtworkFeed: View {
                     
                     animateWithTracking {
                         if dragDirection == .vertical {
-                            if dragOffset.y > cardSize / 2 {
+                            if dragOffset.y > cardSize.height / 2 {
                                 feedModel.previous()
-                            } else if dragOffset.y < -cardSize / 2 {
+                            } else if dragOffset.y < -cardSize.height / 2 {
                                 feedModel.next()
                             }
                         } else if dragDirection == .horizontal && isConfirmed {
@@ -134,8 +137,8 @@ struct ArtworkFeed: View {
     }
     
     private func verticalOffset(for offset: Int) -> Double {
-        guard dragDirection == .vertical else { return CGFloat(offset) * cardSize }
-        let baseOffset = CGFloat(offset) * cardSize
+        guard dragDirection == .vertical else { return CGFloat(offset) * cardSize.height }
+        let baseOffset = CGFloat(offset) * cardSize.height
         return baseOffset + dragOffset.y
     }
     
@@ -146,7 +149,7 @@ struct ArtworkFeed: View {
     
     private func checkConfirmationPoint() {
         let wasConfirmed = isConfirmed
-        isConfirmed = abs(dragDirection == .horizontal ? dragOffset.x : dragOffset.y) >= cardSize / 2
+        isConfirmed = abs(dragDirection == .horizontal ? dragOffset.x : dragOffset.y) >= cardSize.width / 2
         
         if isConfirmed && !wasConfirmed {
             impactFeedback.impactOccurred()
@@ -159,7 +162,7 @@ struct ArtworkFeed: View {
         if dragOffset == .zero || dragDirection == .horizontal {
             return offset == 0 ? 1.0 : 0.8
         } else {
-            let effect = abs(dragOffset.y / cardSize)
+            let effect = abs(dragOffset.y / cardSize.height)
             if (((offset == -1 && dragOffset.y > 0) || (offset == 1 && dragOffset.y < 0))  && dragDirection == .vertical) {
                 return minScale + (maxScale - minScale) * effect
             } else if offset == 0 {
@@ -174,7 +177,7 @@ struct ArtworkFeed: View {
         if dragOffset == .zero || dragDirection == .horizontal {
             return offset == 0 ? 1.0 : 0.0
         } else {
-            let effect = abs(dragOffset.y / cardSize)
+            let effect = abs(dragOffset.y / cardSize.height)
             if (offset == -1 && dragOffset.y > 0) || (offset == 1 && dragOffset.y < 0) {
                 return 1.0 * effect
             } else if offset == 0 {
@@ -265,7 +268,7 @@ extension ArtworkFeed {
                 }
             }
         }
-        .frame(width: cardSize, height: cardSize)
+        .frame(width: cardSize.width, height: cardSize.height)
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .opacity(feedbackOpacity)
     }
@@ -277,6 +280,6 @@ extension ArtworkFeed {
     
     private var feedbackOpacity: Double {
         guard dragDirection == .horizontal else { return 0 }
-        return isConfirmed ? 1.0 : min(abs(dragOffset.x) / (cardSize / 2), 0.8)
+        return isConfirmed ? 1.0 : min(abs(dragOffset.x) / (cardSize.width / 2), 0.8)
     }
 }
