@@ -136,7 +136,13 @@ struct ClipCardView: View {
                     .animation(.easeInOut(duration: 0.3), value: isPlayingClip)
                 }
                 
-                Text(formattedDuration(isPlayingClip ? feedModel.duration - feedModel.currentTime : feedModel.duration))
+                Text(
+                    feedModel.nowPlayingIndex == index
+                        ? formattedDuration(isPlayingClip
+                            ? (feedModel.duration - feedModel.currentTime)
+                            : feedModel.duration)
+                        : "Play"
+                )
                     .font(.system(size: 14))
                     .fontWeight(.bold)
                     .foregroundColor(gradientColor)
