@@ -7,17 +7,27 @@
 
 import SwiftUI
 
-struct TextWithUnderline: View {
+struct CategoryButton: View {
     let text: String
     let isActive: Bool
+    let action: () -> Void
     
     var body: some View {
-        Text(text)
-            .font(.system(size: 14))
-            .fontWeight(.bold)
-            .foregroundColor(isActive ? .primary : .secondary)
-            .padding(.vertical, 12)
-            .modifier(UnderlineModifier(color: isActive ? .black : .clear))
+        Button(action: action) {
+            VStack(spacing: 0) {
+                Text(text)
+                    .font(.system(size: 14))
+                    .fontWeight(.bold)
+                    .foregroundColor(isActive ? .primary : .secondary)
+                    .padding(.vertical, 12)
+                
+                Rectangle()
+                    .fill(isActive ? Color.black : Color.clear)
+                    .frame(height: 2)
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
+        .contentShape(Rectangle())
     }
 }
 
@@ -51,14 +61,13 @@ struct FeedHeaderView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
                             ForEach(categories, id: \.self) { category in
-                                TextWithUnderline(text: category, isActive: category == selectedCategory)
-                                    .id(category)
-                                    .onTapGesture {
-                                        withAnimation {
-                                            selectedCategory = category
-                                            reader.scrollTo(category)
-                                        }
+                                CategoryButton(text: category, isActive: category == selectedCategory) {
+                                    withAnimation {
+                                        selectedCategory = category
+                                        reader.scrollTo(category)
                                     }
+                                }
+                                .id(category)
                             }
                         }
                     }
@@ -77,6 +86,9 @@ struct FeedHeaderView: View {
             Divider()
                 .background(Color.gray.opacity(0.3))
         }
+        .contentShape(Rectangle()) // Capture all taps
+        .onTapGesture { }
         .background(.thinMaterial)
+        
     }
 }
