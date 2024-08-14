@@ -107,3 +107,43 @@ struct UserClipView: Codable, Identifiable {
     }
 }
 
+struct Category: Codable, Identifiable, Hashable {
+    let id: Int
+    let name: String
+    let userFriendlyName: String?
+    let userFriendlyParentName: String?
+    let shouldDisplay: Bool
+    let clipCount: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name
+        case userFriendlyName = "user_friendly_name"
+        case userFriendlyParentName = "user_friendly_parent_name"
+        case shouldDisplay = "should_display"
+        case clipCount = "clip_count"
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func ==(lhs: Category, rhs: Category) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+struct UserCategoryScore: Codable, Identifiable {
+    let id: Int
+    let user: Int
+    let category: Category
+    let score: Double
+    let createdAt: Date
+    let updatedAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id, user, category, score
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+

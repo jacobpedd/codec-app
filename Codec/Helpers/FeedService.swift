@@ -44,6 +44,12 @@ class FeedService {
         return follows
     }
     
+    func loadCategories() async -> [Category] {
+        let urlString = "\(baseURL)/categories/?should_display=true"
+        let categories = await loadGeneric(from: urlString, type: Category.self)
+        return categories
+    }
+    
     private func loadGeneric<T: Codable>(from urlString: String, type: T.Type) async -> [T] {
         guard let url = URL(string: urlString) else {
             print("Invalid URL")

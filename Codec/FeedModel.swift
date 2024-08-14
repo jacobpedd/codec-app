@@ -19,6 +19,7 @@ class FeedModel: ObservableObject {
     @Published var username: String?
     @Published private(set) var feed = [Clip]()
     @Published var followedFeeds: [UserFeedFollow] = []
+    @Published var categories: [Category] = []
     @Published var nowPlayingIndex: Int? {
         didSet {
             if let index = nowPlayingIndex {
@@ -115,6 +116,11 @@ class FeedModel: ObservableObject {
             self.loadArtworkForFeeds(Array(uniqueFeeds))
             self.loadArtworkForFeeds(self.followedFeeds.map { $0.feed })
         }
+    }
+    
+    func loadCategories() async {
+        guard let feedService = feedService else { return }
+        self.categories = await feedService.loadCategories()
     }
 
     func logout() {
