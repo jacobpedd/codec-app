@@ -126,7 +126,7 @@ struct ArtworkFeed: View {
     private func animateWithTracking(_ action: @escaping () -> Void) {
         if !isAnimating {
             let duration = 0.3
-            withAnimation(.easeInOut(duration: duration)) {
+            withAnimation(.easeIn(duration: duration)) {
                 isAnimating = true
                 action()
             }
