@@ -119,6 +119,8 @@ class FeedModel: ObservableObject {
             let uniqueFeeds = Set(self.feed.map { $0.feedItem.feed })
             self.loadArtworkForFeeds(Array(uniqueFeeds))
             self.loadArtworkForFeeds(self.followedFeeds.map { $0.feed })
+            let notInterestedFeedIDs = self.followedFeeds.filter { !$0.isInterested }.compactMap { $0.feed.id }
+            self.feed = self.feed.filter { !notInterestedFeedIDs.contains($0.feedItem.feed.id) }
         }
     }
 
@@ -303,12 +305,22 @@ extension FeedModel {
         print("Success following show \(success)")
         if success {
             let followedFeeds = await feedService.loadFollowedShows()
-            DispatchQueue.main.async {
-                self.followedFeeds = followedFeeds
-                self.loadArtworkForFeeds(self.followedFeeds.map { $0.feed })
+            return await withCheckedContinuation { continuation in
+                DispatchQueue.main.async {
+                    self.followedFeeds = followedFeeds
+                    self.loadArtworkForFeeds(self.followedFeeds.map { $0.feed })
+                    let notInterestedFeedIDs = followedFeeds.filter { !$0.isInterested }.compactMap { $0.feed.id }
+                    let oldFeedCount = self.feed.count
+                    self.feed = self.feed.filter { !notInterestedFeedIDs.contains($0.feedItem.feed.id) }
+                    if oldFeedCount > self.feed.count {
+                        self.next()
+                    }
+                    continuation.resume(with: .success(true))
+                }
             }
+        } else {
+            return false
         }
-        return success
     }
     
     func unfollowShow(followId: Int) async {
@@ -317,6 +329,8 @@ extension FeedModel {
         if success {
             DispatchQueue.main.async {
                 self.followedFeeds.removeAll { $0.id == followId }
+                let notInterestedFeedIDs = self.followedFeeds.filter { !$0.isInterested }.compactMap { $0.feed.id }
+                self.feed = self.feed.filter { !notInterestedFeedIDs.contains($0.feedItem.feed.id) }
             }
         }
     }
