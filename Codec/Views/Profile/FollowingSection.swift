@@ -13,11 +13,14 @@ struct FollowingSection: View {
     @State private var unfollowingId: Int?
     @Binding var showSearchView: Bool
     @Binding var isAddingToBlocked: Bool
+    let shouldAddBlockedSection: Bool
 
     var body: some View {
         Group {
             followSection(isInterested: true)
-            followSection(isInterested: false)
+            if shouldAddBlockedSection {
+                followSection(isInterested: false)
+            }
         }
     }
     

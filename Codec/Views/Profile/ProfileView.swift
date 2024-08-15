@@ -17,7 +17,7 @@ struct ProfileView: View {
     var body: some View {
         if let username = feedModel.username {
             List {
-                FollowingSection(isEditMode: $isEditMode, showSearchView: showSearchViewBinding, isAddingToBlocked: $isAddingToBlocked)
+                FollowingSection(isEditMode: $isEditMode, showSearchView: showSearchViewBinding, isAddingToBlocked: $isAddingToBlocked, shouldAddBlockedSection: true)
                 ActionSection()
             }
             .listStyle(InsetGroupedListStyle())

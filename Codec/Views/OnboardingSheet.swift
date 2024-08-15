@@ -14,7 +14,6 @@ struct OnboardingSheet: View {
     @State private var isLoading = false
     @State private var isEditMode: EditMode = .active
     @State private var showingSearchView = false
-    @State private var isAddingToBlocked = false
     @State private var followedFeedsCount = 0
     
     private var canContinue: Bool {
@@ -31,7 +30,7 @@ struct OnboardingSheet: View {
                     .padding(.bottom)
                 
                 List {
-                    FollowingSection(isEditMode: $isEditMode, showSearchView: $showingSearchView, isAddingToBlocked: $isAddingToBlocked)
+                    FollowingSection(isEditMode: $isEditMode, showSearchView: $showingSearchView, isAddingToBlocked:  Binding(get: { false }, set: { _ in }), shouldAddBlockedSection: false)
                         .disabled(isLoading)
                 }
                 .listStyle(InsetGroupedListStyle())
@@ -69,7 +68,7 @@ struct OnboardingSheet: View {
         .onAppear(perform: loadProfileData)
         .sheet(isPresented: $showingSearchView) {
             NavigationStack {
-                SearchView(isAddingToBlocked: $isAddingToBlocked)
+                SearchView(isAddingToBlocked: Binding(get: { false }, set: { _ in }))
             }
         }
         .disabled(isLoading)
