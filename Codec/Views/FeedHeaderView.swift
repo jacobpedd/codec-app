@@ -56,32 +56,47 @@ struct FeedHeaderView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                ScrollViewReader { reader in
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 16) {
-                            ForEach(categories, id: \.self) { category in
-                                CategoryButton(text: category, isActive: category == selectedCategory) {
-                                    withAnimation {
-                                        selectedCategory = category
-                                        reader.scrollTo(category)
+            ZStack {
+                HStack(spacing: 0) {
+                    ScrollViewReader { reader in
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                ForEach(categories, id: \.self) { category in
+                                    CategoryButton(text: category, isActive: category == selectedCategory) {
+                                        withAnimation {
+                                            selectedCategory = category
+                                            reader.scrollTo(category, anchor: .center)
+                                        }
                                     }
+                                    .id(category)
                                 }
-                                .id(category)
+                                Spacer()
                             }
                         }
+                        .mask(
+                            // Gradient to make text fade behind the profile icon
+                            LinearGradient(gradient: Gradient(stops: [
+                                .init(color: .black, location: 0),
+                                .init(color: .black, location: 0.92),
+                                .init(color: .clear, location: 0.95)
+                            ]), startPoint: .leading, endPoint: .trailing)
+                        )
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal)
+                
+                
+                HStack() {
+                    Spacer()
+                    NavigationLink(destination: ProfileView().environmentObject(feedModel)) {
+                        Image(systemName: "person.crop.circle")
+                            .font(.system(size: 20))
+                            .foregroundColor(.primary)
                     }
                 }
-                
-                Spacer()
-                
-                NavigationLink(destination: ProfileView().environmentObject(feedModel)) {
-                    Image(systemName: "person.crop.circle")
-                        .font(.system(size: 20))
-                        .foregroundColor(.primary)
-                }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
             
             Divider()
                 .background(Color.gray.opacity(0.3))
