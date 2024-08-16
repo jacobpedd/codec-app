@@ -115,12 +115,12 @@ class FeedModel: ObservableObject {
             self.needsOnboarding = queue.isEmpty
             self.feed = historyClips + queue
             self.followedFeeds = followedFeeds
-            self.nowPlayingIndex = max(0, history.count - 1)
             let uniqueFeeds = Set(self.feed.map { $0.feedItem.feed })
             self.loadArtworkForFeeds(Array(uniqueFeeds))
             self.loadArtworkForFeeds(self.followedFeeds.map { $0.feed })
             let notInterestedFeedIDs = self.followedFeeds.filter { !$0.isInterested }.compactMap { $0.feed.id }
             self.feed = self.feed.filter { !notInterestedFeedIDs.contains($0.feedItem.feed.id) }
+            self.nowPlayingIndex = max(0, history.count - 1)
         }
     }
 
@@ -310,10 +310,9 @@ extension FeedModel {
                     self.followedFeeds = followedFeeds
                     self.loadArtworkForFeeds(self.followedFeeds.map { $0.feed })
                     let notInterestedFeedIDs = followedFeeds.filter { !$0.isInterested }.compactMap { $0.feed.id }
-                    let oldFeedCount = self.feed.count
                     self.feed = self.feed.filter { !notInterestedFeedIDs.contains($0.feedItem.feed.id) }
-                    if oldFeedCount > self.feed.count {
-                        self.next()
+                    if let nowPlayingIndex = self.nowPlayingIndex {
+                        self.updateNowPlaying(to: nowPlayingIndex)
                     }
                     continuation.resume(with: .success(true))
                 }
@@ -331,6 +330,9 @@ extension FeedModel {
                 self.followedFeeds.removeAll { $0.id == followId }
                 let notInterestedFeedIDs = self.followedFeeds.filter { !$0.isInterested }.compactMap { $0.feed.id }
                 self.feed = self.feed.filter { !notInterestedFeedIDs.contains($0.feedItem.feed.id) }
+                if let nowPlayingIndex = self.nowPlayingIndex {
+                    self.updateNowPlaying(to: nowPlayingIndex)
+                }
             }
         }
     }
