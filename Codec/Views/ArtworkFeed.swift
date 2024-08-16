@@ -8,6 +8,8 @@ struct ArtworkFeed: View {
     @Namespace private var animation
     @State private var isPlayerShowing: Bool = false
     @State private var isAnimating: Bool = false
+    @State private var isShowingFollowConfirmationPopup = false
+    @State private var isDisabled = false
     
     private let cardWidth: CGFloat = UIScreen.main.bounds.width * 0.9
     private var cardHeight: CGFloat { cardWidth + 25 }
@@ -26,20 +28,27 @@ struct ArtworkFeed: View {
                 let offset = index - feedModel.nowPlayingIndex!
                 if abs(offset) <= 2 {
                     ZStack {
-                        ClipCardView(index: index, cardSize: cardSize, labelOpacity: labelOpacity(for: offset))
-                            .matchedGeometryEffect(id: feedModel.feed[index].id, in: animation)
-                            .scaleEffect(scale(for: offset))
-                            .offset(x: horizontalOffset(for: offset), y: verticalOffset(for: offset))
-                            .zIndex(Double(1000 - abs(offset)))
-                            .onTapGesture {
-                                if offset == 0 && !isAnimating {
-                                    isPlayerShowing = true
+                        if isConfirmed, isAnimating, offset == 0 {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                                .scaleEffect(2)
+                        } else {
+                            ClipCardView(index: index, cardSize: cardSize, labelOpacity: labelOpacity(for: offset))
+                                .matchedGeometryEffect(id: feedModel.feed[index].id, in: animation)
+                                .scaleEffect(scale(for: offset))
+                                .offset(x: horizontalOffset(for: offset), y: verticalOffset(for: offset))
+                                .zIndex(Double(1000 - abs(offset)))
+                                .onTapGesture {
+                                    if offset == 0 && !isAnimating {
+                                        isPlayerShowing = true
+                                    }
                                 }
+                            if offset == 0 {
+                                directionFeedbackView
                             }
-                        if offset == 0 {
-                            directionFeedbackView
                         }
                     }
+                    .animation(.easeInOut, value: feedModel.feed.indices)
                 }
             }
             
@@ -61,8 +70,30 @@ struct ArtworkFeed: View {
                     }
             }
             .zIndex(2000)
+            
+            if isShowingFollowConfirmationPopup {
+                VStack {
+                    Image(systemName: "checkmark.square.fill")
+                        .font(.system(size: 40))
+                        .foregroundColor(.green)
+                        .padding()
+
+                    Text("Followed Successfully!")
+                        .font(.body)
+                        .fontWeight(.bold)
+                        .multilineTextAlignment(.center)
+                        .padding()
+                }
+                .frame(maxWidth: 200, maxHeight: 200)
+                .background(Color.white)
+                .cornerRadius(20)
+                .padding()
+                .zIndex(3000)
+                .transition(.opacity)
+            }
         }
         .animation(.easeInOut, value: feedModel.nowPlayingIndex)
+        .animation(.easeInOut, value: isShowingFollowConfirmationPopup)
         .gesture(
             DragGesture()
                 .onChanged { value in
@@ -92,28 +123,75 @@ struct ArtworkFeed: View {
                 .onEnded { value in
                     guard !isAnimating else { return }
                     
-                    animateWithTracking {
+                    animateWithTracking(shouldTurnOffIsAnimating: false) {
                         if dragDirection == .vertical {
                             if dragOffset.y > cardSize.height / 2 {
                                 feedModel.previous()
                             } else if dragOffset.y < -cardSize.height / 2 {
                                 feedModel.next()
                             }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                isAnimating = false
+                            }
                         } else if dragDirection == .horizontal && isConfirmed {
                             let isInterested = dragOffset.x > 0
-                            if let nowPlaying = feedModel.nowPlaying {
-                                Task {
-                                    await feedModel.followShow(feed: nowPlaying.feedItem.feed, isInterested: isInterested)
-                                }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                isAnimating = !isInterested
                             }
+                            if let nowPlaying = feedModel.nowPlaying {
+                                if !isInterested {
+                                    isDisabled = true
+                                }
+                                Task {
+                                    let success = await feedModel.followShow(feed: nowPlaying.feedItem.feed, isInterested: isInterested)
+                                    isDisabled = false
+                                    if success {
+                                        if isInterested {
+                                            impactFeedback.impactOccurred()
+                                            withAnimation {
+                                                isShowingFollowConfirmationPopup = true
+                                            }
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                                withAnimation {
+                                                    isShowingFollowConfirmationPopup = false
+                                                }
+                                            }
+                                        } else {
+                                            dragOffset = .zero
+                                            dragDirection = .none
+                                            isConfirmed = false
+                                            isAnimating = false
+                                        }
+                                    } else {
+                                        dragOffset = .zero
+                                        dragDirection = .none
+                                        isConfirmed = false
+                                        isAnimating = false
+                                    }
+                                }
+                            } else {
+                                dragOffset = .zero
+                                dragDirection = .none
+                                isConfirmed = false
+                                isAnimating = false
+                            }
+                        } else if dragDirection == .horizontal {
+                            isAnimating = false
                         }
-                        dragOffset = .zero
-                        dragDirection = .none
-                        isConfirmed = false
+                        if dragDirection == .horizontal && isConfirmed && dragOffset.x < 0 {
+                            dragOffset = .init(x: 2*dragOffset.x, y: dragOffset.y)
+                            dragDirection = .horizontal
+                            isPlayerShowing = false
+                        } else {
+                            dragOffset = .zero
+                            dragDirection = .none
+                            isConfirmed = false
+                        }
                     }
                 }
         )
         .edgesIgnoringSafeArea(.all)
+        .disabled(isDisabled)
         .sheet(isPresented: $isPlayerShowing) {
             NowPlayingSheet()
                 .presentationDetents([.large])
@@ -123,7 +201,7 @@ struct ArtworkFeed: View {
         }
     }
     
-    private func animateWithTracking(_ action: @escaping () -> Void) {
+    private func animateWithTracking(shouldTurnOffIsAnimating: Bool = true, action: @escaping () -> Void) {
         if !isAnimating {
             let duration = 0.3
             withAnimation(.easeInOut(duration: duration)) {
@@ -131,7 +209,9 @@ struct ArtworkFeed: View {
                 action()
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
-                isAnimating = false
+                if shouldTurnOffIsAnimating {
+                    isAnimating = false
+                }
             }
         }
     }
@@ -280,6 +360,10 @@ extension ArtworkFeed {
     
     private var feedbackOpacity: Double {
         guard dragDirection == .horizontal else { return 0 }
-        return isConfirmed ? 1.0 : min(abs(dragOffset.x) / (cardSize.width / 2), 0.8)
+        if dragOffset.x > 0 {
+            return isConfirmed ? 1.0 : min(abs(dragOffset.x) / (cardSize.width / 2), 0.8)
+        } else {
+            return isConfirmed && isAnimating ? 0.0 : min(abs(dragOffset.x) / (cardSize.width / 2), 0.8)
+        }
     }
 }
