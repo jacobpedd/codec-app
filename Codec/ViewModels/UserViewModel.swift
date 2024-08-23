@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 class UserViewModel: ObservableObject {
     @Published var token: String? {
         didSet {

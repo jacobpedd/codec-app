@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 class FeedSearchViewModel: ObservableObject {
     @Published var searchResults: [Feed] = []
     @Published var isSearching = false

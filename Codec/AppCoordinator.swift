@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 class AppCoordinator: ObservableObject {
     private let debug: Bool
     private var feedService: FeedService?
@@ -112,7 +113,15 @@ extension AppCoordinator: CategoryViewModelDelegate {
 
 extension View {
     func withAppEnvironment(_ coordinator: AppCoordinator) -> some View {
-        self
+        self.modifier(AppEnvironmentModifier(coordinator: coordinator))
+    }
+}
+
+private struct AppEnvironmentModifier: ViewModifier {
+    @ObservedObject var coordinator: AppCoordinator
+    
+    func body(content: Content) -> some View {
+        content
             .environmentObject(coordinator.playerVM)
             .environmentObject(coordinator.feedVM)
             .environmentObject(coordinator.userVM)
@@ -123,6 +132,7 @@ extension View {
     }
 }
 
+@MainActor
 @ViewBuilder
 func PreviewWithEnvironment<Content: View>(_ content: @escaping () -> Content) -> some View {
     let coordinator = AppCoordinator()
@@ -131,7 +141,11 @@ func PreviewWithEnvironment<Content: View>(_ content: @escaping () -> Content) -
 }
 
 private struct PreviewWithEnvironmentModifier: ViewModifier {
-    @StateObject private var coordinator = AppCoordinator(debug: true)
+    @StateObject private var coordinator: AppCoordinator
+    
+    init() {
+        _coordinator = StateObject(wrappedValue: AppCoordinator(debug: true))
+    }
     
     func body(content: Content) -> some View {
         content

@@ -11,6 +11,7 @@ protocol CategoryViewModelDelegate: AnyObject {
     func categoryViewModel(_ viewModel: CategoryViewModel, didUpdateUserCategories categories: [Category])
 }
 
+@MainActor
 class CategoryViewModel: ObservableObject {
     weak var delegate: CategoryViewModelDelegate?
     

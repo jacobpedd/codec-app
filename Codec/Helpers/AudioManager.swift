@@ -147,8 +147,8 @@ class AudioManager {
                 let duration = try await playerItem.asset.load(.duration)
                 if !duration.isIndefinite {
                     let seconds = CMTimeGetSeconds(duration)
-                    DispatchQueue.main.async { [weak self] in
-                        self?.delegate?.durationLoaded(seconds)
+                    await MainActor.run {
+                        self.delegate?.durationLoaded(seconds)
                     }
                 }
             } catch {

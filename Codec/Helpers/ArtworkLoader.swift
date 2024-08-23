@@ -14,9 +14,7 @@ class ArtworkLoader {
     func loadFeedArtwork(for feed: Feed, completion: @escaping (Artwork?) -> Void) {
         if let cachedImage = cache.getCachedArtwork(for: feed.id) {
             // No need to resize since the image should already be resized before caching
-            DispatchQueue.main.async {
-                completion(Artwork(image: cachedImage))
-            }
+            completion(Artwork(image: cachedImage))
             return
         }
 
@@ -42,9 +40,7 @@ class ArtworkLoader {
                 }
                 
                 self.cache.cacheArtwork(thumbnail, for: feed.id)
-                DispatchQueue.main.async {
-                    completion(Artwork(image: thumbnail))
-                }
+                completion(Artwork(image: thumbnail))
             }
         }
     }

@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 class FeedViewModel: ObservableObject {
     private let audioManager = AudioManager()
     private let excludeClipIds: [Int] = []
@@ -73,6 +74,7 @@ class FeedViewModel: ObservableObject {
     func loadMoreClips() async { await currentCategoryFeedVM?.loadMoreClips() }
 }
 
+@MainActor
 class CategoryFeedViewModel: ObservableObject {
     var category: Category?
     private let audioManager = AudioManager()

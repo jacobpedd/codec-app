@@ -50,7 +50,7 @@ struct ClipCardView: View {
         ZStack {
             VStack {
                 ArtworkView(feed: clip.feedItem.feed)
-                    .frame(width: cardSize.width, height: cardSize.width)
+                .frame(width: cardSize.width, height: cardSize.width)
                 Spacer()
             }
             VStack {
@@ -212,4 +212,27 @@ extension Date {
             }
         }
     }
+}
+
+struct ClipCardPreviewView: View {
+    @EnvironmentObject var feedVM: FeedViewModel
+    
+    private let cardWidth: CGFloat = UIScreen.main.bounds.width * 0.9
+    private var cardHeight: CGFloat { cardWidth + 25 }
+    private var cardSize: CGSize { CGSize(width: cardWidth, height: cardHeight) }
+    
+    var body: some View {
+        VStack(alignment: .center) {
+            HStack(alignment: .center) {
+                if let currentCategoryFeedVM = feedVM.currentCategoryFeedVM {
+                    ClipCardView(categoryFeedVM: currentCategoryFeedVM, index: 2, cardSize: cardSize, labelOpacity: 1.0)
+                }
+            }
+        }
+    }
+}
+
+#Preview {
+    ClipCardPreviewView()
+        .previewWithEnvironment()
 }

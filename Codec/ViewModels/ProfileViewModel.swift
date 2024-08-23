@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 class ProfileViewModel: ObservableObject {
     @Published var followedFeeds: [UserFeedFollow] = [] {
         willSet {

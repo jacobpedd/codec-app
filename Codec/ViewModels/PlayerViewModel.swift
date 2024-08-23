@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 class PlayerViewModel: ObservableObject {
     private let audioManager: AudioManager
     private let viewTracker: ViewTracker
@@ -18,22 +19,20 @@ class PlayerViewModel: ObservableObject {
         }
     }
     
-    var nowPlaying: Clip?  {
+    @Published var nowPlaying: Clip? {
         didSet {
             guard let clip = nowPlaying else { return }
             viewTracker.setCurrentClip(clip, currentTimePublisher: $currentTime, durationPublisher: $duration)
             NowPlayingHelper.setTitle(clip.name)
             artworkVM?.loadArtwork(for: clip.feedItem.feed) { artwork in
-                DispatchQueue.main.async {
-                    if let image = artwork?.image {
-                        NowPlayingHelper.setArtwork(image)
-                    }
+                if let image = artwork?.image {
+                    NowPlayingHelper.setArtwork(image)
                 }
             }
         }
     }
     @Published var isPlaying = false
-    @Published var currentTime: TimeInterval = 0.0  {
+    @Published var currentTime: TimeInterval = 0.0 {
         didSet { NowPlayingHelper.setCurrentTime(currentTime) }
     }
     @Published var duration: Double = 0.0 {
@@ -46,10 +45,7 @@ class PlayerViewModel: ObservableObject {
         }
     }
     var progress: Double {
-        if duration == 0 {
-            return 1
-        }
-        return currentTime / duration
+        duration == 0 ? 1 : currentTime / duration
     }
     
     init() {
@@ -94,8 +90,7 @@ class PlayerViewModel: ObservableObject {
     }
     
     func updateNowPlaying() {
-        guard let feedVM else { return }
-        guard let clip = feedVM.nowPlayingClip else { return }
+        guard let feedVM, let clip = feedVM.nowPlayingClip else { return }
         print("Now playing: \(clip.name)")
         nowPlaying = clip
         currentTime = 0.0
@@ -119,7 +114,6 @@ class PlayerViewModel: ObservableObject {
         viewTracker.stopTracking()
     }
 }
-
 
 extension PlayerViewModel: AudioManagerDelegate {
     func playbackDidEnd() {

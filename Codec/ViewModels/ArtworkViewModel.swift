@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 class ArtworkViewModel: ObservableObject {
     private var feedArtworks = [Int: Artwork]()
     private let artworkLoader: ArtworkLoader
@@ -22,12 +23,10 @@ class ArtworkViewModel: ObservableObject {
         }
         
         artworkLoader.loadFeedArtwork(for: feed) { [weak self] artwork in
-            DispatchQueue.main.async {
-                if let artwork = artwork {
-                    self?.feedArtworks[feed.id] = artwork
-                }
-                completion(artwork)
+            if let artwork = artwork {
+                self?.feedArtworks[feed.id] = artwork
             }
+            completion(artwork)
         }
     }
 }

@@ -39,9 +39,7 @@ struct ArtworkView: View {
 
     private func loadArtwork() {
         artworkVM.loadArtwork(for: feed) { loadedArtwork in
-            DispatchQueue.main.async {
-                self.artwork = loadedArtwork
-            }
+            self.artwork = loadedArtwork
         }
     }
 }
