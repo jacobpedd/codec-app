@@ -81,7 +81,7 @@ struct Feed: Codable, Identifiable, Hashable {
     }
 }
 
-struct UserFeedFollow: Codable, Identifiable, Hashable {
+struct UserFeedFollow: Codable, Identifiable, Hashable, Equatable {
     let id: Int
     let user: Int
     let feed: Feed
@@ -92,6 +92,10 @@ struct UserFeedFollow: Codable, Identifiable, Hashable {
         case id, user, feed
         case createdAt = "created_at"
         case isInterested = "is_interested"
+    }
+    
+    static func == (lhs: UserFeedFollow, rhs: UserFeedFollow) -> Bool {
+        lhs.id == rhs.id && lhs.isInterested == rhs.isInterested
     }
 }
 
@@ -107,7 +111,7 @@ struct UserClipView: Codable, Identifiable {
     }
 }
 
-struct Category: Codable, Identifiable, Hashable {
+struct Category: Codable, Identifiable, Hashable, Equatable {
     let id: Int
     let name: String
     let userFriendlyName: String?
@@ -132,7 +136,7 @@ struct Category: Codable, Identifiable, Hashable {
     }
 }
 
-struct UserCategoryScore: Codable, Identifiable {
+struct UserCategoryScore: Codable, Identifiable, Equatable {
     let id: Int
     let user: Int
     let category: Category
@@ -145,5 +149,13 @@ struct UserCategoryScore: Codable, Identifiable {
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
+    
+    static func == (lhs: UserCategoryScore, rhs: UserCategoryScore) -> Bool {
+        lhs.id == rhs.id &&
+        lhs.user == rhs.user &&
+        lhs.category == rhs.category &&
+        lhs.score == rhs.score &&
+        lhs.createdAt == rhs.createdAt &&
+        lhs.updatedAt == rhs.updatedAt
+    }
 }
-

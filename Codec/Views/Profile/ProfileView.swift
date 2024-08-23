@@ -8,72 +8,48 @@
 import SwiftUI
 
 struct ProfileView: View {
-    @EnvironmentObject private var feedModel: FeedModel
+    @EnvironmentObject private var userVM: UserViewModel
     @State private var isLoading = false
-    @State private var isEditMode: EditMode = .inactive
-    @State private var showingSearchView = false
-    @State private var isAddingToBlocked = false
 
     var body: some View {
-        if let username = feedModel.username {
-            List {
-                FollowingSection(isEditMode: $isEditMode, showSearchView: showSearchViewBinding, isAddingToBlocked: $isAddingToBlocked)
-                ActionSection()
-            }
-            .listStyle(InsetGroupedListStyle())
-            .navigationBarTitle("@\(username)", displayMode: .inline)
-            .onAppear(perform: loadProfileData)
-            .overlay(
-                Group {
-                    if isLoading {
-                        ProgressView()
-                    }
+        List {
+            Section {
+                NavigationLink(destination: TopicView()) {
+                    Label("Manage Topics", systemImage: "tag")
+                        .foregroundColor(.primary)
                 }
-            )
-            .environment(\.editMode, $isEditMode)
-            .animation(.default, value: isEditMode)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: toggleEditMode) {
-                        Text(isEditMode == .active ? "Done" : "Edit")
-                    }
+                NavigationLink(destination: FeedFollowBlockView(isInterested: true)) {
+                    Label("Followed Feeds", systemImage: "plus.circle")
+                        .foregroundColor(.primary)
                 }
-            }
-            .sheet(isPresented: $showingSearchView) {
-                NavigationView {
-                    SearchView(isAddingToBlocked: $isAddingToBlocked)
+                NavigationLink(destination: FeedFollowBlockView(isInterested: false)) {
+                    Label("Blocked Feeds", systemImage: "xmark.shield")
+                        .foregroundColor(.primary)
                 }
+// TODO: History tab
+//                NavigationLink(destination: Text("History")) {
+//                    Label("View History", systemImage: "book")
+//                        .foregroundColor(.primary)
+//                }
             }
-        } else {
-            Text("Not logged in")
-                .font(.headline)
+            ActionSection()
         }
-    }
-    
-    private var showSearchViewBinding: Binding<Bool> {
-        Binding<Bool>(
-            get: { self.showingSearchView },
-            set: { newValue in
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    self.showingSearchView = newValue
+        .listStyle(InsetGroupedListStyle())
+        .navigationBarTitle("@\(userVM.username ?? "error")", displayMode: .inline)
+        .overlay(
+            Group {
+                if isLoading {
+                    ProgressView()
                 }
             }
         )
     }
-    
-    private func loadProfileData() {
-        if feedModel.followedFeeds.isEmpty {
-            isLoading = true
-            Task {
-                await feedModel.load()
-                isLoading = false
-            }
-        }
+}
+
+
+#Preview {
+    NavigationStack {
+        ProfileView()
     }
-    
-    private func toggleEditMode() {
-        withAnimation {
-            isEditMode = isEditMode == .active ? .inactive : .active
-        }
-    }
+    .previewWithEnvironment()
 }

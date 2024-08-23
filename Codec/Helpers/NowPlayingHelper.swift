@@ -9,7 +9,6 @@ import Foundation
 import MediaPlayer
 
 struct NowPlayingHelper {
-    
     // Private static function to update the now playing information
     private static func updateNowPlayingInfo(_ updates: [String: Any?]) {
         var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]

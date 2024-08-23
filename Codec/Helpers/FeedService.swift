@@ -11,27 +11,41 @@ class FeedService {
     var token: String
     private let baseURL = "https://codec.fly.dev"
     private let debug: Bool
+    private var loadedClipIds: Set<Int> = [] // Store clip IDs in memory and never load them twice
     
     init(token: String, debug: Bool = false) {
         self.token = token
         self.debug = debug
     }
     
-    func loadQueue(excludeClipIds: [Int]? = nil) async -> [Clip] {
+    func loadQueue(category: Category? = nil) async -> [Clip] {
         // Base URL
         var urlString = "\(baseURL)/queue/"
         
-        // Check if excludeClipIds exists and is not empty
-        if let ids = excludeClipIds, !ids.isEmpty {
-            // Join the ids into a comma-separated string
-            let idsString = ids.map { String($0) }.joined(separator: ",")
-            // Append the query parameter to the URL
-            urlString += "?exclude_clip_ids=\(idsString)"
+        var queryItems = [String]()
+        
+        // Always exclude already loaded clips
+        if !loadedClipIds.isEmpty {
+            let idsString = loadedClipIds.map { String($0) }.joined(separator: ",")
+            queryItems.append("exclude_clip_ids=\(idsString)")
+        }
+        
+        // Check if category exists
+        if let category {
+            queryItems.append("topic_ids=\(category.id)")
+        }
+        
+        // If there are any query items, join them with "&" and append to the urlString
+        if !queryItems.isEmpty {
+            urlString += "?" + queryItems.joined(separator: "&")
         }
         
         // Call the loadGeneric function with the constructed URL
-        let queue = await loadGeneric(from: urlString, type: Clip.self)
-        return queue
+        let newClips = await loadGeneric(from: urlString, type: Clip.self)
+        
+        // Add new clip IDs to the loaded set
+        loadedClipIds.formUnion(newClips.map { $0.id })
+        return newClips
     }
     
     func loadHistory() async -> [UserClipView] {
@@ -156,8 +170,6 @@ class FeedService {
             return []
         }
         
-        print("Searching with url \(url.absoluteString)")
-        
         var request = URLRequest(url: url)
         request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
         
@@ -244,6 +256,71 @@ class FeedService {
             }
         } catch {
             print("Error unfollowing show: \(error)")
+            return false
+        }
+    }
+    
+    func getUserCategoryScores() async -> [UserCategoryScore] {
+        let scores = await loadGeneric(from: "\(baseURL)/user_category_scores/", type: UserCategoryScore.self)
+        return scores.sorted { $0.createdAt < $1.createdAt }
+    }
+    
+    func updateUserCategoryScore(categoryId: Int, score: Float) async -> Bool {
+        guard let url = URL(string: "\(baseURL)/user_category_scores/") else {
+            print("Invalid URL")
+            return false
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = [
+            "category": categoryId,
+            "score": score
+        ]
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+            let (_, response) = try await URLSession.shared.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) {
+                print("Successfully updated category score for category \(categoryId): \(score)")
+                return true
+            } else {
+                print("Failed to update category score for category \(categoryId): \(response)")
+                return false
+            }
+        } catch {
+            print("Error updating category score for category \(categoryId): \(error)")
+            return false
+        }
+    }
+    
+    func deleteUserCategoryScore(categoryScoreId: Int) async -> Bool {
+        guard let url = URL(string: "\(baseURL)/user_category_scores/\(categoryScoreId)/") else {
+            print("Invalid URL")
+            return false
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
+        
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse,
+               (200...299).contains(httpResponse.statusCode) {
+                print("Successfully deleted category score \(categoryScoreId)")
+                return true
+            } else {
+                print("Failed to delete category score \(categoryScoreId): \(response)")
+                return false
+            }
+        } catch {
+            print("Error deleting category score \(categoryScoreId): \(error)")
             return false
         }
     }

@@ -13,7 +13,10 @@ class ArtworkLoader {
 
     func loadFeedArtwork(for feed: Feed, completion: @escaping (Artwork?) -> Void) {
         if let cachedImage = cache.getCachedArtwork(for: feed.id) {
-            completion(Artwork(image: cachedImage))
+            // No need to resize since the image should already be resized before caching
+            DispatchQueue.main.async {
+                completion(Artwork(image: cachedImage))
+            }
             return
         }
 
@@ -24,16 +27,28 @@ class ArtworkLoader {
         }
 
         downloadImage(from: artworkURL) { image in
-            if let image = image {
-                self.cache.cacheArtwork(image, for: feed.id)
-                completion(Artwork(image: image))
-            } else {
+            guard let image = image else {
                 print("Failed to download artwork for feed \(feed.id)")
                 completion(nil)
+                return
+            }
+            
+            let thumbnailSize = CGSize(width: 500, height: 500)
+            image.prepareThumbnail(of: thumbnailSize) { thumbnail in
+                guard let thumbnail = thumbnail else {
+                    print("Failed to create thumbnail for feed \(feed.id)")
+                    completion(nil)
+                    return
+                }
+                
+                self.cache.cacheArtwork(thumbnail, for: feed.id)
+                DispatchQueue.main.async {
+                    completion(Artwork(image: thumbnail))
+                }
             }
         }
     }
-
+    
     private func downloadImage(from url: URL, completion: @escaping (UIImage?) -> Void) {
         let task = session.dataTask(with: url) { data, response, error in
             guard let data = data, error == nil else {
