@@ -63,7 +63,7 @@ class FeedViewModel: ObservableObject {
         nowPlayingIndex = 0
     }
     
-    func loadFeed() async { 
+    func loadFeed() async {
         await currentCategoryFeedVM?.loadFeed()
         onFeedLoad?()
     }
@@ -99,18 +99,15 @@ class CategoryFeedViewModel: ObservableObject {
     func loadFeed() async {
         guard !isLoading else { return }
         guard let feedService else { return }
-        
-        await MainActor.run { isLoading = true }
+        isLoading = true
         
         let newClips = await feedService.loadQueue(category: category)
         print("Loaded clips for \(category?.userFriendlyName ?? "FYP"): \(newClips.count)")
         
-        await MainActor.run {
-            clips = newClips
-            nowPlayingIndex = 0
-            isLoading = false
-            onFeedLoad?()
-        }
+        clips = newClips
+        nowPlayingIndex = 0
+        isLoading = false
+        onFeedLoad?()
     }
     
     func moveToNextClip() {

@@ -41,7 +41,9 @@ class PlayerViewModel: ObservableObject {
     @Published var playbackSpeed: Double {
         didSet {
             UserDefaults.standard.set(playbackSpeed, forKey: "playbackSpeed")
-            audioManager.setRate(rate: isPlaying ? playbackSpeed : 0.0)
+            if isPlaying {
+                audioManager.setRate(rate: playbackSpeed)
+            }
         }
     }
     var progress: Double {
@@ -49,7 +51,8 @@ class PlayerViewModel: ObservableObject {
     }
     
     init() {
-        self.playbackSpeed = UserDefaults.standard.double(forKey: "playbackSpeed")
+        let savedSpeed = UserDefaults.standard.double(forKey: "playbackSpeed")
+        self.playbackSpeed = savedSpeed > 0 ? savedSpeed : 1.0
         self.viewTracker = ViewTracker()
         self.audioManager = AudioManager()
         self.audioManager.delegate = self
