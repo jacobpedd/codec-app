@@ -130,7 +130,6 @@ func PreviewWithEnvironment<Content: View>(_ content: @escaping () -> Content) -
         .withAppEnvironment(coordinator)
 }
 
-#if DEBUG
 private struct PreviewWithEnvironmentModifier: ViewModifier {
     @StateObject private var coordinator = AppCoordinator(debug: true)
     
@@ -145,4 +144,3 @@ extension View {
         modifier(PreviewWithEnvironmentModifier())
     }
 }
-#endif
