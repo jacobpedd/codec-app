@@ -38,21 +38,13 @@ class ViewTracker {
         lastReportedProgress = 0
         currentTime = 0
         duration = 1
-        
-        print("Current clip set to: \(clip?.name ?? "nil")")
     }
     
     func startTracking() {
         stopTracking() // Ensure we're not already tracking
-        
-        guard currentClip != nil else {
-            print("Cannot start tracking: No current clip set")
-            return
-        }
+        guard currentClip != nil else { return }
         
         lastUpdateTime = Date()
-        
-        print("Start tracking")
         
         // Subscribe to currentTime and duration publishers
         currentTimePublisher?
@@ -80,7 +72,6 @@ class ViewTracker {
         timer = nil
         cancellables.removeAll()
         updateProgress()
-        print("Stopped tracking")
     }
 
     private func checkAndUpdateProgress() {

@@ -81,7 +81,7 @@ struct Feed: Codable, Identifiable, Hashable {
     }
 }
 
-struct UserFeedFollow: Codable, Identifiable, Hashable {
+struct UserFeedFollow: Codable, Identifiable, Hashable, Equatable {
     let id: Int
     let user: Int
     let feed: Feed
@@ -92,6 +92,10 @@ struct UserFeedFollow: Codable, Identifiable, Hashable {
         case id, user, feed
         case createdAt = "created_at"
         case isInterested = "is_interested"
+    }
+    
+    static func == (lhs: UserFeedFollow, rhs: UserFeedFollow) -> Bool {
+        lhs.id == rhs.id && lhs.isInterested == rhs.isInterested
     }
 }
 
@@ -107,3 +111,51 @@ struct UserClipView: Codable, Identifiable {
     }
 }
 
+struct Category: Codable, Identifiable, Hashable, Equatable {
+    let id: Int
+    let name: String
+    let userFriendlyName: String?
+    let userFriendlyParentName: String?
+    let shouldDisplay: Bool
+    let clipCount: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name
+        case userFriendlyName = "user_friendly_name"
+        case userFriendlyParentName = "user_friendly_parent_name"
+        case shouldDisplay = "should_display"
+        case clipCount = "clip_count"
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func ==(lhs: Category, rhs: Category) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+struct UserCategoryScore: Codable, Identifiable, Equatable {
+    let id: Int
+    let user: Int
+    let category: Category
+    let score: Double
+    let createdAt: Date
+    let updatedAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id, user, category, score
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+    
+    static func == (lhs: UserCategoryScore, rhs: UserCategoryScore) -> Bool {
+        lhs.id == rhs.id &&
+        lhs.user == rhs.user &&
+        lhs.category == rhs.category &&
+        lhs.score == rhs.score &&
+        lhs.createdAt == rhs.createdAt &&
+        lhs.updatedAt == rhs.updatedAt
+    }
+}

@@ -1,7 +1,11 @@
 import SwiftUI
 
 struct ArtworkFeed: View {
-    @EnvironmentObject private var feedModel: FeedModel
+    @ObservedObject var categoryFeedVM: CategoryFeedViewModel
+    
+    @EnvironmentObject private var playerVM: PlayerViewModel
+    @EnvironmentObject private var profileVM: ProfileViewModel
+    @EnvironmentObject private var artworkVM: ArtworkViewModel
     @State private var dragOffset: CGPoint = .zero
     @State private var dragDirection: DragDirection = .none
     @State private var isConfirmed: Bool = false
@@ -18,51 +22,53 @@ struct ArtworkFeed: View {
         case vertical, horizontal, none
     }
     
+    init(categoryFeedVM: CategoryFeedViewModel) {
+        self.categoryFeedVM = categoryFeedVM
+    }
+    
     var body: some View {
         ZStack {
             backgroundView
             
-            ForEach(feedModel.feed.indices, id: \.self) { index in
-                let offset = index - feedModel.nowPlayingIndex!
-                if abs(offset) <= 2 {
-                    ZStack {
-                        ClipCardView(index: index, cardSize: cardSize, labelOpacity: labelOpacity(for: offset))
-                            .matchedGeometryEffect(id: feedModel.feed[index].id, in: animation)
-                            .scaleEffect(scale(for: offset))
-                            .offset(x: horizontalOffset(for: offset), y: verticalOffset(for: offset))
-                            .zIndex(Double(1000 - abs(offset)))
-                            .onTapGesture {
-                                if offset == 0 && !isAnimating {
-                                    isPlayerShowing = true
-                                }
+            ForEach(categoryFeedVM.clips.indices, id: \.self) { index in
+                let offset = index - categoryFeedVM.nowPlayingIndex
+                ZStack {
+                    ClipCardView(categoryFeedVM: categoryFeedVM, index: index, cardSize: cardSize, labelOpacity: labelOpacity(for: offset))
+                        .matchedGeometryEffect(id: categoryFeedVM.clips[index].id, in: animation)
+                        .scaleEffect(scale(for: offset))
+                        .offset(x: horizontalOffset(for: offset), y: verticalOffset(for: offset))
+                        .zIndex(Double(1000 - abs(offset)))
+                        .onTapGesture {
+                            if offset == 0 && !isAnimating {
+                                isPlayerShowing = true
                             }
-                        if offset == 0 {
-                            directionFeedbackView
                         }
+                    if offset == 0 {
+                        directionFeedbackView
                     }
                 }
             }
             
             VStack {
-                // TODO: Make sure these line up with the new card size
                 progressiveBlurView(startPoint: .top, endPoint: .bottom)
                     .onTapGesture {
-                        animateWithTracking {
-                            feedModel.previous()
+                        withAnimation(.easeIn(duration: 0.3)) {
+                            playerVM.previous()
                         }
                     }
                 Spacer()
                     .frame(height: cardSize.height)
                 progressiveBlurView(startPoint: .bottom, endPoint: .top)
                     .onTapGesture {
-                        animateWithTracking {
-                            feedModel.next()
+                        withAnimation(.easeIn(duration: 0.3)) {
+                            playerVM.next()
                         }
                     }
             }
             .zIndex(2000)
         }
-        .animation(.easeInOut, value: feedModel.nowPlayingIndex)
+        .animation(.easeInOut, value: categoryFeedVM.nowPlayingIndex)
+        .animation(.easeInOut, value: categoryFeedVM.clips)
         .gesture(
             DragGesture()
                 .onChanged { value in
@@ -92,18 +98,18 @@ struct ArtworkFeed: View {
                 .onEnded { value in
                     guard !isAnimating else { return }
                     
-                    animateWithTracking {
+                    withAnimation(.easeIn(duration: 0.3)) {
                         if dragDirection == .vertical {
                             if dragOffset.y > cardSize.height / 2 {
-                                feedModel.previous()
+                                playerVM.previous()
                             } else if dragOffset.y < -cardSize.height / 2 {
-                                feedModel.next()
+                                playerVM.next()
                             }
                         } else if dragDirection == .horizontal && isConfirmed {
                             let isInterested = dragOffset.x > 0
-                            if let nowPlaying = feedModel.nowPlaying {
+                            if let nowPlaying = playerVM.nowPlaying {
                                 Task {
-                                    await feedModel.followShow(feed: nowPlaying.feedItem.feed, isInterested: isInterested)
+                                    await profileVM.followShow(feed: nowPlaying.feedItem.feed, isInterested: isInterested)
                                 }
                             }
                         }
@@ -120,19 +126,6 @@ struct ArtworkFeed: View {
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(25)
                 .presentationBackground(.clear)
-        }
-    }
-    
-    private func animateWithTracking(_ action: @escaping () -> Void) {
-        if !isAnimating {
-            let duration = 0.3
-            withAnimation(.easeInOut(duration: duration)) {
-                isAnimating = true
-                action()
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
-                isAnimating = false
-            }
         }
     }
     
@@ -194,14 +187,10 @@ extension ArtworkFeed {
         GeometryReader { geo in
             ZStack {
                 ForEach(-1...1, id: \.self) { offset in
-                    let index = feedModel.nowPlayingIndex! + offset
-                    if index >= 0 && index < feedModel.feed.count,
-                       let image = feedModel.feedArtworks[feedModel.feed[index].feedItem.feed.id]?.image {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFill()
+                    let index = categoryFeedVM.nowPlayingIndex + offset
+                    if index >= 0 && index < categoryFeedVM.clips.count {
+                        ArtworkView(feed: categoryFeedVM.clips[index].feedItem.feed)
                             .frame(width: geo.size.width, height: geo.size.height)
-                            .clipped()
                             .blur(radius: 50)
                             .opacity(self.imageOpacity(for: offset))
                             .animation(.easeInOut, value: dragOffset)
@@ -211,6 +200,7 @@ extension ArtworkFeed {
                 Rectangle()
                     .fill(.ultraThinMaterial)
             }
+            .frame(width: geo.size.width, height: geo.size.height)
         }
     }
     
@@ -228,6 +218,7 @@ extension ArtworkFeed {
                     endPoint: endPoint
                 )
             )
+            .contentShape(Rectangle())
     }
 }
 
@@ -240,7 +231,7 @@ extension ArtworkFeed {
                 if dragDirection == .horizontal {
                     if dragOffset.x < 0 {
                         Spacer()
-                        VStack(alignment: dragOffset.x > 0 ? .leading : .trailing, spacing: 10) {
+                        VStack(alignment: .trailing, spacing: 10) {
                             Image(systemName: "hand.raised")
                                 .foregroundColor(.white)
                                 .font(.system(size: 32))
@@ -248,11 +239,11 @@ extension ArtworkFeed {
                                 .font(.headline)
                                 .foregroundColor(.white)
                                 .lineLimit(1)
-                                .multilineTextAlignment(dragOffset.x > 0 ? .leading : .trailing)
+                                .multilineTextAlignment(.trailing)
                         }
                         .padding()
                     } else if dragOffset.x > 0 {
-                        VStack(alignment: dragOffset.x > 0 ? .leading : .trailing, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 10) {
                             Image(systemName: "plus")
                                 .foregroundColor(.white)
                                 .font(.system(size: 32))
@@ -260,7 +251,7 @@ extension ArtworkFeed {
                                 .font(.headline)
                                 .foregroundColor(.white)
                                 .lineLimit(1)
-                                .multilineTextAlignment(dragOffset.x > 0 ? .leading : .trailing)
+                                .multilineTextAlignment(.leading)
                         }
                         .padding()
                         Spacer()

@@ -44,34 +44,21 @@ struct AirPlayView: UIViewRepresentable {
 }
 
 struct NowPlayingSheet: View {
+    @EnvironmentObject private var feedVM: FeedViewModel
+    @EnvironmentObject private var playerVM: PlayerViewModel
+    @EnvironmentObject private var artworkVM: ArtworkViewModel
     @State private var isTranscriptShowing: Bool = false
     @State private var airPlayView = AirPlayView()
-    @EnvironmentObject private var feedModel: FeedModel
     @Environment(\.colorScheme) var colorScheme
     
     let speeds: [Double] = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
     
     var clip: Clip? {
-        feedModel.nowPlaying
+        playerVM.nowPlaying
     }
     
     var duration: Double {
-        return feedModel.duration
-    }
-    
-    var image: Artwork? {
-        if let clip {
-            return feedModel.feedArtworks[clip.feedItem.feed.id]
-        }
-        return nil
-    }
-    
-    var bgColor: Color {
-        return image?.bgColor ?? .gray
-    }
-    
-    var shadwoColor: Color {
-        return image?.shadowColor ?? .gray
+        return playerVM.duration
     }
     
     func formattedSpeed(_ speed: Double) -> String {
@@ -96,25 +83,14 @@ struct NowPlayingSheet: View {
                 .ignoresSafeArea()
             
             VStack() {
-                if let clip {
+                if let clip = clip {
                     GeometryReader { geometry in
                         ZStack {
-                            if let image = image {
-                                Image(uiImage: image.image)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: geometry.size.height, height: geometry.size.height)
-                                    .clipped()
-                                    .cornerRadius(15)
-                                    .shadow(color: image.shadowColor.opacity(0.6), radius: 20)
-                            } else {
-                                    Rectangle()
-                                        .fill(Color.gray)
-                                        .scaledToFill()
-                                        .frame(width: geometry.size.height, height: geometry.size.height)
-                                        .clipped()
-                                        .cornerRadius(15)
-                            }
+                            ArtworkView(feed: clip.feedItem.feed)
+                                .frame(width: geometry.size.height, height: geometry.size.height)
+                                .clipped()
+                                .cornerRadius(15)
+                                .shadow(color: .gray.opacity(0.6), radius: 20)
                             
                             if isTranscriptShowing {
                                 ScrollView(.vertical, showsIndicators: true) {
@@ -137,12 +113,12 @@ struct NowPlayingSheet: View {
                                 .fontWeight(.bold)
                                 .lineLimit(3)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                
                         }
                         .frame(height: 100)
                         
                         Spacer()
                         
+                        // Progress bar and time
                         VStack {
                             GeometryReader { geometry in
                                 ZStack(alignment: .leading) {
@@ -152,10 +128,10 @@ struct NowPlayingSheet: View {
                                         .brightness(colorScheme == .light ? 0.3 : 0.0)
                                     
                                     RoundedRectangle(cornerRadius: 10)
-                                        .frame(width: geometry.size.width * feedModel.progress, height: 5)
+                                        .frame(width: geometry.size.width * playerVM.progress, height: 5)
                                         .foregroundColor(.gray)
                                         .brightness(colorScheme == .light ? 0.0 : 0.3)
-                                        .animation(.easeInOut(duration: 0.25), value: feedModel.progress)
+                                        .animation(.easeInOut(duration: 0.25), value: playerVM.progress)
                                     
                                     RoundedRectangle(cornerRadius: 10)
                                         .opacity(0.01)
@@ -164,7 +140,7 @@ struct NowPlayingSheet: View {
                                             DragGesture(minimumDistance: 0)
                                                 .onChanged { value in
                                                     let newProgress = value.location.x / geometry.size.width
-                                                    feedModel.seekToProgress(percentage: min(max(newProgress, 0), 1))
+                                                    playerVM.seekToProgress(percentage: min(max(newProgress, 0), 1))
                                                 }
                                         )
                                 }
@@ -172,11 +148,11 @@ struct NowPlayingSheet: View {
                             .frame(height: 5)
                             
                             HStack {
-                                Text(formattedTime(from: feedModel.currentTime))
+                                Text(formattedTime(from: playerVM.currentTime))
                                     .font(.caption)
                                     .foregroundColor(Color.gray)
                                 Spacer()
-                                Text(formattedTime(from: feedModel.duration))
+                                Text(formattedTime(from: playerVM.duration))
                                     .font(.caption)
                                     .foregroundColor(Color.gray)
                             }
@@ -184,9 +160,10 @@ struct NowPlayingSheet: View {
                         
                         Spacer()
                         
+                        // Playback controls
                         HStack {
                             Button(action: {
-                                feedModel.previous()
+                                playerVM.previous()
                             }) {
                                 Image(systemName: "backward.fill")
                                     .foregroundColor(.primary)
@@ -194,15 +171,15 @@ struct NowPlayingSheet: View {
                             }
                             Spacer()
                             Button(action: {
-                                feedModel.playPause()
+                                playerVM.playPause()
                             }) {
-                                Image(systemName: feedModel.isPlaying ? "pause.fill" : "play.fill")
+                                Image(systemName: playerVM.isPlaying ? "pause.fill" : "play.fill")
                                     .foregroundColor(.primary)
                                     .font(.system(size: 50))
                             }
                             Spacer()
                             Button(action: {
-                                feedModel.next()
+                                playerVM.next()
                             }) {
                                 Image(systemName: "forward.fill")
                                     .foregroundColor(.primary)
@@ -212,6 +189,7 @@ struct NowPlayingSheet: View {
                         
                         Spacer()
                         
+                        // Bottom controls
                         ZStack {
                             airPlayView
                                 .frame(width: 50, height: 50)
@@ -220,33 +198,24 @@ struct NowPlayingSheet: View {
                                 Menu {
                                     ForEach(speeds, id: \.self) { speed in
                                         Button("\(formattedSpeed(speed))x") {
-                                            feedModel.playbackSpeed = speed
+                                            playerVM.playbackSpeed = speed
                                         }
                                     }
                                 } label: {
-                                    Text("\(formattedSpeed(feedModel.playbackSpeed))x")
+                                    Text("\(formattedSpeed(playerVM.playbackSpeed))x")
                                         .foregroundColor(.primary)
                                         .font(.system(size: 24))
-                                    
                                 }
                                 
                                 Spacer()
                                 
                                 Button(action: {
-                                    isTranscriptShowing = !isTranscriptShowing
+                                    isTranscriptShowing.toggle()
                                 }) {
-                                    if isTranscriptShowing {
-                                        Image(systemName: "photo")
-                                            .foregroundColor(.primary)
-                                            .font(.system(size: 24))
-                                    } else {
-                                        Image(systemName: "text.quote")
-                                            .foregroundColor(.primary)
-                                            .font(.system(size: 24))
-                                    }
-                                    
+                                    Image(systemName: isTranscriptShowing ? "photo" : "text.quote")
+                                        .foregroundColor(.primary)
+                                        .font(.system(size: 24))
                                 }
-                                
                             }
                         }
                     }
@@ -258,7 +227,7 @@ struct NowPlayingSheet: View {
             .padding(.horizontal)
             .padding(.top)
         }
-        .onAppear() {
+        .onAppear {
             setWindowBackgroundColor(.black)
         }
         .presentationDragIndicator(.visible)
@@ -268,7 +237,7 @@ struct NowPlayingSheet: View {
 
 private func setWindowBackgroundColor(_ color: UIColor) {
     if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-        let window = windowScene.windows.first
+       let window = windowScene.windows.first
     {
         window.backgroundColor = color
     }
@@ -278,6 +247,6 @@ private func setWindowBackgroundColor(_ color: UIColor) {
     return VStack {
         Spacer()
         NowPlayingView()
-            .environmentObject(FeedModel())
     }
+    .previewWithEnvironment()
 }

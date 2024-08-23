@@ -8,7 +8,10 @@
 import SwiftUI
 
 struct ClipCardView: View {
-    @EnvironmentObject private var feedModel: FeedModel
+    @ObservedObject var categoryFeedVM: CategoryFeedViewModel
+    
+    @EnvironmentObject private var playerVM: PlayerViewModel
+    @EnvironmentObject private var artworkVM: ArtworkViewModel
     @State private var dragOffset: CGFloat = 0.0
     @State private var isPlayingClip: Bool = false
     let index: Int
@@ -17,70 +20,78 @@ struct ClipCardView: View {
     
     var labelHeight: CGFloat { return cardSize.height - cardSize.width }
     
-    var clip: Clip {
-        return feedModel.feed[index]
+    var clip: Clip? {
+        guard index >= 0 && index < categoryFeedVM.clips.count else { return nil }
+        return categoryFeedVM.clips[index]
     }
     
-    var artwork: Artwork? {
-        return feedModel.feedArtworks[clip.feedItem.feed.id]
-    }
-    
-    var gradientColor: Color {
-        return artwork?.shadowColor ?? .black
+    init(categoryFeedVM: CategoryFeedViewModel, index: Int, cardSize: CGSize, labelOpacity: CGFloat) {
+        self.categoryFeedVM = categoryFeedVM
+        self.index = index
+        self.cardSize = cardSize
+        self.labelOpacity = labelOpacity
     }
     
     var body: some View {
-        ZStack() {
-            if let image = artwork?.image {
-                VStack {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: cardSize.width, height: cardSize.width)
-                    Spacer()
-                }
-                VStack {
-                    Spacer()
-                        .frame(height: cardSize.width * 0.6)
-                    labelOverlay
-                }
+        ZStack {
+            if let clip = clip {
+                cardContent(for: clip)
             } else {
-                ZStack {
-                    Rectangle()
-                        .fill(.ultraThinMaterial)
-                    ProgressView()
-                }
+                emptyCardView
             }
         }
         .frame(width: cardSize.width, height: cardSize.height)
         .clipShape(RoundedRectangle(cornerRadius: 10))
-        .onChange(of: feedModel.isPlaying) { updatePlayingState() }
-        .onChange(of: feedModel.nowPlayingIndex) { updatePlayingState() }
+        .onChange(of: playerVM.isPlaying) { updatePlayingState() }
+        .onChange(of: categoryFeedVM.nowPlayingIndex) { updatePlayingState() }
+    }
+    
+    private func cardContent(for clip: Clip) -> some View {
+        ZStack {
+            VStack {
+                ArtworkView(feed: clip.feedItem.feed)
+                    .frame(width: cardSize.width, height: cardSize.width)
+                Spacer()
+            }
+            VStack {
+                Spacer()
+                    .frame(height: cardSize.width * 0.6)
+                labelOverlay(for: clip)
+            }
+        }
+    }
+    
+    private var emptyCardView: some View {
+        ZStack {
+            Rectangle()
+                .fill(.ultraThinMaterial)
+            Text("No clip available")
+                .foregroundColor(.secondary)
+        }
     }
     
     private func updatePlayingState() {
         withAnimation(.easeInOut(duration: 0.3)) {
-            isPlayingClip = feedModel.isPlaying && feedModel.nowPlayingIndex == index
+            isPlayingClip = playerVM.isPlaying && categoryFeedVM.nowPlayingIndex == index
         }
     }
     
-    
-    private var labelOverlay: some View {
+    private func labelOverlay(for clip: Clip) -> some View {
         LinearGradient(
             gradient: Gradient(stops: [
-                .init(color: gradientColor.opacity(0), location: 0),
-                .init(color: gradientColor.opacity(0.2), location: 0.1),
-                .init(color: gradientColor.opacity(0.5), location: 0.2),
-                .init(color: gradientColor.opacity(0.9), location: 0.35),
-                .init(color: gradientColor, location: 1)
+                .init(color: Color.black.opacity(0), location: 0),
+                .init(color: Color.black.opacity(0.2), location: 0.1),
+                .init(color: Color.black.opacity(0.5), location: 0.2),
+                .init(color: Color.black.opacity(0.9), location: 0.35),
+                .init(color: Color.black, location: 1)
             ]),
             startPoint: .top,
             endPoint: .bottom
         )
-        .overlay(label)
+        .overlay(label(for: clip))
     }
     
-    private var label: some View {
+    private func label(for clip: Clip) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Spacer()
             Text("\(clip.feedItem.postedAt.formattedAsDayAndMonth()) • \(clip.feedItem.feed.name)")
@@ -103,7 +114,7 @@ struct ClipCardView: View {
     
     private var playButton: some View {
         Button(action: {
-            feedModel.playPause()
+            playerVM.playPause()
         }) {
             HStack(spacing: 5) {
                 ZStack {
@@ -115,7 +126,7 @@ struct ClipCardView: View {
                 }
                 .frame(width: 16, height: 16)
                 .font(Font.system(size: 16))
-                .foregroundColor(gradientColor)
+                .foregroundColor(.white)
                 
                 if isPlayingClip {
                     ZStack {
@@ -123,12 +134,12 @@ struct ClipCardView: View {
                             ZStack(alignment: .leading) {
                                 RoundedRectangle(cornerRadius: 10)
                                     .frame(height: 5)
-                                    .foregroundColor(gradientColor)
+                                    .foregroundColor(.white)
                                     .opacity(0.3)
                                 
                                 RoundedRectangle(cornerRadius: 10)
-                                    .frame(width: geometry.size.width * feedModel.progress, height: 5)
-                                    .foregroundColor(gradientColor)
+                                    .frame(width: geometry.size.width * playerVM.progress, height: 5)
+                                    .foregroundColor(.white)
                             }
                         }
                     }
@@ -137,19 +148,19 @@ struct ClipCardView: View {
                 }
                 
                 Text(
-                    feedModel.nowPlayingIndex == index
+                    categoryFeedVM.nowPlayingIndex == index
                         ? formattedDuration(isPlayingClip
-                            ? (feedModel.duration - feedModel.currentTime)
-                            : feedModel.duration)
+                            ? (playerVM.duration - playerVM.currentTime)
+                            : playerVM.duration)
                         : "Play"
                 )
                     .font(.system(size: 14))
                     .fontWeight(.bold)
-                    .foregroundColor(gradientColor)
+                    .foregroundColor(.white)
             }
             .padding(.vertical, 5)
             .padding(.horizontal, 10)
-            .background(Color.white)
+            .background(Color.black.opacity(0.6))
             .cornerRadius(15)
         }
         .buttonStyle(PlainButtonStyle())

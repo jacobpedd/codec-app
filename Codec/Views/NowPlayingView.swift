@@ -8,49 +8,35 @@
 import SwiftUI
 
 struct NowPlayingView: View {
-    @State private var isPlayerShowing: Bool = false
-    @EnvironmentObject private var feedModel: FeedModel
+    @EnvironmentObject private var playerVM: PlayerViewModel
+    @EnvironmentObject private var artworkVM: ArtworkViewModel
     
-    var image: Artwork? {
-        if let clip = feedModel.nowPlaying {
-            return feedModel.feedArtworks[clip.feedItem.feed.id]
-        }
-        return nil
-    }
+    @State private var isPlayerShowing: Bool = false
+    @State private var artwork: Artwork?
     
     var body: some View {
         VStack {
-            if let clip = feedModel.nowPlaying {
+            if let clip = playerVM.nowPlaying {
                 HStack {
-                    if let image = image {
-                        Image(uiImage: image.image)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 40, height: 40)
-                            .cornerRadius(10)
-                    } else {
-                        Rectangle()
-                            .fill(Color.gray)
-                            .frame(width: 30, height: 30)
-                            .cornerRadius(10)
-                    }
+                    ArtworkView(feed: clip.feedItem.feed)
+                        .frame(width: 40, height: 40)
+                        .cornerRadius(10)
                     Text(clip.name)
                         .font(.footnote)
                         .lineLimit(1)
                     Spacer()
                     Button(action: {
-                        feedModel.playPause()
+                        playerVM.playPause()
                     }) {
-                        Image(systemName: feedModel.isPlaying ? "pause.fill" : "play.fill")
+                        Image(systemName: playerVM.isPlaying ? "pause.fill" : "play.fill")
                             .foregroundColor(.primary)
                     }
                     Button(action: {
-                        feedModel.next()
+                        playerVM.next()
                     }) {
                         Image(systemName: "forward.fill")
                             .foregroundColor(.primary)
                     }
-                    
                 }
                 .padding(10)
                 .background(.thinMaterial)
@@ -79,6 +65,6 @@ struct NowPlayingView: View {
     return VStack {
         Spacer()
         NowPlayingView()
-            .environmentObject(FeedModel())
     }
+    .previewWithEnvironment()
 }

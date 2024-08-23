@@ -8,11 +8,13 @@
 import SwiftUI
 
 struct ActionSection: View {
-    @EnvironmentObject private var feedModel: FeedModel
+    @EnvironmentObject private var userVM: UserViewModel
 
     var body: some View {
         Section {
-            Button(action: feedModel.logout) {
+            Button(action: {
+                userVM.logout()
+            }) {
                 HStack {
                     Text("Log Out")
                     Spacer()
@@ -38,4 +40,13 @@ struct ActionSection: View {
             UIApplication.shared.open(url)
         }
     }
+}
+
+#Preview {
+    NavigationStack {
+        List {
+            ActionSection()
+        }
+    }
+    .previewWithEnvironment()
 }
