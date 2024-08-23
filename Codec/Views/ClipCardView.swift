@@ -14,6 +14,7 @@ struct ClipCardView: View {
     @EnvironmentObject private var artworkVM: ArtworkViewModel
     @State private var dragOffset: CGFloat = 0.0
     @State private var isPlayingClip: Bool = false
+    @State private var artwork: Artwork?
     let index: Int
     let cardSize: CGSize
     let labelOpacity: CGFloat
@@ -23,6 +24,10 @@ struct ClipCardView: View {
     var clip: Clip? {
         guard index >= 0 && index < categoryFeedVM.clips.count else { return nil }
         return categoryFeedVM.clips[index]
+    }
+    
+    var artworkColor: Color {
+        return artwork?.bgColor ?? Color.black
     }
     
     init(categoryFeedVM: CategoryFeedViewModel, index: Int, cardSize: CGSize, labelOpacity: CGFloat) {
@@ -44,6 +49,10 @@ struct ClipCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .onChange(of: playerVM.isPlaying) { updatePlayingState() }
         .onChange(of: categoryFeedVM.nowPlayingIndex) { updatePlayingState() }
+        .onChange(of: clip) { loadArtwork() }
+        .onAppear {
+            loadArtwork()
+        }
     }
     
     private func cardContent(for clip: Clip) -> some View {
@@ -79,11 +88,11 @@ struct ClipCardView: View {
     private func labelOverlay(for clip: Clip) -> some View {
         LinearGradient(
             gradient: Gradient(stops: [
-                .init(color: Color.black.opacity(0), location: 0),
-                .init(color: Color.black.opacity(0.2), location: 0.1),
-                .init(color: Color.black.opacity(0.5), location: 0.2),
-                .init(color: Color.black.opacity(0.9), location: 0.35),
-                .init(color: Color.black, location: 1)
+                .init(color: Color.clear, location: 0),
+                .init(color: artworkColor.opacity(0.2), location: 0.1),
+                .init(color: artworkColor.opacity(0.5), location: 0.2),
+                .init(color: artworkColor.opacity(0.9), location: 0.35),
+                .init(color: artworkColor, location: 1)
             ]),
             startPoint: .top,
             endPoint: .bottom
@@ -126,7 +135,7 @@ struct ClipCardView: View {
                 }
                 .frame(width: 16, height: 16)
                 .font(Font.system(size: 16))
-                .foregroundColor(.white)
+                .foregroundColor(artworkColor)
                 
                 if isPlayingClip {
                     ZStack {
@@ -134,12 +143,12 @@ struct ClipCardView: View {
                             ZStack(alignment: .leading) {
                                 RoundedRectangle(cornerRadius: 10)
                                     .frame(height: 5)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(artworkColor)
                                     .opacity(0.3)
                                 
                                 RoundedRectangle(cornerRadius: 10)
                                     .frame(width: geometry.size.width * playerVM.progress, height: 5)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(artworkColor)
                             }
                         }
                     }
@@ -156,11 +165,11 @@ struct ClipCardView: View {
                 )
                     .font(.system(size: 14))
                     .fontWeight(.bold)
-                    .foregroundColor(.white)
+                    .foregroundColor(artworkColor)
             }
             .padding(.vertical, 5)
             .padding(.horizontal, 10)
-            .background(Color.black.opacity(0.6))
+            .background(.white)
             .cornerRadius(15)
         }
         .buttonStyle(PlainButtonStyle())
@@ -174,6 +183,13 @@ struct ClipCardView: View {
             return "\(minutes)m \(seconds)s"
         } else {
             return "\(seconds)s"
+        }
+    }
+    
+    private func loadArtwork() {
+        guard let clip = clip else { return }
+        artworkVM.loadArtwork(for: clip.feedItem.feed) { loadedArtwork in
+            self.artwork = loadedArtwork
         }
     }
 }
