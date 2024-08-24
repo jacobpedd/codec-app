@@ -119,6 +119,11 @@ class PlayerViewModel: ObservableObject {
 }
 
 extension PlayerViewModel: AudioManagerDelegate {
+    func bufferingStateChanged(_ isBuffering: Bool) {
+        // TODO: Show buffering state in UI
+        return
+    }
+    
     func playbackDidEnd() {
         next()
     }

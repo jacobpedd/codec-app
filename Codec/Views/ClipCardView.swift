@@ -10,10 +10,10 @@ import SwiftUI
 struct ClipCardView: View {
     @ObservedObject var categoryFeedVM: CategoryFeedViewModel
     
+    @EnvironmentObject var feedVM: FeedViewModel
     @EnvironmentObject private var playerVM: PlayerViewModel
     @EnvironmentObject private var artworkVM: ArtworkViewModel
     @State private var dragOffset: CGFloat = 0.0
-    @State private var isPlayingClip: Bool = false
     @State private var artwork: Artwork?
     let index: Int
     let cardSize: CGSize
@@ -28,6 +28,10 @@ struct ClipCardView: View {
     
     var artworkColor: Color {
         return artwork?.bgColor ?? Color.black
+    }
+    
+    var isPlayingClip: Bool {
+        return playerVM.isPlaying && playerVM.nowPlaying == clip && clip != nil
     }
     
     init(categoryFeedVM: CategoryFeedViewModel, index: Int, cardSize: CGSize, labelOpacity: CGFloat) {
@@ -47,8 +51,6 @@ struct ClipCardView: View {
         }
         .frame(width: cardSize.width, height: cardSize.height)
         .clipShape(RoundedRectangle(cornerRadius: 10))
-        .onChange(of: playerVM.isPlaying) { updatePlayingState() }
-        .onChange(of: categoryFeedVM.nowPlayingIndex) { updatePlayingState() }
         .onChange(of: clip) { loadArtwork() }
         .onAppear {
             loadArtwork()
@@ -76,12 +78,6 @@ struct ClipCardView: View {
                 .fill(.ultraThinMaterial)
             Text("No clip available")
                 .foregroundColor(.secondary)
-        }
-    }
-    
-    private func updatePlayingState() {
-        withAnimation(.easeInOut(duration: 0.3)) {
-            isPlayingClip = playerVM.isPlaying && categoryFeedVM.nowPlayingIndex == index
         }
     }
     
@@ -116,6 +112,7 @@ struct ClipCardView: View {
             Spacer()
                 .frame(height: 10)
             playButton
+                .animation(.easeIn, value: isPlayingClip)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)

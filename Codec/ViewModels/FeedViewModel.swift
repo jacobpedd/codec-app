@@ -65,7 +65,6 @@ class FeedViewModel: ObservableObject {
     
     func loadFeed() async {
         await currentCategoryFeedVM?.loadFeed()
-        onFeedLoad?()
     }
     
     func moveToNextClip() { currentCategoryFeedVM?.moveToNextClip() }

@@ -18,9 +18,10 @@ protocol AudioManagerDelegate: AnyObject {
     func playbackDidEnd()
     func currentTimeUpdated(_ currentTime: TimeInterval)
     func durationLoaded(_ duration: TimeInterval)
+    func bufferingStateChanged(_ isBuffering: Bool)
 }
 
-class AudioManager {
+class AudioManager: NSObject {
     weak var delegate: AudioManagerDelegate?
     var audioPlayer: AVPlayer?
     var playerItem: AVPlayerItem?
@@ -30,7 +31,8 @@ class AudioManager {
     private var cacheOrder: [String] = []
     private let maxCachedPlayers = 5
     
-    init() {
+    override init() {
+        super.init()
         setupControlCenterControls()
         configureAudioSession()
     }
@@ -41,11 +43,12 @@ class AudioManager {
             try session.setCategory(.playback)
             try session.setActive(true)
         } catch {
-            print("Error configuring session: \(error)")
+            print("AudioManager: Error configuring session: \(error)")
         }
     }
 
     func loadAudio(audioKey: String) {
+        print("AudioManager: Starting to load audio: \(audioKey)")
         cleanUp()
         
         if let cachedPlayer = cachedPlayers[audioKey] {
@@ -55,18 +58,32 @@ class AudioManager {
         } else {
             guard let encodedAudioKey = audioKey.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
                   let url = URL(string: "https://bucket.trycodec.com/\(encodedAudioKey)") else {
-                print("Error: Invalid URL")
+                print("AudioManager: Error: Invalid URL for audio key: \(audioKey)")
                 return
             }
             let asset = AVAsset(url: url)
             playerItem = AVPlayerItem(asset: asset)
             audioPlayer = AVPlayer(playerItem: playerItem)
             
-            // Cache the new player
+            print("AudioManager: Caching new player for key: \(audioKey)")
             cachePlayer(audioKey: audioKey, player: audioPlayer!)
         }
         
         guard let playerItem = playerItem else { return }
+        
+        setupObservers(for: playerItem)
+        
+        audioPlayer?.replaceCurrentItem(with: playerItem)
+        
+        setupProgressListener()
+        loadDuration()
+    }
+
+    private func setupObservers(for playerItem: AVPlayerItem) {
+        playerItem.addObserver(self, forKeyPath: "status", options: [.new, .initial], context: nil)
+        playerItem.addObserver(self, forKeyPath: "playbackBufferEmpty", options: .new, context: nil)
+        playerItem.addObserver(self, forKeyPath: "playbackLikelyToKeepUp", options: .new, context: nil)
+        playerItem.addObserver(self, forKeyPath: "playbackBufferFull", options: .new, context: nil)
         
         NotificationCenter.default.addObserver(
             self,
@@ -75,34 +92,26 @@ class AudioManager {
             object: playerItem
         )
         
-        // Add observers for the audio session
         let session = AVAudioSession.sharedInstance()
         NotificationCenter.default.addObserver(self, selector: #selector(handleInterruption), name: AVAudioSession.interruptionNotification, object: session)
         NotificationCenter.default.addObserver(self, selector: #selector(handleRouteChange), name: AVAudioSession.routeChangeNotification, object: session)
-
-        audioPlayer = audioPlayer ?? AVPlayer(playerItem: playerItem)
-        audioPlayer?.replaceCurrentItem(with: playerItem)
-        
-        setupProgressListener()
-        loadDuration()
     }
 
-    func preloadAudio(audioKeys: [String]) {
-        for audioKey in audioKeys {
-            if cachedPlayers[audioKey] == nil {
-                guard let encodedAudioKey = audioKey.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-                      let url = URL(string: "https://bucket.trycodec.com/\(encodedAudioKey)") else {
-                    print("Error: Invalid URL for key: \(audioKey)")
-                    continue
-                }
-                let asset = AVAsset(url: url)
-                let playerItem = AVPlayerItem(asset: asset)
-                let player = AVPlayer(playerItem: playerItem)
-                
-                cachePlayer(audioKey: audioKey, player: player)
-            } else {
-                updateCacheOrder(audioKey)
-            }
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        guard let playerItem = object as? AVPlayerItem else { return }
+        
+        switch keyPath {
+        case "playbackBufferEmpty":
+            print("AudioManager: Playback buffer is empty")
+            delegate?.bufferingStateChanged(true)
+        case "playbackLikelyToKeepUp":
+            print("AudioManager: Playback is likely to keep up")
+            delegate?.bufferingStateChanged(false)
+        case "playbackBufferFull":
+            print("AudioManager: Playback buffer is full")
+            delegate?.bufferingStateChanged(false)
+        default:
+            break
         }
     }
 
@@ -152,7 +161,7 @@ class AudioManager {
                     }
                 }
             } catch {
-                print("Error loading duration: \(error)")
+                print("AudioManager: Error loading duration: \(error)")
             }
         }
     }
@@ -166,13 +175,10 @@ class AudioManager {
     }
     
     private func setupControlCenterControls() {
-        // Get the shared MPRemoteCommandCenter
         let commandCenter = MPRemoteCommandCenter.shared()
 
-        // Add handler for Play Command
         commandCenter.playCommand.addTarget { [unowned self] event in
             guard let delegate = self.delegate else { return .commandFailed }
-            print("Play command - is playing: \(delegate.isPlaying)")
             if !delegate.isPlaying {
                 delegate.playPause()
                 return .success
@@ -180,10 +186,8 @@ class AudioManager {
             return .commandFailed
         }
 
-        // Add handler for Pause Command
         commandCenter.pauseCommand.addTarget { [unowned self] event in
             guard let delegate = self.delegate else { return .commandFailed }
-            print("Pause command - is playing: \(delegate.isPlaying)")
             if delegate.isPlaying {
                 delegate.playPause()
                 return .success
@@ -191,29 +195,23 @@ class AudioManager {
             return .commandFailed
         }
 
-        // Add handler for Next Command
         commandCenter.nextTrackCommand.addTarget { [unowned self] event in
             guard let delegate = self.delegate else { return .commandFailed }
-            print("Next command")
             delegate.next()
             return .success
         }
 
-        // Add handler for Previous Command
         commandCenter.previousTrackCommand.addTarget { [unowned self] event in
             guard let delegate = self.delegate else { return .commandFailed }
-            print("Previous command")
             delegate.previous()
             return .success
         }
 
-        // Add handler for Seek Command
         commandCenter.changePlaybackPositionCommand.addTarget { [unowned self] event in
             guard let event = event as? MPChangePlaybackPositionCommandEvent else {
                 return .commandFailed
             }
             guard let delegate = self.delegate else { return .commandFailed }
-            print("Seek command - position: \(event.positionTime)")
             delegate.seekToTime(seconds: event.positionTime)
             return .success
         }
@@ -232,16 +230,13 @@ class AudioManager {
         guard let delegate = self.delegate else { return }
 
         if type == .began {
-            // Interruption began, pause playback
             if delegate.isPlaying {
                 delegate.playPause()
             }
         } else if type == .ended {
-            // Interruption ended, resume playback if needed
             guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { return }
             let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
             if options.contains(.shouldResume) {
-                // Resume playback if appropriate
                 if !delegate.isPlaying {
                     delegate.playPause()
                 }
@@ -271,6 +266,12 @@ class AudioManager {
         if let token = timeObserverToken {
             audioPlayer?.removeTimeObserver(token)
             timeObserverToken = nil
+        }
+        if let playerItem = playerItem {
+            playerItem.removeObserver(self, forKeyPath: "status")
+            playerItem.removeObserver(self, forKeyPath: "playbackBufferEmpty")
+            playerItem.removeObserver(self, forKeyPath: "playbackLikelyToKeepUp")
+            playerItem.removeObserver(self, forKeyPath: "playbackBufferFull")
         }
         NotificationCenter.default.removeObserver(self)
     }
