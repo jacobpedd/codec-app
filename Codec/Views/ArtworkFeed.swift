@@ -63,39 +63,13 @@ struct ArtworkFeed: View {
                     ForEach(categoryFeedVM.clips.indices, id: \.self) { index in
                         childView(index)
                             .onTapGesture {
-                                
-//                                // TODO: better: initialize `self.position`
-//                                if self.position == nil {
-//                                    withAnimation {
-//                                        self.position = index
-//                                    }
-//                                    isPlayerShowing = true
-//                                }
-                                
+
                                 // If we're not already paged to this item,
                                 // then page to it now.
-//                                else 
                                 if self.position != index {
-                                    
-//                                    // If this index is greater than our current position,
-//                                    // then we moved down.
-//                                    let movedDown: Bool = self.position.map {
-//                                        $0 < index
-//                                    } ?? false
-//                                    
-//                                    let movedUp: Bool = self.position.map {
-//                                        $0 > index
-//                                    } ?? false
-                                    
                                     withAnimation {
                                         self.position = index
                                     }
-                                    
-//                                    if movedDown {
-//                                        playerVM.next()
-//                                    } else if movedUp {
-//                                        playerVM.previous()
-//                                    }
                                 }
                                 
                                 // Else, show the player:
@@ -161,13 +135,12 @@ struct ArtworkFeed: View {
             .onChange(of: self.currentCenter ?? 0, { oldValue, newValue in
                 print("onChange of self.currentCenter: oldValue: \(oldValue)")
                 print("onChange of self.currentCenter: newValue: \(newValue)")
-                
+//                
                 if newValue > oldValue {
                     playerVM.next()
-                } else if oldValue < newValue {
+                } else if newValue < oldValue  {
                     playerVM.previous()
                 }
-                
             })
             
             .edgesIgnoringSafeArea(.all)
@@ -306,9 +279,10 @@ struct ArtworkFeed: View {
         let center = proxy.frame(in: .scrollView).midY
         //        let distance = abs(scrollViewHeight / 2 - center)
         let distance = scrollViewHeight / 2 - center
-        //        print("distance: \(distance)")
+        print("distance: \(distance)")
         if distance.rounded(.towardZero) == .zero {
             DispatchQueue.main.async {
+                print("new center: \(index)")
                 self.currentCenter = index
             }
         }
