@@ -136,6 +136,51 @@ class UserViewModel: ObservableObject {
         
         return try await URLSession.shared.data(for: request)
     }
+    
+    func loginWithApple(token: Data?, userId: String) async {
+        guard let tokenString = token.flatMap({ String(data: $0, encoding: .utf8) }) else {
+            self.errorMessage = "Invalid Apple ID token"
+            return
+        }
+        
+        do {
+            let (data, response) = try await appleSignInRequest(token: tokenString, userId: userId)
+            
+            guard let httpResponse = response as? HTTPURLResponse,
+                  (200...299).contains(httpResponse.statusCode) else {
+                throw URLError(.badServerResponse)
+            }
+            
+            let authResponse = try JSONDecoder().decode(AuthResponse.self, from: data)
+            
+            await MainActor.run {
+                self.username = authResponse.username
+                self.token = authResponse.token
+                isLoggingIn = false
+                self.onLogin?(self.token)
+            }
+        } catch {
+            await MainActor.run {
+                isLoggingIn = false
+                errorMessage = "Error signing in with Apple: \(error.localizedDescription)"
+            }
+        }
+    }
+    
+    private func appleSignInRequest(token: String, userId: String) async throws -> (Data, URLResponse) {
+        guard let url = URL(string: "https://codec.fly.dev/auth/apple/") else {
+            throw URLError(.badURL)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: String] = ["token": token, "user_id": userId]
+        request.httpBody = try JSONEncoder().encode(body)
+        
+        return try await URLSession.shared.data(for: request)
+    }
 }
 
 
