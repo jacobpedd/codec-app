@@ -14,7 +14,10 @@ struct ArtworkFeed: View {
     @State private var isAnimating: Bool = false
     
     private let cardWidth: CGFloat = UIScreen.main.bounds.width * 0.9
+    
+    // TODO: Why +25 ?
     private var cardHeight: CGFloat { cardWidth + 25 }
+    
     private var cardSize: CGSize { CGSize(width: cardWidth, height: cardHeight) }
     private let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
     
@@ -26,15 +29,13 @@ struct ArtworkFeed: View {
         self.categoryFeedVM = categoryFeedVM
     }
     
-    // cardWidth is 90% of screenWidth
-    // cardHeight is cardWidth + ~25
-    nonisolated static let screenWidth = 344.0
-    
     nonisolated var itemLength: CGFloat {
-        Self.screenWidth * 0.9
+        self.cardWidth
     }
     
 //    @State private var position: UUID? = nil // jump to specific item
+    
+    // TODO:
     @State private var position: Int? = nil // jump to specific item
     
     
@@ -53,21 +54,61 @@ struct ArtworkFeed: View {
     var body: some View {
         
         ZStack {
-//            backgroundView
+            backgroundView
             
             ScrollView(.vertical, showsIndicators: false) {
                 
                 LazyVStack(spacing: 0) { // Lazy = don't load item until requested
                     
-//                    ForEach(colors, id: \.id) { colorDatum in
                     ForEach(categoryFeedVM.clips.indices, id: \.self) { index in
                         childView(index)
                             .onTapGesture {
-                                print("tapped \(index)")
-                                withAnimation {
-//                                    self.position = colorDatum.id
-                                    self.position = index
+                                
+//                                // TODO: better: initialize `self.position`
+//                                if self.position == nil {
+//                                    withAnimation {
+//                                        self.position = index
+//                                    }
+//                                    isPlayerShowing = true
+//                                }
+                                
+                                // If we're not already paged to this item,
+                                // then page to it now.
+//                                else 
+                                if self.position != index {
+                                    
+//                                    // If this index is greater than our current position,
+//                                    // then we moved down.
+//                                    let movedDown: Bool = self.position.map {
+//                                        $0 < index
+//                                    } ?? false
+//                                    
+//                                    let movedUp: Bool = self.position.map {
+//                                        $0 > index
+//                                    } ?? false
+                                    
+                                    withAnimation {
+                                        self.position = index
+                                    }
+                                    
+//                                    if movedDown {
+//                                        playerVM.next()
+//                                    } else if movedUp {
+//                                        playerVM.previous()
+//                                    }
                                 }
+                                
+                                // Else, show the player:
+                                else {
+                                    isPlayerShowing = true
+                                }
+                            }
+                        
+                            .scrollTransition { content, phase in
+                                content
+                                    .opacity(phase.isIdentity ? 1 : 0)
+                                    .scaleEffect(phase.isIdentity ? 1 : 0.75)
+                                    .blur(radius: phase.isIdentity ? 0 : 10)
                             }
                         
                         /*
@@ -77,7 +118,9 @@ struct ArtworkFeed: View {
                          - distance = 150, then scale = 1 - 0.1 i.e. 0.9
                          */
                             .visualEffect { content, proxy in
-                                let _distanceFromCenter = distanceFromCenter(for: proxy).rounded(.towardZero)
+                                let _distanceFromCenter = distanceFromCenter(
+                                    index: index,
+                                    for: proxy).rounded(.towardZero)
                                 
                                 let shouldOffsetUp = _distanceFromCenter < 0
                                 // Later calculations require absValue of distance
@@ -89,9 +132,10 @@ struct ArtworkFeed: View {
                                 let maxScaleReduction = 1.0 - Self.nonCenterScale // e.g. never reduce scale by more than 20%
                                 let scaleReduction = maxScaleReduction * percentOfMaxDistance
                                 
+                                // TODO: is card offset too aggressive sometimes? e.g. when *slowly* pulling down on current card to go to card above, the card below the current card seems to move offscreen too quickly; is present in SwiftUI Playground as well.
                                 let maxOffset = self.itemLength/2 // i.e. 50 if itmeLength = 100
                                 let actualOffset = maxOffset * percentOfMaxDistance
-                                
+                                                                
                                 return content
                                     .scaleEffect(0.5) // scale whole thing down by 50%
                                     .scaleEffect(1.0 - scaleReduction) // apply center-based scaling
@@ -105,16 +149,38 @@ struct ArtworkFeed: View {
             // ScrollView must be height of paged-item when using `.paging` PagingScrollTargetBehavior
             .frame(width: self.itemLength,
                    height: self.itemLength)
-            .border(.yellow) // DEBUG
+
             .scrollTargetBehavior(.paging)
             
             // Setting ScrollView's position to some specific item
             .scrollPosition(id: self.$position,
                             anchor: .center)
-            .frame(width: Self.screenWidth)
+            
+            .scaleEffect(2) // Scale the whole thing up
+            
+            .onChange(of: self.currentCenter ?? 0, { oldValue, newValue in
+                print("onChange of self.currentCenter: oldValue: \(oldValue)")
+                print("onChange of self.currentCenter: newValue: \(newValue)")
+                
+                if newValue > oldValue {
+                    playerVM.next()
+                } else if oldValue < newValue {
+                    playerVM.previous()
+                }
+                
+            })
+            
+            .edgesIgnoringSafeArea(.all)
+            .sheet(isPresented: $isPlayerShowing) {
+                NowPlayingSheet()
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+                    .presentationCornerRadius(25)
+                    .presentationBackground(.clear)
+            }
             
             
-//                        ForEach(categoryFeedVM.clips.indices, id: \.self) { index in
+            //                        ForEach(categoryFeedVM.clips.indices, id: \.self) { index in
             //                let offset = index - categoryFeedVM.nowPlayingIndex
             //                ZStack {
             //                    ClipCardView(categoryFeedVM: categoryFeedVM,
@@ -218,14 +284,7 @@ struct ArtworkFeed: View {
         }
     }
     
-//    func childView(_ colorDatum: ColorData) -> some View {
-//        Text("\(colorDatum.color.description)")
-//            .frame(width: self.itemLength, height: self.itemLength)
-//            .background(colorDatum.color)
-//            .foregroundStyle(.white)
-//            .clipShape(.rect(cornerRadius: 30))
-//    }
-    
+
     @ViewBuilder
     func childView(_ index: Int) -> some View {
         let offset = index - categoryFeedVM.nowPlayingIndex
@@ -234,43 +293,50 @@ struct ArtworkFeed: View {
                      index: index,
                      cardSize: .init(width: self.itemLength,
                                      height: self.itemLength),
-                     labelOpacity: labelOpacity(for: offset))
-        
-//        Text("\(colorDatum.color.description)")
-//            .frame(width: self.itemLength, height: self.itemLength)
-//            .background(colorDatum.color)
-//            .foregroundStyle(.white)
-//            .clipShape(.rect(cornerRadius: 30))
+                     // Not needed?
+//                     labelOpacity: labelOpacity(for: offset)
+                     labelOpacity: 1.0)
+       
     }
     
-    nonisolated func distanceFromCenter(for proxy: GeometryProxy) -> Double {
+    // TODO: Move to `.visualEffects` modifier closure?
+    nonisolated func distanceFromCenter(index: Int, 
+                                        for proxy: GeometryProxy) -> Double {
         let scrollViewHeight = proxy.bounds(of: .scrollView)?.height ?? 100
         let center = proxy.frame(in: .scrollView).midY
         //        let distance = abs(scrollViewHeight / 2 - center)
         let distance = scrollViewHeight / 2 - center
         //        print("distance: \(distance)")
+        if distance.rounded(.towardZero) == .zero {
+            DispatchQueue.main.async {
+                self.currentCenter = index
+            }
+        }
+        
         return distance
     }
     
-    private func verticalOffset(for offset: Int) -> Double {
-        guard dragDirection == .vertical else { return CGFloat(offset) * cardSize.height }
-        let baseOffset = CGFloat(offset) * cardSize.height
-        return baseOffset + dragOffset.y
-    }
+    @State var currentCenter: Int? = nil
     
-    private func horizontalOffset(for offset: Int) -> Double {
-        guard dragDirection == .horizontal && offset == 0 else { return 0 }
-        return dragOffset.x
-    }
+//    private func verticalOffset(for offset: Int) -> Double {
+//        guard dragDirection == .vertical else { return CGFloat(offset) * cardSize.height }
+//        let baseOffset = CGFloat(offset) * cardSize.height
+//        return baseOffset + dragOffset.y
+//    }
     
-    private func checkConfirmationPoint() {
-        let wasConfirmed = isConfirmed
-        isConfirmed = abs(dragDirection == .horizontal ? dragOffset.x : dragOffset.y) >= cardSize.width / 2
-        
-        if isConfirmed && !wasConfirmed {
-            impactFeedback.impactOccurred()
-        }
-    }
+//    private func horizontalOffset(for offset: Int) -> Double {
+//        guard dragDirection == .horizontal && offset == 0 else { return 0 }
+//        return dragOffset.x
+//    }
+    
+//    private func checkConfirmationPoint() {
+//        let wasConfirmed = isConfirmed
+//        isConfirmed = abs(dragDirection == .horizontal ? dragOffset.x : dragOffset.y) >= cardSize.width / 2
+//        
+//        if isConfirmed && !wasConfirmed {
+//            impactFeedback.impactOccurred()
+//        }
+//    }
     
     private func scale(for offset: Int) -> Double {
         let maxScale = 1.0
