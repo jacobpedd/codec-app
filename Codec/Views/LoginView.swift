@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AuthenticationServices
 
 struct LoginView: View {
     @EnvironmentObject private var userVM: UserViewModel
@@ -78,6 +79,32 @@ struct LoginView: View {
         }
         .padding(.horizontal, 40)
         .animation(.easeInOut, value: hasAccount)
+        
+        SignInWithAppleButton(
+            .signIn,
+            onRequest: { request in
+                request.requestedScopes = [.fullName, .email]
+            },
+            onCompletion: { result in
+                switch result {
+                case .success(let authResults):
+                    switch authResults.credential {
+                    case let appleIDCredential as ASAuthorizationAppleIDCredential:
+                        let token = appleIDCredential.identityToken
+                        let userId = appleIDCredential.user
+                        Task {
+                            await userVM.loginWithApple(token: token, userId: userId)
+                        }
+                    default:
+                        break
+                    }
+                case .failure(let error):
+                    print("Sign in failed: \(error)")
+                }
+            }
+        )
+        .frame(height: 44)
+        .padding()
     }
     
     private func submit() {
