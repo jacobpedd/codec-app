@@ -32,9 +32,7 @@ struct ArtworkFeed: View {
     nonisolated var itemLength: CGFloat {
         self.cardWidth
     }
-    
-//    @State private var position: UUID? = nil // jump to specific item
-    
+        
     // TODO:
     @State private var position: Int? = nil // jump to specific item
     
@@ -51,6 +49,9 @@ struct ArtworkFeed: View {
         self.scrollViewHeight - self.itemLength
     }
     
+    // (swipe offset amount, which index/card the offset is for)
+    @State var horizontalSwipeOffset: (CGFloat, Int)?
+    
     var body: some View {
         
         ZStack {
@@ -61,7 +62,12 @@ struct ArtworkFeed: View {
                 LazyVStack(spacing: 0) { // Lazy = don't load item until requested
                     
                     ForEach(categoryFeedVM.clips.indices, id: \.self) { index in
+                        let hasSwipeOffset = self.horizontalSwipeOffset?.1 == index
+                        let swipeOffset = self.horizontalSwipeOffset?.0 ?? .zero
+                        
                         childView(index)
+                            .offset(x: hasSwipeOffset ? swipeOffset : .zero)
+                        
                             .onTapGesture {
 
                                 // If we're not already paged to this item,
@@ -77,13 +83,33 @@ struct ArtworkFeed: View {
                                     isPlayerShowing = true
                                 }
                             }
-                        
-                            .scrollTransition { content, phase in
-                                content
-                                    .opacity(phase.isIdentity ? 1 : 0)
-                                    .scaleEffect(phase.isIdentity ? 1 : 0.75)
-                                    .blur(radius: phase.isIdentity ? 0 : 10)
-                            }
+                            .gesture(
+                                DragGesture()
+                                    .onChanged({ value in
+//                                        let swipeThreshold = 8.0
+//                                        let swipeThreshold = 4.0
+                                        let swipeThreshold = 0.0
+                                        
+                                        print("dragged: \(value.translation)")
+                                        if value.translation.width.magnitude > swipeThreshold {
+                                            print("swipe began")
+                                            
+                                            let swipeOffset = max(min(value.translation.width,
+                                                                 cardSize.width),
+                                                             -cardSize.width)
+//                                            withAnimation {
+                                                self.horizontalSwipeOffset = (swipeOffset, index)
+//                                            }
+                                        }
+                                    })
+                                    .onEnded({ value in
+                                        print("drag ended")
+                                        withAnimation {
+                                            self.horizontalSwipeOffset = nil
+                                        }
+                                        
+                                    })
+                            )
                         
                         /*
                          Suppose we scale down non-centered items to 80% and that each item's height is 300. Thus:
@@ -130,8 +156,9 @@ struct ArtworkFeed: View {
             .scrollPosition(id: self.$position,
                             anchor: .center)
             
-            .scaleEffect(2) // Scale the whole thing up
+            .scaleEffect(2) // Undoes the 1/2-scaling applied to each child-view
             
+            // Change clip when ScrollView's centered-clip changes
             .onChange(of: self.currentCenter ?? 0, { oldValue, newValue in
                 print("onChange of self.currentCenter: oldValue: \(oldValue)")
                 print("onChange of self.currentCenter: newValue: \(newValue)")
@@ -266,11 +293,10 @@ struct ArtworkFeed: View {
                      index: index,
                      cardSize: .init(width: self.itemLength,
                                      height: self.itemLength),
-                     // Not needed?
-//                     labelOpacity: labelOpacity(for: offset)
-                     labelOpacity: 1.0)
-       
+                     labelOpacity: labelOpacity(for: offset))
     }
+    
+    @State var currentSmallestDistanceFromCenter: CGFloat? = nil
     
     // TODO: Move to `.visualEffects` modifier closure?
     nonisolated func distanceFromCenter(index: Int, 
@@ -279,10 +305,11 @@ struct ArtworkFeed: View {
         let center = proxy.frame(in: .scrollView).midY
         //        let distance = abs(scrollViewHeight / 2 - center)
         let distance = scrollViewHeight / 2 - center
-        print("distance: \(distance)")
-        if distance.rounded(.towardZero) == .zero {
+                
+        // Allow some wiggle room:
+        // if distance.rounded(.towardZero) == .zero {
+        if distance.magnitude.rounded(.towardZero) < 24 {
             DispatchQueue.main.async {
-                print("new center: \(index)")
                 self.currentCenter = index
             }
         }
