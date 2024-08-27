@@ -6,8 +6,13 @@ struct ArtworkFeed: View {
     @EnvironmentObject private var playerVM: PlayerViewModel
     @EnvironmentObject private var profileVM: ProfileViewModel
     @EnvironmentObject private var artworkVM: ArtworkViewModel
-    @State private var dragOffset: CGPoint = .zero
-    @State private var dragDirection: DragDirection = .none
+//    @State private var dragOffset: CGPoint = .zero
+    
+    var dragOffset: CGFloat {
+        self.horizontalSwipeOffset?.0 ?? .zero
+    }
+    
+//    @State private var dragDirection: DragDirection = .none
     @State private var isConfirmed: Bool = false
     @Namespace private var animation
     @State private var isPlayerShowing: Bool = false
@@ -16,7 +21,8 @@ struct ArtworkFeed: View {
     private let cardWidth: CGFloat = UIScreen.main.bounds.width * 0.9
     
     // TODO: Why +25 ?
-    private var cardHeight: CGFloat { cardWidth + 25 }
+//    private var cardHeight: CGFloat { cardWidth + 25 }
+    private var cardHeight: CGFloat { cardWidth }
     
     private var cardSize: CGSize { CGSize(width: cardWidth, height: cardHeight) }
     private let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
@@ -62,55 +68,8 @@ struct ArtworkFeed: View {
                 LazyVStack(spacing: 0) { // Lazy = don't load item until requested
                     
                     ForEach(categoryFeedVM.clips.indices, id: \.self) { index in
-                        let hasSwipeOffset = self.horizontalSwipeOffset?.1 == index
-                        let swipeOffset = self.horizontalSwipeOffset?.0 ?? .zero
-                        
                         childView(index)
-                            .offset(x: hasSwipeOffset ? swipeOffset : .zero)
-                        
-                            .onTapGesture {
-
-                                // If we're not already paged to this item,
-                                // then page to it now.
-                                if self.position != index {
-                                    withAnimation {
-                                        self.position = index
-                                    }
-                                }
-                                
-                                // Else, show the player:
-                                else {
-                                    isPlayerShowing = true
-                                }
-                            }
-                            .gesture(
-                                DragGesture()
-                                    .onChanged({ value in
-//                                        let swipeThreshold = 8.0
-//                                        let swipeThreshold = 4.0
-                                        let swipeThreshold = 0.0
-                                        
-                                        print("dragged: \(value.translation)")
-                                        if value.translation.width.magnitude > swipeThreshold {
-                                            print("swipe began")
-                                            
-                                            let swipeOffset = max(min(value.translation.width,
-                                                                 cardSize.width),
-                                                             -cardSize.width)
-//                                            withAnimation {
-                                                self.horizontalSwipeOffset = (swipeOffset, index)
-//                                            }
-                                        }
-                                    })
-                                    .onEnded({ value in
-                                        print("drag ended")
-                                        withAnimation {
-                                            self.horizontalSwipeOffset = nil
-                                        }
-                                        
-                                    })
-                            )
-                        
+                            
                         /*
                          Suppose we scale down non-centered items to 80% and that each item's height is 300. Thus:
                          - item's distance-from-center = 0, then scale = 1 - 0 i.e. 1.0
@@ -289,11 +248,78 @@ struct ArtworkFeed: View {
     func childView(_ index: Int) -> some View {
         let offset = index - categoryFeedVM.nowPlayingIndex
         
-        ClipCardView(categoryFeedVM: categoryFeedVM,
-                     index: index,
-                     cardSize: .init(width: self.itemLength,
-                                     height: self.itemLength),
-                     labelOpacity: labelOpacity(for: offset))
+        
+        let hasSwipeOffset = self.horizontalSwipeOffset?.1 == index
+        let swipeOffset = self.horizontalSwipeOffset?.0 ?? .zero
+        
+        ZStack {
+            
+            directionFeedbackView
+            
+            ClipCardView(categoryFeedVM: categoryFeedVM,
+                         index: index,
+                         cardSize: .init(width: self.itemLength,
+                                         height: self.itemLength),
+                         labelOpacity: labelOpacity(for: offset))
+            
+            .offset(x: hasSwipeOffset ? swipeOffset : .zero)
+        
+            .onTapGesture {
+
+                // If we're not already paged to this item,
+                // then page to it now.
+                if self.position != index {
+                    withAnimation {
+                        self.position = index
+                    }
+                }
+                
+                // Else, show the player:
+                else {
+                    isPlayerShowing = true
+                }
+            }
+            .gesture(
+                DragGesture()
+                    .onChanged({ value in
+//                                        let swipeThreshold = 8.0
+//                                        let swipeThreshold = 4.0
+                        let swipeThreshold = 0.0
+                        
+                        print("dragged: \(value.translation)")
+                        if value.translation.width.magnitude > swipeThreshold {
+                            print("swipe began")
+                            
+                            let swipeOffset = max(min(value.translation.width,
+                                                      cardSize.width),
+                                                  -cardSize.width)
+                            //                                            withAnimation {
+                            self.horizontalSwipeOffset = (swipeOffset, index)
+                            //                                            }
+                            
+                            checkConfirmationPoint()
+                        }
+                    })
+                    .onEnded({ value in
+                        print("drag ended")
+                        withAnimation {
+                            
+                            if let nowPlaying = playerVM.nowPlaying {
+                                let isInterested = hasSwipeOffset && (swipeOffset > 0)
+                                Task {
+                                    await profileVM.followShow(feed: nowPlaying.feedItem.feed, 
+                                                               isInterested: isInterested)
+                                }
+                            }
+                            
+                            self.horizontalSwipeOffset = nil
+                        }
+                        
+                    })
+            )
+        
+            
+        }
     }
     
     @State var currentSmallestDistanceFromCenter: CGFloat? = nil
@@ -308,7 +334,8 @@ struct ArtworkFeed: View {
                 
         // Allow some wiggle room:
         // if distance.rounded(.towardZero) == .zero {
-        if distance.magnitude.rounded(.towardZero) < 24 {
+//        if distance.magnitude.rounded(.towardZero) < 24 {
+        if distance.magnitude.rounded(.towardZero) < 28 {
             DispatchQueue.main.async {
                 self.currentCenter = index
             }
@@ -339,36 +366,34 @@ struct ArtworkFeed: View {
 //        }
 //    }
     
-    private func scale(for offset: Int) -> Double {
-        let maxScale = 1.0
-        let minScale = 0.8
-        if dragOffset == .zero || dragDirection == .horizontal {
-            return offset == 0 ? 1.0 : 0.8
-        } else {
-            let effect = abs(dragOffset.y / cardSize.height)
-            if (((offset == -1 && dragOffset.y > 0) || (offset == 1 && dragOffset.y < 0))  && dragDirection == .vertical) {
-                return minScale + (maxScale - minScale) * effect
-            } else if offset == 0 {
-                return maxScale - (maxScale - minScale) * effect
-            } else {
-                return 0.8
-            }
+    private func checkConfirmationPoint() {
+        let wasConfirmed = isConfirmed
+        isConfirmed = dragOffset >= cardSize.width / 2
+        
+        if isConfirmed && !wasConfirmed {
+            impactFeedback.impactOccurred()
         }
     }
     
+//    private func scale(for offset: Int) -> Double {
+//        let maxScale = 1.0
+//        let minScale = 0.8
+//        if dragOffset == .zero || dragDirection == .horizontal {
+//            return offset == 0 ? 1.0 : 0.8
+//        } else {
+//            let effect = abs(dragOffset.y / cardSize.height)
+//            if (((offset == -1 && dragOffset.y > 0) || (offset == 1 && dragOffset.y < 0))  && dragDirection == .vertical) {
+//                return minScale + (maxScale - minScale) * effect
+//            } else if offset == 0 {
+//                return maxScale - (maxScale - minScale) * effect
+//            } else {
+//                return 0.8
+//            }
+//        }
+//    }
+    
     private func labelOpacity(for offset: Int) -> Double {
-        if dragOffset == .zero || dragDirection == .horizontal {
-            return offset == 0 ? 1.0 : 0.0
-        } else {
-            let effect = abs(dragOffset.y / cardSize.height)
-            if (offset == -1 && dragOffset.y > 0) || (offset == 1 && dragOffset.y < 0) {
-                return 1.0 * effect
-            } else if offset == 0 {
-                return 1.0 - 1.0 * effect
-            } else {
-                return 0
-            }
-        }
+        return offset == 0 ? 1.0 : 0.0
     }
 }
 
@@ -415,52 +440,58 @@ extension ArtworkFeed {
 extension ArtworkFeed {
     private var directionFeedbackView: some View {
         ZStack {
-            Rectangle()
-                .fill(feedbackColor)
+            feedbackColor
+
             HStack(alignment: .center) {
-                if dragDirection == .horizontal {
-                    if dragOffset.x < 0 {
-                        Spacer()
-                        VStack(alignment: .trailing, spacing: 10) {
-                            Image(systemName: "hand.raised")
-                                .foregroundColor(.white)
-                                .font(.system(size: 32))
-                            Text("Block Show")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .lineLimit(1)
-                                .multilineTextAlignment(.trailing)
-                        }
-                        .padding()
-                    } else if dragOffset.x > 0 {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Image(systemName: "plus")
-                                .foregroundColor(.white)
-                                .font(.system(size: 32))
-                            Text("Follow Show")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .lineLimit(1)
-                                .multilineTextAlignment(.leading)
-                        }
-                        .padding()
-                        Spacer()
+                if dragOffset < 0 {
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 10) {
+                        Image(systemName: "hand.raised")
+                            .foregroundColor(.white)
+                            .font(.system(size: 32))
+                        Text("Block Show")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                            .multilineTextAlignment(.trailing)
                     }
+                    .padding()
+                } else if dragOffset > 0 {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Image(systemName: "plus")
+                            .foregroundColor(.white)
+                            .font(.system(size: 32))
+                        Text("Follow Show")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                            .multilineTextAlignment(.leading)
+                    }
+                    .padding()
+                    
+                    Spacer()
                 }
             }
         }
-        .frame(width: cardSize.width, height: cardSize.height)
+//        .frame(width: cardSize.width, height: cardSize.height)
+        .frame(width: itemLength, height: itemLength)
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .opacity(feedbackOpacity)
     }
     
+    // Have separate cards, but change their z-index according to which direction we swiped?
     private var feedbackColor: Color {
-        guard dragDirection == .horizontal else { return .clear }
-        return dragOffset.x > 0 ? .green : .red
+        if dragOffset == .zero {
+            return .clear
+        } else if dragOffset > 0 {
+            return .green
+        } else {
+            return .red
+        }
     }
     
     private var feedbackOpacity: Double {
-        guard dragDirection == .horizontal else { return 0 }
-        return isConfirmed ? 1.0 : min(abs(dragOffset.x) / (cardSize.width / 2), 0.8)
+//        1
+        isConfirmed ? 1.0 : min(abs(dragOffset) / (cardSize.width / 2), 0.8)
     }
 }
