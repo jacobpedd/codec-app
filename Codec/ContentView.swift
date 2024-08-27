@@ -49,6 +49,7 @@ struct AuthenticatedView: View {
         NavigationStack {
             if !userVM.isOnboarding {
                 FeedView()
+                    .border(.black, width: 8)
                     .onAppear {
                         checkTopics()
                         checkFollows()

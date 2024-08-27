@@ -23,6 +23,7 @@ struct FeedView: View {
                                     if let categoryFeedVM = feedVM.categoryFeeds[category] {
                                         if !categoryFeedVM.clips.isEmpty {
                                             ArtworkFeed(categoryFeedVM: categoryFeedVM)
+                                                .border(.blue, width: 8)
                                         } else {
                                             ProgressView()
                                         }
@@ -33,7 +34,8 @@ struct FeedView: View {
                                             }
                                     }
                             }
-                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .frame(width: geometry.size.width, 
+                                   height: geometry.size.height)
                             .clipped()
                         }
                         .offset(x: -CGFloat(currentPage) * geometry.size.width)
@@ -59,6 +61,8 @@ struct FeedView: View {
             }
             .navigationBarHidden(true)
         }
+        .border(.red, width: 8)
+        
         .onAppear() {
             if feedVM.currentFeed.isEmpty {
                 Task {
