@@ -218,6 +218,7 @@ class AudioManager: NSObject {
     }
 
     @objc private func playerItemDidReachEnd() {
+        audioPlayer?.seek(to: .zero)
         delegate?.playbackDidEnd()
     }
     
