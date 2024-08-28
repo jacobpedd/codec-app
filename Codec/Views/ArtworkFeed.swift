@@ -17,8 +17,6 @@ struct ArtworkFeed: View {
     @State private var isAnimating: Bool = false
     
     private let cardWidth: CGFloat = UIScreen.main.bounds.width * 0.9
-//    private let cardWidth: CGFloat = (UIScreen.main.bounds.width * 0.9).rounded(.toNearestOrAwayFromZero)
-//    private let cardWidth: CGFloat = 300
     
     // TODO: Why +25 ?
     // private var cardHeight: CGFloat { cardWidth + 25 }
@@ -61,7 +59,7 @@ struct ArtworkFeed: View {
                 
                 // TODO: perf-wise, will VStack become okay? LazyVStack derenders the currentCenter-1 item *just if we have never scrolled*
 //                LazyVStack(spacing: 0) { // Lazy = don't load item until requested
-                VStack(spacing: 0) { // Lazy = don't load item until requested
+                VStack(spacing: 0) {
                     
                     ForEach(categoryFeedVM.clips.indices, id: \.self) { index in
                         childView(index)
@@ -185,17 +183,18 @@ struct ArtworkFeed: View {
                 if !scrollPositionIsAtIndex || !currentCenterIsAtIndex {
                     self.isAnimatingFromTap = true
                     
-                    // reset scrollPosition, in case it was already at this
+                    // First, reset scrollPosition, in case it was already at this index.
                     self.scrollPosition = nil
                     
-                    // On a separate render, set the scrollPosition to the index we actually want.
+                    // Then, on a separate render, set the scrollPosition to this index.
                     DispatchQueue.main.async {
                         withAnimation {
                             self.scrollPosition = index
                         }
                     }
                         
-                    // 0.6 = assumed time of animation
+                    // 0.6 = assumed time of scroll animation;
+                    // Note: `completion:` handler of `withAnimation` can sometimes not be called
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                         self.isAnimatingFromTap = false
                     }
