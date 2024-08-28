@@ -39,10 +39,12 @@ struct ArtworkFeed: View {
     }
     
     // For programmatically scrolling to a specific item
-    @State private var scrollPosition: Int? = nil
+//    @State private var scrollPosition: Int? = nil
+//    @State private var scrollPosition: Int? = 0
     
     // Tracks item which is currently in the center
-    @State private var currentCenter: Int? = nil
+//    @State private var currentCenter: Int? = nil
+    @State private var currentCenter: Int = 0
     
     nonisolated static let nonCenterScale = 0.8
     
@@ -61,15 +63,57 @@ struct ArtworkFeed: View {
     
     var body: some View {
         
-        ZStack {
-            backgroundView(self.currentCenter ?? 0)
+        let clips = categoryFeedVM.clips
+        
+//        ZStack {
+//            backgroundView(self.currentCenter ?? 0)
+//            backgroundView(self.currentCenter)
+            
+        ScrollViewReader { scrollProxy in
+            
+            
             
             ScrollView(.vertical, showsIndicators: false) {
                 
-                LazyVStack(spacing: 0) { // Lazy = don't load item until requested
+//                LazyVStack(spacing: 0) { // Lazy = don't load item until requested
+                VStack(spacing: 0) { // Lazy = don't load item until requested
                     
-                    ForEach(categoryFeedVM.clips.indices, id: \.self) { index in
-                        childView(index)
+                    //                    ForEach(categoryFeedVM.clips.indices, id: \.self) { index in
+                    ForEach(categoryFeedVM.clips, id: \.id) { clip in
+                        let index = clips.firstIndex(of: clip) ?? .zero
+                        let id = clip.id
+                        childView(index, id: id)
+                            .id(clip.id)
+                            .onTapGesture {
+                                
+                                //                print("tapped index \(index)")
+                                print("tapped index \(index), id \(id)")
+                                
+                                withAnimation {
+                                    scrollProxy.scrollTo(id, anchor: .center)
+                                }
+                                
+                                
+                                // If we're not already paged to this item,
+                                // then page to it now.
+                                //                if self.scrollPosition != index {
+                                //                    withAnimation {
+                                //                        self.scrollPosition = index
+                                //                    }
+                                //                }
+                                //                                if self.scrollPosition != id {
+                                //                                    withAnimation {
+                                //                                        self.scrollPosition = id
+                                //                                    }
+                                //                                }
+                                
+                                
+                                
+                                // Else, show the player:
+                                //                                else {
+                                //                                    isPlayerShowing = true
+                                //                                }
+                            }
                         
                         /*
                          Suppose we scale down non-centered items to 80% and that each item's height is 300. Thus:
@@ -90,11 +134,12 @@ struct ArtworkFeed: View {
                                 let cappedDistance = min(distance, maxDistance) // e.g. treat distances greater than 300 as simply 300
                                 let percentOfMaxDistance = cappedDistance/maxDistance
                                 let maxScaleReduction = 1.0 - Self.nonCenterScale // e.g. never reduce scale by more than 20%
+//                                let maxScaleReduction = 0.0
                                 let scaleReduction = maxScaleReduction * percentOfMaxDistance
                                 
                                 // TODO: is card offset too aggressive sometimes? e.g. when *slowly* pulling down on current card to go to card above, the card below the current card seems to move offscreen too quickly; is present in SwiftUI Playground as well.
-                                //                                let maxOffset = self.itemLength/2 // i.e. 50 if itmeLength = 100
-                                let maxOffset = self.itemLength/1.33 // i.e. 50 if itmeLength = 100
+                                let maxOffset = self.itemLength/2 // i.e. 50 if itmeLength = 100
+                                // let maxOffset = self.itemLength/1.33 // i.e. 50 if itemLength = 100
                                 let actualOffset = maxOffset * percentOfMaxDistance
                                 let finalActualOffset = (shouldOffsetUp ? -1 : 1) * actualOffset
                                 
@@ -105,189 +150,89 @@ struct ArtworkFeed: View {
                                 print("item: finalActualOffset: \(finalActualOffset)")
                                 
                                 return content
-                                    .scaleEffect(0.25) // scale down to 1/4th
+                                //                                    .scaleEffect(0.25) // scale down to 1/4th
+                                    .scaleEffect(0.5) // scale down to 1/4th
                                     .scaleEffect(1.0 - scaleReduction) // apply center-based scaling
                                     .offset(y: finalActualOffset)
                             }
                     } // ForEach
-                    .edgesIgnoringSafeArea(.all)
+                    //                    .edgesIgnoringSafeArea(.all)
                 } // LazyVStack
-                .edgesIgnoringSafeArea(.all)
+                //                .edgesIgnoringSafeArea(.all)
                 
             } // ScrollView
-            .edgesIgnoringSafeArea(.all)
-            .border(.green)
+            
+        } // ScrollViewReader
+        
+//            .edgesIgnoringSafeArea(.all)
+//            .border(.green)
             // ScrollView must be height of paged-item when using `.paging` PagingScrollTargetBehavior
             .frame(width: self.itemLength,
                    //                   height: self.itemLength * 3)
                    height: self.itemLength)
-            .border(.red)
+//            .border(.red)
             
             .scrollTargetBehavior(.paging)
             
             // Setting ScrollView's position to some specific item
-            .scrollPosition(id: self.$scrollPosition,
-                            anchor: .center)
+//            .scrollPosition(id: self.$scrollPosition,
+//                            anchor: .center)
             
-            .scaleEffect(4) // Scale back up 4x
+            .scaleEffect(2) // Scale back up 4x
+//            .scaleEffect(4) // Scale back up 4x
             
             // Change clip when ScrollView's centered-clip changes
-            .onChange(of: self.currentCenter ?? 0, { oldValue, newValue in
-                print("onChange of self.currentCenter: oldValue: \(oldValue)")
-                print("onChange of self.currentCenter: newValue: \(newValue)")
-                //
+//            .onChange(of: self.currentCenter ?? 0, { oldValue, newValue in
             
-                withAnimation(.easeIn(duration: 0.3)) {
-                    if newValue > oldValue {
-                        playerVM.next()
-                    } else if newValue < oldValue  {
-                        playerVM.previous()
-                    }
-                }
-                
-            })
+//            .onChange(of: self.currentCenter, { oldValue, newValue in
+//                print("onChange of self.currentCenter: oldValue: \(oldValue)")
+//                print("onChange of self.currentCenter: newValue: \(newValue)")
+//                //
+//            
+//                withAnimation(.easeIn(duration: 0.3)) {
+//                    if newValue > oldValue {
+//                        playerVM.next()
+//                    } else if newValue < oldValue  {
+//                        playerVM.previous()
+//                    }
+//                }
+//                
+//            })
             
-//            .animation(.easeInOut, value: categoryFeedVM.nowPlayingIndex)
-//            .animation(.linear(duration: 1), value: categoryFeedVM.nowPlayingIndex)
-//            .animation(.easeInOut, value: categoryFeedVM.clips)
-//            .animation(.linear(duration: 1), value: categoryFeedVM.clips)
-//            .edgesIgnoringSafeArea(.all)
-            
-            .sheet(isPresented: $isPlayerShowing) {
-                NowPlayingSheet()
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
-                    .presentationCornerRadius(25)
-                    .presentationBackground(.clear)
-            }
-            
-            //
-            //            ForEach(categoryFeedVM.clips.indices, id: \.self) { index in
-            //                let offset = index - categoryFeedVM.nowPlayingIndex
-            //                ZStack {
-            //                    ClipCardView(categoryFeedVM: categoryFeedVM,
-            //                                 index: index,
-            //                                 cardSize: cardSize,
-            //                                 labelOpacity: labelOpacity(for: offset))
-            //                    .matchedGeometryEffect(id: categoryFeedVM.clips[index].id, in: animation)
-            //                    .scaleEffect(scale(for: offset))
-            //                    .offset(x: horizontalOffset(for: offset), y: verticalOffset(for: offset))
-            //                    .zIndex(Double(1000 - abs(offset)))
-            //                    .onTapGesture {
-            //                        if offset == 0 && !isAnimating {
-            //                            isPlayerShowing = true
-            //                        }
-            //                    }
-            //                    if offset == 0 {
-            //                        directionFeedbackView
-            //                    }
-            //                }
-            //            }
-            //
-            //            VStack {
-            //                progressiveBlurView(startPoint: .top, endPoint: .bottom)
-            //                    .onTapGesture {
-            //                        withAnimation(.easeIn(duration: 0.3)) {
-            //                            playerVM.previous()
-            //                        }
-            //                    }
-            //                Spacer()
-            //                    .frame(height: cardSize.height)
-            //                progressiveBlurView(startPoint: .bottom, endPoint: .top)
-            //                    .onTapGesture {
-            //                        withAnimation(.easeIn(duration: 0.3)) {
-            //                            playerVM.next()
-            //                        }
-            //                    }
-            //            }
-            //            .zIndex(2000)
-            //        }
-//                    .animation(.easeInOut, value: categoryFeedVM.nowPlayingIndex)
-//                    .animation(.easeInOut, value: categoryFeedVM.clips)
-            //        .gesture(
-            //            DragGesture()
-            //                .onChanged { value in
-            //                    let translation = value.translation
-            //
-            //                    if abs(translation.width) < 1 && abs(translation.height) < 1 {
-            //                        dragDirection = .none
-            //                    }
-            //
-            //                    if dragDirection == .none {
-            //                        dragDirection = abs(translation.width) > abs(translation.height) ? .horizontal : .vertical
-            //                    }
-            //
-            //                    guard !isAnimating else { return }
-            //
-            //                    switch dragDirection {
-            //                    case .horizontal:
-            //                        dragOffset = CGPoint(x: max(min(translation.width, cardSize.width), -cardSize.width), y: 0)
-            //                    case .vertical:
-            //                        dragOffset = CGPoint(x: 0, y: max(min(translation.height, cardSize.height), -cardSize.height))
-            //                    case .none:
-            //                        break
-            //                    }
-            //
-            //                    checkConfirmationPoint()
-            //                }
-            //                .onEnded { value in
-            //                    guard !isAnimating else { return }
-            //
-            //                    withAnimation(.easeIn(duration: 0.3)) {
-            //                        if dragDirection == .vertical {
-            //                            if dragOffset.y > cardSize.height / 2 {
-            //                                playerVM.previous()
-            //                            } else if dragOffset.y < -cardSize.height / 2 {
-            //                                playerVM.next()
-            //                            }
-            //                        } else if dragDirection == .horizontal && isConfirmed {
-            //                            let isInterested = dragOffset.x > 0
-            //                            if let nowPlaying = playerVM.nowPlaying {
-            //                                Task {
-            //                                    await profileVM.followShow(feed: nowPlaying.feedItem.feed, isInterested: isInterested)
-            //                                }
-            //                            }
-            //                        }
-            //                        dragOffset = .zero
-            //                        dragDirection = .none
-            //                        isConfirmed = false
-            //                    }
-            //                }
-            //        )
-            //        .edgesIgnoringSafeArea(.all)
-            //        .sheet(isPresented: $isPlayerShowing) {
-            //            NowPlayingSheet()
-            //                .presentationDetents([.large])
-            //                .presentationDragIndicator(.visible)
-            //                .presentationCornerRadius(25)
-            //                .presentationBackground(.clear)
-            //        }
-            
-            
-        } // ZStack
+            .edgesIgnoringSafeArea(.all)
+//            
+//            .sheet(isPresented: $isPlayerShowing) {
+//                NowPlayingSheet()
+//                    .presentationDetents([.large])
+//                    .presentationDragIndicator(.visible)
+//                    .presentationCornerRadius(25)
+//                    .presentationBackground(.clear)
+//            }
+
+//        } // ZStack
         
-        .overlay(alignment: .bottom) {
-            progressiveBlurView(startPoint: .bottom,
-                                endPoint: .top)
-            .frame(width: UIScreen.main.bounds.width,
-                   // Note: progressiveBlur is a bit imprecise; we want a particular level of blurEffect at a particular point in the screen
-                   height: UIScreen.main.bounds.height - (itemLength * 1.5))
-            .allowsHitTesting(false)
-        }
+//        .overlay(alignment: .bottom) {
+//            progressiveBlurView(startPoint: .bottom,
+//                                endPoint: .top)
+//            .frame(width: UIScreen.main.bounds.width,
+//                   // Note: progressiveBlur is a bit imprecise; we want a particular level of blurEffect at a particular point in the screen
+//                   height: UIScreen.main.bounds.height - (itemLength * 1.5))
+//            .allowsHitTesting(false)
+//        }
     }
     
     
     @ViewBuilder
-    func childView(_ index: Int) -> some View {
+    func childView(_ index: Int, id: Int) -> some View {
         let offset = index - categoryFeedVM.nowPlayingIndex
         
         
         let hasSwipeOffset = self.horizontalSwipeOffset?.1 == index
         let swipeOffset = self.horizontalSwipeOffset?.0 ?? .zero
         
-        ZStack {
+//        ZStack {
             
-            directionFeedbackView
+//            directionFeedbackView
             
 //            ClipCardView(categoryFeedVM: categoryFeedVM,
 //                         index: index,
@@ -304,73 +249,69 @@ struct ArtworkFeed: View {
             
             .offset(x: hasSwipeOffset ? swipeOffset : .zero)
             
-            .onTapGesture {
-                
-                print("tapped index \(index)")
-                // If we're not already paged to this item,
-                // then page to it now.
-                if self.scrollPosition != index {
-                    withAnimation {
-                        self.scrollPosition = index
-                        
-                        // added
-                        if self.currentCenter == nil {
-                            self.currentCenter = scrollPosition
-                        }
-                    }
-//                    
-//                    // added
-//                    if self.currentCenter == nil {
-//                        self.currentCenter = scrollPosition
+//            .onTapGesture {
+//                
+////                print("tapped index \(index)")
+//                print("tapped index \(index), id \(id)")
+//                                
+//                // If we're not already paged to this item,
+//                // then page to it now.
+////                if self.scrollPosition != index {
+////                    withAnimation {
+////                        self.scrollPosition = index
+////                    }
+////                }
+//                if self.scrollPosition != id {
+//                    withAnimation {
+//                        self.scrollPosition = id
 //                    }
-                    
-                }
-                
-                // Else, show the player:
-                else {
-                    isPlayerShowing = true
-                }
-            }
-            .gesture(
-                DragGesture()
-                    .onChanged({ value in
-                        
-                        // Only allow swipe on the currently-centered item
-                        guard self.currentCenter == index else {
-                            return
-                        }
-                        
-                        // let swipeThreshold = 8.0
-                        // let swipeThreshold = 4.0
-                        let swipeThreshold = 0.0
-                        
-                        print("dragged: index \(index): \(value.translation)")
-                        if value.translation.width.magnitude > swipeThreshold {
-                            print("swipe began")
-                            let swipeOffset = max(min(value.translation.width,
-                                                      cardSize.width),
-                                                  -cardSize.width)
-                            
-                            self.horizontalSwipeOffset = (swipeOffset, index)
-                            checkConfirmationPoint()
-                        }
-                    })
-                    .onEnded({ value in
-                        print("drag ended: index \(index)")
-                        withAnimation {
-                            if let nowPlaying = playerVM.nowPlaying {
-                                let isInterested = hasSwipeOffset && (swipeOffset > 0)
-                                Task {
-                                    await profileVM.followShow(feed: nowPlaying.feedItem.feed,
-                                                               isInterested: isInterested)
-                                }
-                            }
-                            
-                            self.horizontalSwipeOffset = nil
-                        }
-                    })
-            ) // .gesture
-        }
+//                }
+//                
+//                // Else, show the player:
+//                else {
+//                    isPlayerShowing = true
+//                }
+//            }
+//            .gesture(
+//                DragGesture()
+//                    .onChanged({ value in
+//                        
+//                        // Only allow swipe on the currently-centered item
+//                        guard self.currentCenter == index else {
+//                            return
+//                        }
+//                        
+//                        // let swipeThreshold = 8.0
+//                        // let swipeThreshold = 4.0
+//                        let swipeThreshold = 0.0
+//                        
+//                        print("dragged: index \(index): \(value.translation)")
+//                        if value.translation.width.magnitude > swipeThreshold {
+//                            print("swipe began")
+//                            let swipeOffset = max(min(value.translation.width,
+//                                                      cardSize.width),
+//                                                  -cardSize.width)
+//                            
+//                            self.horizontalSwipeOffset = (swipeOffset, index)
+//                            checkConfirmationPoint()
+//                        }
+//                    })
+//                    .onEnded({ value in
+//                        print("drag ended: index \(index)")
+//                        withAnimation {
+//                            if let nowPlaying = playerVM.nowPlaying {
+//                                let isInterested = hasSwipeOffset && (swipeOffset > 0)
+//                                Task {
+//                                    await profileVM.followShow(feed: nowPlaying.feedItem.feed,
+//                                                               isInterested: isInterested)
+//                                }
+//                            }
+//                            
+//                            self.horizontalSwipeOffset = nil
+//                        }
+//                    })
+//            ) // .gesture
+//        }
     }
     
     @State var currentSmallestDistanceFromCenter: CGFloat? = nil
@@ -388,6 +329,7 @@ struct ArtworkFeed: View {
         // Allow some wiggle room:
         // if distance.rounded(.towardZero) == .zero {
         //        if distance.magnitude.rounded(.towardZero) < 24 {
+        
         if distance.magnitude.rounded(.towardZero) < 28 {
             DispatchQueue.main.async {
                 withAnimation {
