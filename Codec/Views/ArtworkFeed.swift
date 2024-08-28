@@ -96,11 +96,18 @@ struct ArtworkFeed: View {
                                 //                                let maxOffset = self.itemLength/2 // i.e. 50 if itmeLength = 100
                                 let maxOffset = self.itemLength/1.33 // i.e. 50 if itmeLength = 100
                                 let actualOffset = maxOffset * percentOfMaxDistance
+                                let finalActualOffset = (shouldOffsetUp ? -1 : 1) * actualOffset
+                                
+                                print("item: INDEX: \(index)")
+                                print("item: distance: \(distance)")
+                                print("item: cappedDistance: \(cappedDistance)")
+                                print("item: actualOffset: \(actualOffset)")
+                                print("item: finalActualOffset: \(finalActualOffset)")
                                 
                                 return content
                                     .scaleEffect(0.25) // scale down to 1/4th
                                     .scaleEffect(1.0 - scaleReduction) // apply center-based scaling
-                                    .offset(y: (shouldOffsetUp ? -1 : 1) * actualOffset)
+                                    .offset(y: finalActualOffset)
                             }
                     } // ForEach
                     .edgesIgnoringSafeArea(.all)
@@ -139,11 +146,13 @@ struct ArtworkFeed: View {
                 }
                 
             })
+            
 //            .animation(.easeInOut, value: categoryFeedVM.nowPlayingIndex)
 //            .animation(.linear(duration: 1), value: categoryFeedVM.nowPlayingIndex)
 //            .animation(.easeInOut, value: categoryFeedVM.clips)
 //            .animation(.linear(duration: 1), value: categoryFeedVM.clips)
-            .edgesIgnoringSafeArea(.all)
+//            .edgesIgnoringSafeArea(.all)
+            
             .sheet(isPresented: $isPlayerShowing) {
                 NowPlayingSheet()
                     .presentationDetents([.large])
@@ -280,13 +289,18 @@ struct ArtworkFeed: View {
             
             directionFeedbackView
             
-            ClipCardView(categoryFeedVM: categoryFeedVM,
-                         index: index,
-                         cardSize: .init(width: self.itemLength,
-                                         height: self.itemLength),
-//                         labelOpacity: labelOpacity(for: offset)
-                         labelOpacity: 1
-            )
+//            ClipCardView(categoryFeedVM: categoryFeedVM,
+//                         index: index,
+//                         cardSize: .init(width: self.itemLength,
+//                                         height: self.itemLength),
+//                         labelOpacity: 1
+//            )
+            Rectangle()
+                .fill(.red.opacity(0.75))
+                .frame(width: itemLength,
+                       height: itemLength)
+            
+            .border(.green, width: 4)
             
             .offset(x: hasSwipeOffset ? swipeOffset : .zero)
             
@@ -298,7 +312,18 @@ struct ArtworkFeed: View {
                 if self.scrollPosition != index {
                     withAnimation {
                         self.scrollPosition = index
+                        
+                        // added
+                        if self.currentCenter == nil {
+                            self.currentCenter = scrollPosition
+                        }
                     }
+//                    
+//                    // added
+//                    if self.currentCenter == nil {
+//                        self.currentCenter = scrollPosition
+//                    }
+                    
                 }
                 
                 // Else, show the player:
@@ -314,7 +339,6 @@ struct ArtworkFeed: View {
                         guard self.currentCenter == index else {
                             return
                         }
-                        
                         
                         // let swipeThreshold = 8.0
                         // let swipeThreshold = 4.0
@@ -369,35 +393,12 @@ struct ArtworkFeed: View {
                 withAnimation {
                     self.currentCenter = index
                 }
-                
             }
         }
         
         return distance
     }
-    
-    
-    
-    //    private func verticalOffset(for offset: Int) -> Double {
-    //        guard dragDirection == .vertical else { return CGFloat(offset) * cardSize.height }
-    //        let baseOffset = CGFloat(offset) * cardSize.height
-    //        return baseOffset + dragOffset.y
-    //    }
-    
-    //    private func horizontalOffset(for offset: Int) -> Double {
-    //        guard dragDirection == .horizontal && offset == 0 else { return 0 }
-    //        return dragOffset.x
-    //    }
-    
-    //    private func checkConfirmationPoint() {
-    //        let wasConfirmed = isConfirmed
-    //        isConfirmed = abs(dragDirection == .horizontal ? dragOffset.x : dragOffset.y) >= cardSize.width / 2
-    //
-    //        if isConfirmed && !wasConfirmed {
-    //            impactFeedback.impactOccurred()
-    //        }
-    //    }
-    
+  
     private func checkConfirmationPoint() {
         let wasConfirmed = isConfirmed
         isConfirmed = dragOffset >= cardSize.width / 2
@@ -405,10 +406,6 @@ struct ArtworkFeed: View {
         if isConfirmed && !wasConfirmed {
             impactFeedback.impactOccurred()
         }
-    }
-    
-    private func labelOpacity(for offset: Int) -> Double {
-        return offset == 0 ? 1.0 : 0.0
     }
 }
 
@@ -421,8 +418,6 @@ extension ArtworkFeed {
                     ArtworkView(feed: categoryFeedVM.clips[index].feedItem.feed)
                         .frame(width: geo.size.width, height: geo.size.height)
                         .blur(radius: 50)
-//                        .opacity(self.imageOpacity(for: offset))
-//                        .animation(.easeInOut, value: dragOffset)
                 }
                 
                 Rectangle()
@@ -431,33 +426,9 @@ extension ArtworkFeed {
             .frame(width: geo.size.width, height: geo.size.height)
         }
     }
-    
-//    private var _backgroundView: some View {
-//        GeometryReader { geo in
-//            ZStack {
-//                ForEach(-1...1, id: \.self) { offset in
-//                    let index = categoryFeedVM.nowPlayingIndex + offset
-//                    if index >= 0 && index < categoryFeedVM.clips.count {
-//                        ArtworkView(feed: categoryFeedVM.clips[index].feedItem.feed)
-//                            .frame(width: geo.size.width, height: geo.size.height)
-//                            .blur(radius: 50)
-//                            .opacity(self.imageOpacity(for: offset))
-//                            .animation(.easeInOut, value: dragOffset)
-//                    }
-//                }
-//                
-//                Rectangle()
-//                    .fill(.ultraThinMaterial)
-//            }
-//            .frame(width: geo.size.width, height: geo.size.height)
-//        }
-//    }
-    
-//    private func imageOpacity(for offset: Int) -> Double {
-//        return labelOpacity(for: offset)
-//    }
-    
-    private func progressiveBlurView(startPoint: UnitPoint, endPoint: UnitPoint) -> some View {
+ 
+    private func progressiveBlurView(startPoint: UnitPoint, 
+                                     endPoint: UnitPoint) -> some View {
         Rectangle()
             .fill(.thinMaterial)
             .mask(
@@ -507,13 +478,10 @@ extension ArtworkFeed {
                 }
             }
         }
-        //        .frame(width: cardSize.width, height: cardSize.height)
         .frame(width: itemLength, height: itemLength)
         .clipShape(RoundedRectangle(cornerRadius: 20))
-        .opacity(feedbackOpacity)
     }
     
-    // Have separate cards, but change their z-index according to which direction we swiped?
     private var feedbackColor: Color {
         if dragOffset == .zero {
             return .clear
@@ -522,9 +490,5 @@ extension ArtworkFeed {
         } else {
             return .red
         }
-    }
-    
-    private var feedbackOpacity: Double {
-        isConfirmed ? 1.0 : min(abs(dragOffset) / (cardSize.width / 2), 0.8)
     }
 }
