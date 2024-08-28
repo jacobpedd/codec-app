@@ -73,11 +73,14 @@ struct ArtworkFeed: View {
                          - distance = 150, then scale = 1 - 0.1 i.e. 0.9
                          */
                             .visualEffect { content, proxy in
-                                let _distanceFromCenter = distanceFromCenter(
-                                    index: index,
-                                    for: proxy).rounded(.towardZero)
                                 
-                                let shouldOffsetUp = _distanceFromCenter < 0
+                                let _distanceFromCenter = distanceFromCenter(index: index,
+                                                                             for: proxy)
+                                
+                                let distanceRounded = _distanceFromCenter.rounded(.toNearestOrAwayFromZero)
+                                let shouldOffsetUp = distanceRounded < 0
+                                let shouldOffsetDown = distanceRounded > 0
+                                
                                 // Later calculations require absValue of distance
                                 let distance = abs(_distanceFromCenter)
                                 
@@ -88,21 +91,14 @@ struct ArtworkFeed: View {
                                 let scaleReduction = maxScaleReduction * percentOfMaxDistance
                                 
                                 // TODO: is card offset too aggressive sometimes? e.g. when *slowly* pulling down on current card to go to card above, the card below the current card seems to move offscreen too quickly; is present in SwiftUI Playground as well.
-                                let maxOffset = self.cardHeight/1.3333333333 //3333333333333 // 33333333333333333
-//                                let maxOffset = self.cardHeight/2
+                                let maxOffset = self.cardHeight/1.3333333333
                                 let actualOffset = maxOffset * percentOfMaxDistance
-                                let finalActualOffset = (shouldOffsetUp ? -1 : 1) * actualOffset
                                               
-                                print("contentOffset: index \(index)")
-                                print("contentOffset: maxOffset \(maxOffset)")
-                                print("contentOffset: actualOffset \(actualOffset)")
-                                print("contentOffset: finalActualOffset \(finalActualOffset)")
-                                
                                 return content
                                     .scaleEffect(0.25) // scale down to 1/4th
-//                                    .scaleEffect(0.5) // scale down to 1/4th
                                     .scaleEffect(1.0 - scaleReduction) // apply center-based scaling
-                                    .offset(y: finalActualOffset)
+                                    .offset(y: shouldOffsetUp ? (-1 * actualOffset) : 0)
+                                    .offset(y: shouldOffsetDown ? actualOffset : 0)
                             }
                     } // ForEach
                     .edgesIgnoringSafeArea(.all)
@@ -121,13 +117,12 @@ struct ArtworkFeed: View {
             .scrollPosition(id: self.$scrollPosition,
                             anchor: .center)
             
-//            .scaleEffect(2) // Scale back up 4x
             .scaleEffect(4) // Scale back up 4x
             
             // Change clip when ScrollView's centered-clip changes
             .onChange(of: self.currentCenter ?? 0, { oldValue, newValue in
-                print("onChange of self.currentCenter: oldValue: \(oldValue)")
-                print("onChange of self.currentCenter: newValue: \(newValue)")
+                // print("onChange of self.currentCenter: oldValue: \(oldValue)")
+                // print("onChange of self.currentCenter: newValue: \(newValue)")
                 withAnimation(.easeIn(duration: 0.3)) {
                     if newValue > oldValue {
                         playerVM.next()
@@ -174,37 +169,34 @@ struct ArtworkFeed: View {
             )
             .offset(x: hasSwipeOffset ? swipeOffset : .zero)
             .onTapGesture {
-                
-                print("tapped index \(index)")
-                
                 guard !self.isAnimatingFromTap else {
-                    print("Already animating from tap")
+                    // print("Already animating from tap")
                     return
                 }
                 
                 // If we're not already paged to this item,
                 // then page to it now.
                 let scrollPositionIsAtIndex = self.scrollPosition == index
-                let currentCenterIsAtIndex = self.currentCenter == index
-                print("tapped scrollPositionIsAtIndex \(scrollPositionIsAtIndex)")
-                print("tapped currentCenterIsAtIndex \(currentCenterIsAtIndex)")
                 
-                let alreadyAtCurrentIndex = scrollPositionIsAtIndex && currentCenterIsAtIndex
+                // It can happen that the animation is interrupted, such that scrollPosition is set to this index but we did not actually fully scroll there.
+                // So we also check against currentCenter.
+                let currentCenterIsAtIndex = self.currentCenter == index
                 
                 if !scrollPositionIsAtIndex || !currentCenterIsAtIndex {
                     self.isAnimatingFromTap = true
-                    print("Started animating from tap")
-                    print("set scrollPosition, which was \(self.scrollPosition), to nil")
+                    
+                    // reset scrollPosition, in case it was already at this
                     self.scrollPosition = nil
+                    
+                    // On a separate render, set the scrollPosition to the index we actually want.
                     DispatchQueue.main.async {
-                        print("set scrollPosition to index \(index)")
                         withAnimation {
                             self.scrollPosition = index
                         }
                     }
-                    
+                        
+                    // 0.6 = assumed time of animation
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                        print("Done animating from tap")
                         self.isAnimatingFromTap = false
                     }
                 }
@@ -259,9 +251,6 @@ struct ArtworkFeed: View {
         let scrollViewHeight = proxy.bounds(of: .scrollView)?.height ?? 100
         let center = proxy.frame(in: .scrollView).midY
         let distance = scrollViewHeight / 2 - center
-        
-        print("distanceFromCenter: UIScreen.main.bounds.width: \(UIScreen.main.bounds.width)")
-        print("distanceFromCenter: UIScreen.main.bounds.width * 0.9: \(UIScreen.main.bounds.width * 0.9)")
         
         // Allow some wiggle room; don't just test against 0
         if distance.magnitude.rounded(.towardZero) < 28 {
