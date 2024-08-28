@@ -17,10 +17,12 @@ struct ArtworkFeed: View {
     @State private var isAnimating: Bool = false
     
     private let cardWidth: CGFloat = UIScreen.main.bounds.width * 0.9
+//    private let cardWidth: CGFloat = (UIScreen.main.bounds.width * 0.9).rounded(.toNearestOrAwayFromZero)
+//    private let cardWidth: CGFloat = 300
     
     // TODO: Why +25 ?
     // private var cardHeight: CGFloat { cardWidth + 25 }
-    private var cardHeight: CGFloat { cardWidth }
+    nonisolated private var cardHeight: CGFloat { cardWidth }
     
     private var cardSize: CGSize { CGSize(width: cardWidth, height: cardHeight) }
     private let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
@@ -28,11 +30,7 @@ struct ArtworkFeed: View {
     init(categoryFeedVM: CategoryFeedViewModel) {
         self.categoryFeedVM = categoryFeedVM
     }
-    
-    nonisolated var itemLength: CGFloat {
-        self.cardWidth
-    }
-    
+        
     // For programmatically scrolling to a specific item
     @State private var scrollPosition: Int? = nil
     
@@ -43,12 +41,12 @@ struct ArtworkFeed: View {
     
     var scrollViewHeight: CGFloat {
         // some height such that a single item can fit cleanly in the middle
-        self.itemLength * 3
+        self.cardHeight * 3
     }
     
     var viewPortalHeight: CGFloat {
         // cut off half of the top-most and half of the bottom-most views
-        self.scrollViewHeight - self.itemLength
+        self.scrollViewHeight - self.cardHeight
     }
     
     // (swipe offset amount, which index/card the offset is for)
@@ -83,19 +81,26 @@ struct ArtworkFeed: View {
                                 // Later calculations require absValue of distance
                                 let distance = abs(_distanceFromCenter)
                                 
-                                let maxDistance = self.itemLength
+                                let maxDistance = self.cardHeight
                                 let cappedDistance = min(distance, maxDistance) // e.g. treat distances greater than 300 as simply 300
                                 let percentOfMaxDistance = cappedDistance/maxDistance
                                 let maxScaleReduction = 1.0 - Self.nonCenterScale // e.g. never reduce scale by more than 20%
                                 let scaleReduction = maxScaleReduction * percentOfMaxDistance
                                 
                                 // TODO: is card offset too aggressive sometimes? e.g. when *slowly* pulling down on current card to go to card above, the card below the current card seems to move offscreen too quickly; is present in SwiftUI Playground as well.
-                                let maxOffset = self.itemLength/1.33
+                                let maxOffset = self.cardHeight/1.3333333333 //3333333333333 // 33333333333333333
+//                                let maxOffset = self.cardHeight/2
                                 let actualOffset = maxOffset * percentOfMaxDistance
                                 let finalActualOffset = (shouldOffsetUp ? -1 : 1) * actualOffset
-                                                                
+                                              
+                                print("contentOffset: index \(index)")
+                                print("contentOffset: maxOffset \(maxOffset)")
+                                print("contentOffset: actualOffset \(actualOffset)")
+                                print("contentOffset: finalActualOffset \(finalActualOffset)")
+                                
                                 return content
                                     .scaleEffect(0.25) // scale down to 1/4th
+//                                    .scaleEffect(0.5) // scale down to 1/4th
                                     .scaleEffect(1.0 - scaleReduction) // apply center-based scaling
                                     .offset(y: finalActualOffset)
                             }
@@ -103,13 +108,12 @@ struct ArtworkFeed: View {
                     .edgesIgnoringSafeArea(.all)
                 } // LazyVStack
                 .edgesIgnoringSafeArea(.all)
-                
             } // ScrollView
             .edgesIgnoringSafeArea(.all)
             
             // ScrollView must be height of paged-item when using `.paging` PagingScrollTargetBehavior
-            .frame(width: self.itemLength,
-                   height: self.itemLength)
+            .frame(width: self.cardWidth,
+                   height: self.cardHeight)
             
             .scrollTargetBehavior(.paging)
             
@@ -117,14 +121,13 @@ struct ArtworkFeed: View {
             .scrollPosition(id: self.$scrollPosition,
                             anchor: .center)
             
+//            .scaleEffect(2) // Scale back up 4x
             .scaleEffect(4) // Scale back up 4x
             
             // Change clip when ScrollView's centered-clip changes
             .onChange(of: self.currentCenter ?? 0, { oldValue, newValue in
                 print("onChange of self.currentCenter: oldValue: \(oldValue)")
                 print("onChange of self.currentCenter: newValue: \(newValue)")
-                //
-            
                 withAnimation(.easeIn(duration: 0.3)) {
                     if newValue > oldValue {
                         playerVM.next()
@@ -132,7 +135,6 @@ struct ArtworkFeed: View {
                         playerVM.previous()
                     }
                 }
-                
             })
             .sheet(isPresented: $isPlayerShowing) {
                 NowPlayingSheet()
@@ -148,11 +150,12 @@ struct ArtworkFeed: View {
                                 endPoint: .top)
             .frame(width: UIScreen.main.bounds.width,
                    // Note: progressiveBlur is a bit imprecise; we want a particular level of blurEffect at a particular point in the screen
-                   height: UIScreen.main.bounds.height - (itemLength * 1.5))
-            .allowsHitTesting(false)
+                   height: UIScreen.main.bounds.height - (self.cardHeight * 1.5))
+            .allowsHitTesting(false) // ignores gestures
         }
     }
     
+    @State private var isAnimatingFromTap: Bool = false
     
     @ViewBuilder
     func childView(_ index: Int) -> some View {
@@ -165,17 +168,44 @@ struct ArtworkFeed: View {
             
             ClipCardView(categoryFeedVM: categoryFeedVM,
                          index: index,
-                         cardSize: .init(width: self.itemLength,
-                                         height: self.itemLength),
+                         cardSize: .init(width: self.cardWidth,
+                                         height: self.cardHeight),
                          labelOpacity: 1
             )
             .offset(x: hasSwipeOffset ? swipeOffset : .zero)
             .onTapGesture {
+                
+                print("tapped index \(index)")
+                
+                guard !self.isAnimatingFromTap else {
+                    print("Already animating from tap")
+                    return
+                }
+                
                 // If we're not already paged to this item,
                 // then page to it now.
-                if self.scrollPosition != index {
-                    withAnimation {
-                        self.scrollPosition = index
+                let scrollPositionIsAtIndex = self.scrollPosition == index
+                let currentCenterIsAtIndex = self.currentCenter == index
+                print("tapped scrollPositionIsAtIndex \(scrollPositionIsAtIndex)")
+                print("tapped currentCenterIsAtIndex \(currentCenterIsAtIndex)")
+                
+                let alreadyAtCurrentIndex = scrollPositionIsAtIndex && currentCenterIsAtIndex
+                
+                if !scrollPositionIsAtIndex || !currentCenterIsAtIndex {
+                    self.isAnimatingFromTap = true
+                    print("Started animating from tap")
+                    print("set scrollPosition, which was \(self.scrollPosition), to nil")
+                    self.scrollPosition = nil
+                    DispatchQueue.main.async {
+                        print("set scrollPosition to index \(index)")
+                        withAnimation {
+                            self.scrollPosition = index
+                        }
+                    }
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                        print("Done animating from tap")
+                        self.isAnimatingFromTap = false
                     }
                 }
                 // Else, show the player:
@@ -229,6 +259,9 @@ struct ArtworkFeed: View {
         let scrollViewHeight = proxy.bounds(of: .scrollView)?.height ?? 100
         let center = proxy.frame(in: .scrollView).midY
         let distance = scrollViewHeight / 2 - center
+        
+        print("distanceFromCenter: UIScreen.main.bounds.width: \(UIScreen.main.bounds.width)")
+        print("distanceFromCenter: UIScreen.main.bounds.width * 0.9: \(UIScreen.main.bounds.width * 0.9)")
         
         // Allow some wiggle room; don't just test against 0
         if distance.magnitude.rounded(.towardZero) < 28 {
@@ -321,7 +354,7 @@ extension ArtworkFeed {
                 }
             }
         }
-        .frame(width: itemLength, height: itemLength)
+        .frame(width: cardWidth, height: cardHeight)
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
     
