@@ -12,7 +12,6 @@ struct ArtworkFeed: View {
         self.horizontalSwipeOffset?.0 ?? .zero
     }
     
-//    @State private var dragDirection: DragDirection = .none
     @State private var isConfirmed: Bool = false
     @Namespace private var animation
     @State private var isPlayerShowing: Bool = false
@@ -39,9 +38,7 @@ struct ArtworkFeed: View {
         self.cardWidth
     }
         
-    // TODO:
     @State private var position: Int? = nil // jump to specific item
-    
     
     nonisolated static let nonCenterScale = 0.8
     
@@ -62,7 +59,7 @@ struct ArtworkFeed: View {
         
         ZStack {
             backgroundView
-            
+                            
             ScrollView(.vertical, showsIndicators: false) {
                 
                 LazyVStack(spacing: 0) { // Lazy = don't load item until requested
@@ -92,22 +89,29 @@ struct ArtworkFeed: View {
                                 let scaleReduction = maxScaleReduction * percentOfMaxDistance
                                 
                                 // TODO: is card offset too aggressive sometimes? e.g. when *slowly* pulling down on current card to go to card above, the card below the current card seems to move offscreen too quickly; is present in SwiftUI Playground as well.
-                                let maxOffset = self.itemLength/2 // i.e. 50 if itmeLength = 100
+//                                let maxOffset = self.itemLength/2 // i.e. 50 if itmeLength = 100
+                                let maxOffset = self.itemLength/1.33 // i.e. 50 if itmeLength = 100
                                 let actualOffset = maxOffset * percentOfMaxDistance
                                                                 
                                 return content
-                                    .scaleEffect(0.5) // scale whole thing down by 50%
+//                                    .scaleEffect(0.5) // scale whole thing down by 50%
+                                     .scaleEffect(0.25)
                                     .scaleEffect(1.0 - scaleReduction) // apply center-based scaling
                                     .offset(y: (shouldOffsetUp ? -1 : 1) * actualOffset)
                             }
                     } // ForEach
+                    .edgesIgnoringSafeArea(.all)
                 } // LazyVStack
+                .edgesIgnoringSafeArea(.all)
                 
             } // ScrollView
-            
+            .edgesIgnoringSafeArea(.all)
+            .border(.green)
             // ScrollView must be height of paged-item when using `.paging` PagingScrollTargetBehavior
             .frame(width: self.itemLength,
+//                   height: self.itemLength * 3)
                    height: self.itemLength)
+            .border(.red)
 
             .scrollTargetBehavior(.paging)
             
@@ -115,7 +119,8 @@ struct ArtworkFeed: View {
             .scrollPosition(id: self.$position,
                             anchor: .center)
             
-            .scaleEffect(2) // Undoes the 1/2-scaling applied to each child-view
+//            .scaleEffect(2) // Undoes the 1/2-scaling applied to each child-view
+             .scaleEffect(4)
             
             // Change clip when ScrollView's centered-clip changes
             .onChange(of: self.currentCenter ?? 0, { oldValue, newValue in
@@ -129,6 +134,8 @@ struct ArtworkFeed: View {
                 }
             })
             
+     
+
             .edgesIgnoringSafeArea(.all)
             .sheet(isPresented: $isPlayerShowing) {
                 NowPlayingSheet()
@@ -138,108 +145,118 @@ struct ArtworkFeed: View {
                     .presentationBackground(.clear)
             }
             
+//            
+//            ForEach(categoryFeedVM.clips.indices, id: \.self) { index in
+//                let offset = index - categoryFeedVM.nowPlayingIndex
+//                ZStack {
+//                    ClipCardView(categoryFeedVM: categoryFeedVM,
+//                                 index: index,
+//                                 cardSize: cardSize,
+//                                 labelOpacity: labelOpacity(for: offset))
+//                    .matchedGeometryEffect(id: categoryFeedVM.clips[index].id, in: animation)
+//                    .scaleEffect(scale(for: offset))
+//                    .offset(x: horizontalOffset(for: offset), y: verticalOffset(for: offset))
+//                    .zIndex(Double(1000 - abs(offset)))
+//                    .onTapGesture {
+//                        if offset == 0 && !isAnimating {
+//                            isPlayerShowing = true
+//                        }
+//                    }
+//                    if offset == 0 {
+//                        directionFeedbackView
+//                    }
+//                }
+//            }
+//            
+//            VStack {
+//                progressiveBlurView(startPoint: .top, endPoint: .bottom)
+//                    .onTapGesture {
+//                        withAnimation(.easeIn(duration: 0.3)) {
+//                            playerVM.previous()
+//                        }
+//                    }
+//                Spacer()
+//                    .frame(height: cardSize.height)
+//                progressiveBlurView(startPoint: .bottom, endPoint: .top)
+//                    .onTapGesture {
+//                        withAnimation(.easeIn(duration: 0.3)) {
+//                            playerVM.next()
+//                        }
+//                    }
+//            }
+//            .zIndex(2000)
+//        }
+//        .animation(.easeInOut, value: categoryFeedVM.nowPlayingIndex)
+//        .animation(.easeInOut, value: categoryFeedVM.clips)
+//        .gesture(
+//            DragGesture()
+//                .onChanged { value in
+//                    let translation = value.translation
+//                    
+//                    if abs(translation.width) < 1 && abs(translation.height) < 1 {
+//                        dragDirection = .none
+//                    }
+//                    
+//                    if dragDirection == .none {
+//                        dragDirection = abs(translation.width) > abs(translation.height) ? .horizontal : .vertical
+//                    }
+//                    
+//                    guard !isAnimating else { return }
+//                    
+//                    switch dragDirection {
+//                    case .horizontal:
+//                        dragOffset = CGPoint(x: max(min(translation.width, cardSize.width), -cardSize.width), y: 0)
+//                    case .vertical:
+//                        dragOffset = CGPoint(x: 0, y: max(min(translation.height, cardSize.height), -cardSize.height))
+//                    case .none:
+//                        break
+//                    }
+//                    
+//                    checkConfirmationPoint()
+//                }
+//                .onEnded { value in
+//                    guard !isAnimating else { return }
+//                    
+//                    withAnimation(.easeIn(duration: 0.3)) {
+//                        if dragDirection == .vertical {
+//                            if dragOffset.y > cardSize.height / 2 {
+//                                playerVM.previous()
+//                            } else if dragOffset.y < -cardSize.height / 2 {
+//                                playerVM.next()
+//                            }
+//                        } else if dragDirection == .horizontal && isConfirmed {
+//                            let isInterested = dragOffset.x > 0
+//                            if let nowPlaying = playerVM.nowPlaying {
+//                                Task {
+//                                    await profileVM.followShow(feed: nowPlaying.feedItem.feed, isInterested: isInterested)
+//                                }
+//                            }
+//                        }
+//                        dragOffset = .zero
+//                        dragDirection = .none
+//                        isConfirmed = false
+//                    }
+//                }
+//        )
+//        .edgesIgnoringSafeArea(.all)
+//        .sheet(isPresented: $isPlayerShowing) {
+//            NowPlayingSheet()
+//                .presentationDetents([.large])
+//                .presentationDragIndicator(.visible)
+//                .presentationCornerRadius(25)
+//                .presentationBackground(.clear)
+//        }
             
-            //                        ForEach(categoryFeedVM.clips.indices, id: \.self) { index in
-            //                let offset = index - categoryFeedVM.nowPlayingIndex
-            //                ZStack {
-            //                    ClipCardView(categoryFeedVM: categoryFeedVM,
-            //                                 index: index,
-            //                                 cardSize: cardSize,
-            //                                 labelOpacity: labelOpacity(for: offset))
-            //                        .matchedGeometryEffect(id: categoryFeedVM.clips[index].id, in: animation)
-            //                        .scaleEffect(scale(for: offset))
-            //                        .offset(x: horizontalOffset(for: offset), y: verticalOffset(for: offset))
-            //                        .zIndex(Double(1000 - abs(offset)))
-            //                        .onTapGesture {
-            //                            if offset == 0 && !isAnimating {
-            //                                isPlayerShowing = true
-            //                            }
-            //                        }
-            //                    if offset == 0 {
-            //                        directionFeedbackView
-            //                    }
-            //                }
-            //            }
-            //
-            //            VStack {
-            //                progressiveBlurView(startPoint: .top, endPoint: .bottom)
-            //                    .onTapGesture {
-            //                        withAnimation(.easeIn(duration: 0.3)) {
-            //                            playerVM.previous()
-            //                        }
-            //                    }
-            //                Spacer()
-            //                    .frame(height: cardSize.height)
-            //                progressiveBlurView(startPoint: .bottom, endPoint: .top)
-            //                    .onTapGesture {
-            //                        withAnimation(.easeIn(duration: 0.3)) {
-            //                            playerVM.next()
-            //                        }
-            //                    }
-            //            }
-            //            .zIndex(2000)
-            //        }
-            //        .animation(.easeInOut, value: categoryFeedVM.nowPlayingIndex)
-            //        .animation(.easeInOut, value: categoryFeedVM.clips)
-            //        .gesture(
-            //            DragGesture()
-            //                .onChanged { value in
-            //                    let translation = value.translation
-            //
-            //                    if abs(translation.width) < 1 && abs(translation.height) < 1 {
-            //                        dragDirection = .none
-            //                    }
-            //
-            //                    if dragDirection == .none {
-            //                        dragDirection = abs(translation.width) > abs(translation.height) ? .horizontal : .vertical
-            //                    }
-            //
-            //                    guard !isAnimating else { return }
-            //
-            //                    switch dragDirection {
-            //                    case .horizontal:
-            //                        dragOffset = CGPoint(x: max(min(translation.width, cardSize.width), -cardSize.width), y: 0)
-            //                    case .vertical:
-            //                        dragOffset = CGPoint(x: 0, y: max(min(translation.height, cardSize.height), -cardSize.height))
-            //                    case .none:
-            //                        break
-            //                    }
-            //
-            //                    checkConfirmationPoint()
-            //                }
-            //                .onEnded { value in
-            //                    guard !isAnimating else { return }
-            //
-            //                    withAnimation(.easeIn(duration: 0.3)) {
-            //                        if dragDirection == .vertical {
-            //                            if dragOffset.y > cardSize.height / 2 {
-            //                                playerVM.previous()
-            //                            } else if dragOffset.y < -cardSize.height / 2 {
-            //                                playerVM.next()
-            //                            }
-            //                        } else if dragDirection == .horizontal && isConfirmed {
-            //                            let isInterested = dragOffset.x > 0
-            //                            if let nowPlaying = playerVM.nowPlaying {
-            //                                Task {
-            //                                    await profileVM.followShow(feed: nowPlaying.feedItem.feed, isInterested: isInterested)
-            //                                }
-            //                            }
-            //                        }
-            //                        dragOffset = .zero
-            //                        dragDirection = .none
-            //                        isConfirmed = false
-            //                    }
-            //                }
-            //        )
-            //        .edgesIgnoringSafeArea(.all)
-            //        .sheet(isPresented: $isPlayerShowing) {
-            //            NowPlayingSheet()
-            //                .presentationDetents([.large])
-            //                .presentationDragIndicator(.visible)
-            //                .presentationCornerRadius(25)
-            //                .presentationBackground(.clear)
-            //        }
             
+        } // ZStack
+        
+        .overlay(alignment: .bottom) {
+            progressiveBlurView(startPoint: .bottom,
+                                endPoint: .top)
+            .frame(width: UIScreen.main.bounds.width,
+                   // Note: progressiveBlur is a bit imprecise; we want a particular level of blurEffect at a particular point in the screen
+                   height: UIScreen.main.bounds.height - (itemLength * 1.5))
+            .allowsHitTesting(false)
         }
     }
     
@@ -266,6 +283,7 @@ struct ArtworkFeed: View {
         
             .onTapGesture {
 
+                print("tapped index \(index)")
                 // If we're not already paged to this item,
                 // then page to it now.
                 if self.position != index {
@@ -282,43 +300,43 @@ struct ArtworkFeed: View {
             .gesture(
                 DragGesture()
                     .onChanged({ value in
-//                                        let swipeThreshold = 8.0
-//                                        let swipeThreshold = 4.0
+                        
+                        // Only allow swipe on the currently-centered item
+                        guard self.currentCenter == index else {
+                            return
+                        }
+                        
+                        
+                        // let swipeThreshold = 8.0
+                        // let swipeThreshold = 4.0
                         let swipeThreshold = 0.0
                         
-                        print("dragged: \(value.translation)")
+                        print("dragged: index \(index): \(value.translation)")
                         if value.translation.width.magnitude > swipeThreshold {
                             print("swipe began")
-                            
                             let swipeOffset = max(min(value.translation.width,
                                                       cardSize.width),
                                                   -cardSize.width)
-                            //                                            withAnimation {
+
                             self.horizontalSwipeOffset = (swipeOffset, index)
-                            //                                            }
-                            
                             checkConfirmationPoint()
                         }
                     })
                     .onEnded({ value in
-                        print("drag ended")
+                        print("drag ended: index \(index)")
                         withAnimation {
-                            
                             if let nowPlaying = playerVM.nowPlaying {
                                 let isInterested = hasSwipeOffset && (swipeOffset > 0)
                                 Task {
-                                    await profileVM.followShow(feed: nowPlaying.feedItem.feed, 
+                                    await profileVM.followShow(feed: nowPlaying.feedItem.feed,
                                                                isInterested: isInterested)
                                 }
                             }
                             
                             self.horizontalSwipeOffset = nil
                         }
-                        
                     })
-            )
-        
-            
+            ) // .gesture
         }
     }
     
@@ -328,9 +346,11 @@ struct ArtworkFeed: View {
     nonisolated func distanceFromCenter(index: Int, 
                                         for proxy: GeometryProxy) -> Double {
         let scrollViewHeight = proxy.bounds(of: .scrollView)?.height ?? 100
+        print("scrollViewHeight: \(scrollViewHeight)")
         let center = proxy.frame(in: .scrollView).midY
         //        let distance = abs(scrollViewHeight / 2 - center)
         let distance = scrollViewHeight / 2 - center
+        print("distance: \(distance)")
                 
         // Allow some wiggle room:
         // if distance.rounded(.towardZero) == .zero {
@@ -374,23 +394,6 @@ struct ArtworkFeed: View {
             impactFeedback.impactOccurred()
         }
     }
-    
-//    private func scale(for offset: Int) -> Double {
-//        let maxScale = 1.0
-//        let minScale = 0.8
-//        if dragOffset == .zero || dragDirection == .horizontal {
-//            return offset == 0 ? 1.0 : 0.8
-//        } else {
-//            let effect = abs(dragOffset.y / cardSize.height)
-//            if (((offset == -1 && dragOffset.y > 0) || (offset == 1 && dragOffset.y < 0))  && dragDirection == .vertical) {
-//                return minScale + (maxScale - minScale) * effect
-//            } else if offset == 0 {
-//                return maxScale - (maxScale - minScale) * effect
-//            } else {
-//                return 0.8
-//            }
-//        }
-//    }
     
     private func labelOpacity(for offset: Int) -> Double {
         return offset == 0 ? 1.0 : 0.0
@@ -491,7 +494,6 @@ extension ArtworkFeed {
     }
     
     private var feedbackOpacity: Double {
-//        1
         isConfirmed ? 1.0 : min(abs(dragOffset) / (cardSize.width / 2), 0.8)
     }
 }

@@ -23,7 +23,6 @@ struct FeedView: View {
                                     if let categoryFeedVM = feedVM.categoryFeeds[category] {
                                         if !categoryFeedVM.clips.isEmpty {
                                             ArtworkFeed(categoryFeedVM: categoryFeedVM)
-                                                .border(.blue, width: 8)
                                         } else {
                                             ProgressView()
                                         }
@@ -61,7 +60,6 @@ struct FeedView: View {
             }
             .navigationBarHidden(true)
         }
-        .border(.red, width: 8)
         
         .onAppear() {
             if feedVM.currentFeed.isEmpty {
