@@ -29,7 +29,7 @@ struct CategoryButton: View {
                     .padding(.vertical, 12)
                 
                 Rectangle()
-                    .fill(isActive ? Color.black : Color.clear)
+                    .fill(isActive ? .primary : Color.clear)
                     .frame(height: 2)
             }
         }
