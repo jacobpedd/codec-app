@@ -6,7 +6,6 @@ struct ArtworkFeed: View {
     @EnvironmentObject private var playerVM: PlayerViewModel
     @EnvironmentObject private var profileVM: ProfileViewModel
     @EnvironmentObject private var artworkVM: ArtworkViewModel
-    //    @State private var dragOffset: CGPoint = .zero
     
     var dragOffset: CGFloat {
         self.horizontalSwipeOffset?.0 ?? .zero
@@ -25,11 +24,7 @@ struct ArtworkFeed: View {
     
     private var cardSize: CGSize { CGSize(width: cardWidth, height: cardHeight) }
     private let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-    
-    enum DragDirection {
-        case vertical, horizontal, none
-    }
-    
+        
     init(categoryFeedVM: CategoryFeedViewModel) {
         self.categoryFeedVM = categoryFeedVM
     }
@@ -66,7 +61,9 @@ struct ArtworkFeed: View {
             
             ScrollView(.vertical, showsIndicators: false) {
                 
-                LazyVStack(spacing: 0) { // Lazy = don't load item until requested
+                // TODO: perf-wise, will VStack become okay? LazyVStack derenders the currentCenter-1 item *just if we have never scrolled*
+//                LazyVStack(spacing: 0) { // Lazy = don't load item until requested
+                VStack(spacing: 0) { // Lazy = don't load item until requested
                     
                     ForEach(categoryFeedVM.clips.indices, id: \.self) { index in
                         childView(index)
@@ -93,17 +90,10 @@ struct ArtworkFeed: View {
                                 let scaleReduction = maxScaleReduction * percentOfMaxDistance
                                 
                                 // TODO: is card offset too aggressive sometimes? e.g. when *slowly* pulling down on current card to go to card above, the card below the current card seems to move offscreen too quickly; is present in SwiftUI Playground as well.
-                                //                                let maxOffset = self.itemLength/2 // i.e. 50 if itmeLength = 100
-                                let maxOffset = self.itemLength/1.33 // i.e. 50 if itmeLength = 100
+                                let maxOffset = self.itemLength/1.33
                                 let actualOffset = maxOffset * percentOfMaxDistance
                                 let finalActualOffset = (shouldOffsetUp ? -1 : 1) * actualOffset
-                                
-                                print("item: INDEX: \(index)")
-                                print("item: distance: \(distance)")
-                                print("item: cappedDistance: \(cappedDistance)")
-                                print("item: actualOffset: \(actualOffset)")
-                                print("item: finalActualOffset: \(finalActualOffset)")
-                                
+                                                                
                                 return content
                                     .scaleEffect(0.25) // scale down to 1/4th
                                     .scaleEffect(1.0 - scaleReduction) // apply center-based scaling
@@ -116,12 +106,10 @@ struct ArtworkFeed: View {
                 
             } // ScrollView
             .edgesIgnoringSafeArea(.all)
-            .border(.green)
+            
             // ScrollView must be height of paged-item when using `.paging` PagingScrollTargetBehavior
             .frame(width: self.itemLength,
-                   //                   height: self.itemLength * 3)
                    height: self.itemLength)
-            .border(.red)
             
             .scrollTargetBehavior(.paging)
             
@@ -146,13 +134,6 @@ struct ArtworkFeed: View {
                 }
                 
             })
-            
-//            .animation(.easeInOut, value: categoryFeedVM.nowPlayingIndex)
-//            .animation(.linear(duration: 1), value: categoryFeedVM.nowPlayingIndex)
-//            .animation(.easeInOut, value: categoryFeedVM.clips)
-//            .animation(.linear(duration: 1), value: categoryFeedVM.clips)
-//            .edgesIgnoringSafeArea(.all)
-            
             .sheet(isPresented: $isPlayerShowing) {
                 NowPlayingSheet()
                     .presentationDetents([.large])
@@ -160,110 +141,6 @@ struct ArtworkFeed: View {
                     .presentationCornerRadius(25)
                     .presentationBackground(.clear)
             }
-            
-            //
-            //            ForEach(categoryFeedVM.clips.indices, id: \.self) { index in
-            //                let offset = index - categoryFeedVM.nowPlayingIndex
-            //                ZStack {
-            //                    ClipCardView(categoryFeedVM: categoryFeedVM,
-            //                                 index: index,
-            //                                 cardSize: cardSize,
-            //                                 labelOpacity: labelOpacity(for: offset))
-            //                    .matchedGeometryEffect(id: categoryFeedVM.clips[index].id, in: animation)
-            //                    .scaleEffect(scale(for: offset))
-            //                    .offset(x: horizontalOffset(for: offset), y: verticalOffset(for: offset))
-            //                    .zIndex(Double(1000 - abs(offset)))
-            //                    .onTapGesture {
-            //                        if offset == 0 && !isAnimating {
-            //                            isPlayerShowing = true
-            //                        }
-            //                    }
-            //                    if offset == 0 {
-            //                        directionFeedbackView
-            //                    }
-            //                }
-            //            }
-            //
-            //            VStack {
-            //                progressiveBlurView(startPoint: .top, endPoint: .bottom)
-            //                    .onTapGesture {
-            //                        withAnimation(.easeIn(duration: 0.3)) {
-            //                            playerVM.previous()
-            //                        }
-            //                    }
-            //                Spacer()
-            //                    .frame(height: cardSize.height)
-            //                progressiveBlurView(startPoint: .bottom, endPoint: .top)
-            //                    .onTapGesture {
-            //                        withAnimation(.easeIn(duration: 0.3)) {
-            //                            playerVM.next()
-            //                        }
-            //                    }
-            //            }
-            //            .zIndex(2000)
-            //        }
-//                    .animation(.easeInOut, value: categoryFeedVM.nowPlayingIndex)
-//                    .animation(.easeInOut, value: categoryFeedVM.clips)
-            //        .gesture(
-            //            DragGesture()
-            //                .onChanged { value in
-            //                    let translation = value.translation
-            //
-            //                    if abs(translation.width) < 1 && abs(translation.height) < 1 {
-            //                        dragDirection = .none
-            //                    }
-            //
-            //                    if dragDirection == .none {
-            //                        dragDirection = abs(translation.width) > abs(translation.height) ? .horizontal : .vertical
-            //                    }
-            //
-            //                    guard !isAnimating else { return }
-            //
-            //                    switch dragDirection {
-            //                    case .horizontal:
-            //                        dragOffset = CGPoint(x: max(min(translation.width, cardSize.width), -cardSize.width), y: 0)
-            //                    case .vertical:
-            //                        dragOffset = CGPoint(x: 0, y: max(min(translation.height, cardSize.height), -cardSize.height))
-            //                    case .none:
-            //                        break
-            //                    }
-            //
-            //                    checkConfirmationPoint()
-            //                }
-            //                .onEnded { value in
-            //                    guard !isAnimating else { return }
-            //
-            //                    withAnimation(.easeIn(duration: 0.3)) {
-            //                        if dragDirection == .vertical {
-            //                            if dragOffset.y > cardSize.height / 2 {
-            //                                playerVM.previous()
-            //                            } else if dragOffset.y < -cardSize.height / 2 {
-            //                                playerVM.next()
-            //                            }
-            //                        } else if dragDirection == .horizontal && isConfirmed {
-            //                            let isInterested = dragOffset.x > 0
-            //                            if let nowPlaying = playerVM.nowPlaying {
-            //                                Task {
-            //                                    await profileVM.followShow(feed: nowPlaying.feedItem.feed, isInterested: isInterested)
-            //                                }
-            //                            }
-            //                        }
-            //                        dragOffset = .zero
-            //                        dragDirection = .none
-            //                        isConfirmed = false
-            //                    }
-            //                }
-            //        )
-            //        .edgesIgnoringSafeArea(.all)
-            //        .sheet(isPresented: $isPlayerShowing) {
-            //            NowPlayingSheet()
-            //                .presentationDetents([.large])
-            //                .presentationDragIndicator(.visible)
-            //                .presentationCornerRadius(25)
-            //                .presentationBackground(.clear)
-            //        }
-            
-            
         } // ZStack
         
         .overlay(alignment: .bottom) {
@@ -279,9 +156,6 @@ struct ArtworkFeed: View {
     
     @ViewBuilder
     func childView(_ index: Int) -> some View {
-        let offset = index - categoryFeedVM.nowPlayingIndex
-        
-        
         let hasSwipeOffset = self.horizontalSwipeOffset?.1 == index
         let swipeOffset = self.horizontalSwipeOffset?.0 ?? .zero
         
@@ -289,43 +163,21 @@ struct ArtworkFeed: View {
             
             directionFeedbackView
             
-//            ClipCardView(categoryFeedVM: categoryFeedVM,
-//                         index: index,
-//                         cardSize: .init(width: self.itemLength,
-//                                         height: self.itemLength),
-//                         labelOpacity: 1
-//            )
-            Rectangle()
-                .fill(.red.opacity(0.75))
-                .frame(width: itemLength,
-                       height: itemLength)
-            
-            .border(.green, width: 4)
-            
+            ClipCardView(categoryFeedVM: categoryFeedVM,
+                         index: index,
+                         cardSize: .init(width: self.itemLength,
+                                         height: self.itemLength),
+                         labelOpacity: 1
+            )
             .offset(x: hasSwipeOffset ? swipeOffset : .zero)
-            
             .onTapGesture {
-                
-                print("tapped index \(index)")
                 // If we're not already paged to this item,
                 // then page to it now.
                 if self.scrollPosition != index {
                     withAnimation {
                         self.scrollPosition = index
-                        
-                        // added
-                        if self.currentCenter == nil {
-                            self.currentCenter = scrollPosition
-                        }
                     }
-//                    
-//                    // added
-//                    if self.currentCenter == nil {
-//                        self.currentCenter = scrollPosition
-//                    }
-                    
                 }
-                
                 // Else, show the player:
                 else {
                     isPlayerShowing = true
@@ -343,10 +195,7 @@ struct ArtworkFeed: View {
                         // let swipeThreshold = 8.0
                         // let swipeThreshold = 4.0
                         let swipeThreshold = 0.0
-                        
-                        print("dragged: index \(index): \(value.translation)")
                         if value.translation.width.magnitude > swipeThreshold {
-                            print("swipe began")
                             let swipeOffset = max(min(value.translation.width,
                                                       cardSize.width),
                                                   -cardSize.width)
@@ -356,7 +205,6 @@ struct ArtworkFeed: View {
                         }
                     })
                     .onEnded({ value in
-                        print("drag ended: index \(index)")
                         withAnimation {
                             if let nowPlaying = playerVM.nowPlaying {
                                 let isInterested = hasSwipeOffset && (swipeOffset > 0)
@@ -379,15 +227,10 @@ struct ArtworkFeed: View {
     nonisolated func distanceFromCenter(index: Int,
                                         for proxy: GeometryProxy) -> Double {
         let scrollViewHeight = proxy.bounds(of: .scrollView)?.height ?? 100
-        print("scrollViewHeight: \(scrollViewHeight)")
         let center = proxy.frame(in: .scrollView).midY
-        //        let distance = abs(scrollViewHeight / 2 - center)
         let distance = scrollViewHeight / 2 - center
-        print("distance: \(distance)")
         
-        // Allow some wiggle room:
-        // if distance.rounded(.towardZero) == .zero {
-        //        if distance.magnitude.rounded(.towardZero) < 24 {
+        // Allow some wiggle room; don't just test against 0
         if distance.magnitude.rounded(.towardZero) < 28 {
             DispatchQueue.main.async {
                 withAnimation {
