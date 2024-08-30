@@ -89,25 +89,28 @@ struct ArtworkFeed: View {
                                 let scaleReduction = maxScaleReduction * percentOfMaxDistance
                                 
                                 // TODO: is card offset too aggressive sometimes? e.g. when *slowly* pulling down on current card to go to card above, the card below the current card seems to move offscreen too quickly; is present in SwiftUI Playground as well.
-                                let maxOffset = self.cardHeight/1.3333333333
+//                                let maxOffset = self.cardHeight/1.3333333333
+//                                
+//                                let maxOffset = self.cardHeight/2.8
+                                let maxOffset = self.cardHeight/2.5
                                 let actualOffset = maxOffset * percentOfMaxDistance
                                               
                                 return content
-                                    .scaleEffect(0.25) // scale down to 1/4th
-                                    .scaleEffect(1.0 - scaleReduction) // apply center-based scaling
+//                                    .scaleEffect(0.25) // scale down to 1/4th
+                                    .scaleEffect(0.5) // scale down to 1/4th
+//                                    .scaleEffect(1.0 - scaleReduction) // apply center-based scaling
                                     .offset(y: shouldOffsetUp ? (-1 * actualOffset) : 0)
                                     .offset(y: shouldOffsetDown ? actualOffset : 0)
                             }
+                        
                     } // ForEach
-                    .edgesIgnoringSafeArea(.all)
                 } // LazyVStack
-                .edgesIgnoringSafeArea(.all)
             } // ScrollView
-            .edgesIgnoringSafeArea(.all)
             
             // ScrollView must be height of paged-item when using `.paging` PagingScrollTargetBehavior
             .frame(width: self.cardWidth,
                    height: self.cardHeight)
+            .border(.red, width: 4)
             
             .scrollTargetBehavior(.paging)
             
@@ -115,7 +118,8 @@ struct ArtworkFeed: View {
             .scrollPosition(id: self.$scrollPosition,
                             anchor: .center)
             
-            .scaleEffect(4) // Scale back up 4x
+            // .scaleEffect(4) // Scale back up 4x
+            .scaleEffect(2) // Scale back up
             
             // Change clip when ScrollView's centered-clip changes
             .onChange(of: self.currentCenter ?? 0, { oldValue, newValue in
@@ -163,8 +167,7 @@ struct ArtworkFeed: View {
                          index: index,
                          cardSize: .init(width: self.cardWidth,
                                          height: self.cardHeight),
-                         labelOpacity: 1
-            )
+                         labelOpacity: 1)
             .offset(x: hasSwipeOffset ? swipeOffset : .zero)
             .onTapGesture {
                 guard !self.isAnimatingFromTap else {
