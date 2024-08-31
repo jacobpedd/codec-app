@@ -19,7 +19,7 @@ struct ArtworkFeed: View {
     private let cardWidth: CGFloat = UIScreen.main.bounds.width * 0.9
     
     // TODO: Why +25 ?
-    // private var cardHeight: CGFloat { cardWidth + 25 }
+    //     nonisolated private var cardHeight: CGFloat { cardWidth + 25 }
     nonisolated private var cardHeight: CGFloat { cardWidth }
     
     private var cardSize: CGSize { CGSize(width: cardWidth, height: cardHeight) }
@@ -36,16 +36,6 @@ struct ArtworkFeed: View {
     @State private var currentCenter: Int? = nil
     
     nonisolated static let nonCenterScale = 0.8
-    
-    var scrollViewHeight: CGFloat {
-        // some height such that a single item can fit cleanly in the middle
-        self.cardHeight * 3
-    }
-    
-    var viewPortalHeight: CGFloat {
-        // cut off half of the top-most and half of the bottom-most views
-        self.scrollViewHeight - self.cardHeight
-    }
     
     // (swipe offset amount, which index/card the offset is for)
     @State var horizontalSwipeOffset: (CGFloat, Int)?
@@ -89,19 +79,19 @@ struct ArtworkFeed: View {
                                 let scaleReduction = maxScaleReduction * percentOfMaxDistance
                                 
                                 // TODO: is card offset too aggressive sometimes? e.g. when *slowly* pulling down on current card to go to card above, the card below the current card seems to move offscreen too quickly; is present in SwiftUI Playground as well.
-                                let maxOffset = self.cardHeight/1.3333333333
+                                let maxOffset = self.cardHeight/2.8
+//                                let maxOffset = self.cardHeight/1.3333333333
                                 let actualOffset = maxOffset * percentOfMaxDistance
                                               
                                 return content
-                                    .scaleEffect(0.25) // scale down to 1/4th
-                                    .scaleEffect(1.0 - scaleReduction) // apply center-based scaling
+//                                    .scaleEffect(0.25) // scale down to 1/4th
+                                    .scaleEffect(0.5) // scale down to 1/4th
+                                    // .scaleEffect(1.0 - scaleReduction) // apply center-based scaling
                                     .offset(y: shouldOffsetUp ? (-1 * actualOffset) : 0)
                                     .offset(y: shouldOffsetDown ? actualOffset : 0)
                             }
                     } // ForEach
-                    .edgesIgnoringSafeArea(.all)
                 } // LazyVStack
-                .edgesIgnoringSafeArea(.all)
             } // ScrollView
             .edgesIgnoringSafeArea(.all)
             
@@ -115,7 +105,8 @@ struct ArtworkFeed: View {
             .scrollPosition(id: self.$scrollPosition,
                             anchor: .center)
             
-            .scaleEffect(4) // Scale back up 4x
+            .scaleEffect(2)
+            // .scaleEffect(4) // Scale back up 4x
             
             // Change clip when ScrollView's centered-clip changes
             .onChange(of: self.currentCenter ?? 0, { oldValue, newValue in
