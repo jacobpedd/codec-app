@@ -12,6 +12,7 @@
 		0B36D00B2C3FAF3200C2C1D5 /* ClipCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B36D00A2C3FAF3200C2C1D5 /* ClipCardView.swift */; };
 		0B36D0112C3FB69E00C2C1D5 /* ColorKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0B36D0102C3FB69E00C2C1D5 /* ColorKit */; };
 		0B4E983A2BED78B800B8FDB9 /* Artwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4E98392BED78B800B8FDB9 /* Artwork.swift */; };
+		0B59A9682C87B287004FA4B8 /* ScrollViewTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B59A9672C87B287004FA4B8 /* ScrollViewTest.swift */; };
 		0B7A7F922C6BC85F00D24B83 /* TopicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7A7F912C6BC85F00D24B83 /* TopicView.swift */; };
 		0B7CE8CA2C6D43EF00563C44 /* FeedHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7CE8C92C6D43EF00563C44 /* FeedHeaderView.swift */; };
 		0B7D3A9C2BF7DEDC003A3B95 /* NowPlayingSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7D3A9B2BF7DEDC003A3B95 /* NowPlayingSheet.swift */; };
@@ -50,6 +51,7 @@
 		0B31F79B2C40BA7F00AE48C6 /* ArtworkFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkFeed.swift; sourceTree = "<group>"; };
 		0B36D00A2C3FAF3200C2C1D5 /* ClipCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipCardView.swift; sourceTree = "<group>"; };
 		0B4E98392BED78B800B8FDB9 /* Artwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Artwork.swift; sourceTree = "<group>"; };
+		0B59A9672C87B287004FA4B8 /* ScrollViewTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollViewTest.swift; sourceTree = "<group>"; };
 		0B7A7F912C6BC85F00D24B83 /* TopicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicView.swift; sourceTree = "<group>"; };
 		0B7CE8C92C6D43EF00563C44 /* FeedHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedHeaderView.swift; sourceTree = "<group>"; };
 		0B7D3A9B2BF7DEDC003A3B95 /* NowPlayingSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingSheet.swift; sourceTree = "<group>"; };
@@ -109,6 +111,7 @@
 				0B36D00A2C3FAF3200C2C1D5 /* ClipCardView.swift */,
 				0B31F79B2C40BA7F00AE48C6 /* ArtworkFeed.swift */,
 				0B7CE8C92C6D43EF00563C44 /* FeedHeaderView.swift */,
+				0B59A9672C87B287004FA4B8 /* ScrollViewTest.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -324,6 +327,7 @@
 				0BA3FAED2C46FD0E006B9FC9 /* ArtworkCache.swift in Sources */,
 				0BB49B642C38D1F600D29B69 /* ViewTracker.swift in Sources */,
 				0B7D3AAF2BFE648A003A3B95 /* FeedView.swift in Sources */,
+				0B59A9682C87B287004FA4B8 /* ScrollViewTest.swift in Sources */,
 				0BB49B5A2C387B9700D29B69 /* FeedFollowBlockView.swift in Sources */,
 				0B7CE8CA2C6D43EF00563C44 /* FeedHeaderView.swift in Sources */,
 				0B7D3A9C2BF7DEDC003A3B95 /* NowPlayingSheet.swift in Sources */,
@@ -460,7 +464,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"Codec/Preview Content\"";
-				DEVELOPMENT_TEAM = 57798878NB;
+				DEVELOPMENT_TEAM = 25CX322JVS;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -481,7 +485,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MARKETING_VERSION = 0.1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.trycodec.CodecApp2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.trycodec.CodecApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -503,7 +507,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"Codec/Preview Content\"";
-				DEVELOPMENT_TEAM = 57798878NB;
+				DEVELOPMENT_TEAM = 25CX322JVS;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -524,7 +528,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MARKETING_VERSION = 0.1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.trycodec.CodecApp2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.trycodec.CodecApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
