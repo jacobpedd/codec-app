@@ -59,6 +59,7 @@ struct FeedView: View {
             }
             .navigationBarHidden(true)
         }
+        
         .onAppear() {
             if feedVM.currentFeed.isEmpty {
                 Task {
