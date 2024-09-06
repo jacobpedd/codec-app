@@ -200,8 +200,12 @@ struct ArtworkFeed: View {
                 .onTapGesture {
                     playerVM.previous()
                 }
-            Spacer()
+            Color.clear
+                .contentShape(Rectangle())
                 .frame(width: geometry.size.width, height: cardSize.height)
+                .onTapGesture {
+                    playerVM.playPause()
+                }
             Color.clear
                 .contentShape(Rectangle())
                 .onTapGesture {
