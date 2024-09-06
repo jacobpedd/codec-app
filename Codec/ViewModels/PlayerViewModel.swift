@@ -92,6 +92,13 @@ class PlayerViewModel: ObservableObject {
         updateNowPlaying()
     }
     
+    func setIndex(index: Int) {
+        guard let feedVM else { return }
+        guard index < feedVM.currentFeed.count - 1 && index >= 0 else { return }
+        feedVM.moveToIndex(index: index)
+        updateNowPlaying()
+    }
+    
     func updateNowPlaying() {
         guard let feedVM, let clip = feedVM.nowPlayingClip else { return }
         print("Now playing: \(clip.name)")

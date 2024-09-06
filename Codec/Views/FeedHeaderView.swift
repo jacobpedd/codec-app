@@ -62,14 +62,14 @@ struct ScrollableCategoryList: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     // For you button
-                    CategoryButton(category:  nil) {
+                    CategoryButton(category: nil) {
                         withAnimation {
                             reader.scrollTo("For You", anchor: .center)
                             if feedVM.currentCategory != nil {
                                 feedVM.currentCategory = nil
                                 playerVM.updateNowPlaying()
                             } else {
-                                feedVM.moveToFirst()
+                                playerVM.setIndex(index: 0)
                             }
                         }
                     }
@@ -88,15 +88,15 @@ struct ScrollableCategoryList: View {
                                         feedVM.currentCategory = category
                                         playerVM.updateNowPlaying()
                                     } else {
-                                        feedVM.moveToFirst()
+                                        playerVM.setIndex(index: 0)
                                     }
                                 }
                             }
                             .id(category.id)
                         }
+                    }
                     Spacer()
                         .frame(width: 20, height: 20)
-                    }
                 }
             }
             .mask(
