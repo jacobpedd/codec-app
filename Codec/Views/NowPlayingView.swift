@@ -20,7 +20,7 @@ struct NowPlayingView: View {
                 HStack {
                     ArtworkView(feed: clip.feedItem.feed)
                         .frame(width: 40, height: 40)
-                        .cornerRadius(10)
+                        .cornerRadius(5)
                     Text(clip.name)
                         .font(.footnote)
                         .lineLimit(1)
