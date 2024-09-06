@@ -200,12 +200,46 @@ struct ArtworkFeed: View {
                 .onTapGesture {
                     playerVM.previous()
                 }
-            Color.clear
-                .contentShape(Rectangle())
-                .frame(width: geometry.size.width, height: cardSize.height)
-                .onTapGesture {
-                    playerVM.playPause()
+            // NOTE: This spacer has some tap targets because the underlying cards can't be tapped.
+            // This is a pretty bad hack. We need it becasue the cards are under the scroll view so can't be tapped.
+            VStack(spacing: 0) {
+                Spacer()
+                HStack {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .frame(width: 175, height: 50)
+                        .onTapGesture {
+                            playerVM.playPause()
+                        }
+                    Spacer()
+                    Menu {
+                        Button(action: {
+                            guard let clip = playerVM.nowPlaying else { return }
+                            let feed = clip.feedItem.feed
+                            Task {
+                                await profileVM.followShow(feed: feed, isInterested: false)
+                            }
+                        }) {
+                            Label("Mute Show", systemImage: "xmark.shield")
+                        }
+                        Button(action: {
+                            guard let clip = playerVM.nowPlaying else { return }
+                            let feed = clip.feedItem.feed
+                            Task {
+                                await profileVM.followShow(feed: feed, isInterested: true)
+                            }
+                        }) {
+                            Label("Follow Show", systemImage: "plus.circle")
+                        }
+                    } label : {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .frame(width: 50, height: 40)
+                    }
                 }
+            }
+            .frame(width: cardSize.width, height: cardSize.height)
+            
             Color.clear
                 .contentShape(Rectangle())
                 .onTapGesture {

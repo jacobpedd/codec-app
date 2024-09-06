@@ -61,6 +61,14 @@ struct FeedView: View {
             }
             .navigationBarHidden(true)
         }
+        .onAppear() {
+            guard let fypFeed = feedVM.categoryFeeds[nil] else { return }
+            if fypFeed.clips.isEmpty {
+                Task {
+                    await feedVM.categoryFeeds[nil]?.loadFeed()
+                }
+            }
+        }
         .onChange(of: feedVM.currentCategory) {
             if let index = categories.firstIndex(where: { $0?.id == feedVM.currentCategory?.id }) {
                 currentPage = index

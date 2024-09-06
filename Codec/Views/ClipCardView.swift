@@ -109,10 +109,20 @@ struct ClipCardView: View {
                 .foregroundColor(.white)
                 .fontWeight(.bold)
                 .lineLimit(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
             Spacer()
                 .frame(height: 10)
-            playButton
-                .animation(.easeIn, value: isPlayingClip)
+            HStack(alignment: .center) {
+                playButton
+                    .animation(.easeIn, value: isPlayingClip)
+                Spacer()
+                Button(action: {}) {
+                    Image(systemName: "ellipsis")
+                        .frame(width: 20, height: 20)
+                        .foregroundColor(.white)
+                }
+                
+            }
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)

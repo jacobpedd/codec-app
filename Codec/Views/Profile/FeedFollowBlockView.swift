@@ -20,7 +20,7 @@ struct FeedFollowBlockView: View {
 
     var body: some View {
         let feeds = profileVM.followedFeeds.filter { $0.isInterested == isInterested }
-        let title = isInterested ? "Following" : "Blocked"
+        let title = isInterested ? "Following" : "Muted"
         
         NavigationStack {
             VStack {

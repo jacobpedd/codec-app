@@ -47,7 +47,7 @@ struct NowPlayingSheet: View {
     @EnvironmentObject private var feedVM: FeedViewModel
     @EnvironmentObject private var playerVM: PlayerViewModel
     @EnvironmentObject private var artworkVM: ArtworkViewModel
-    @State private var isTranscriptShowing: Bool = false
+    @State private var isQueueListShowing: Bool = false
     @State private var airPlayView = AirPlayView()
     @Environment(\.colorScheme) var colorScheme
     
@@ -85,24 +85,11 @@ struct NowPlayingSheet: View {
             VStack() {
                 if let clip = clip {
                     GeometryReader { geometry in
-                        ZStack {
-                            ArtworkView(feed: clip.feedItem.feed)
-                                .frame(width: geometry.size.height, height: geometry.size.height)
-                                .clipped()
-                                .cornerRadius(15)
-                                .shadow(color: .gray.opacity(0.6), radius: 20)
-                            
-                            if isTranscriptShowing {
-                                ScrollView(.vertical, showsIndicators: true) {
-                                    Text(clip.summary.trimmingCharacters(in: .whitespacesAndNewlines))
-                                }
-                                .padding()
-                                .padding(.horizontal)
-                                .background(.ultraThickMaterial)
-                                .cornerRadius(15)
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
+                        ArtworkView(feed: clip.feedItem.feed)
+                            .frame(width: geometry.size.height, height: geometry.size.height)
+                            .clipped()
+                            .cornerRadius(15)
+                            .shadow(color: .gray.opacity(0.6), radius: 20)
                     }
                     .padding()
                     
@@ -210,9 +197,9 @@ struct NowPlayingSheet: View {
                                 Spacer()
                                 
                                 Button(action: {
-                                    isTranscriptShowing.toggle()
+                                    isQueueListShowing.toggle()
                                 }) {
-                                    Image(systemName: isTranscriptShowing ? "photo" : "text.quote")
+                                    Image(systemName: "list.bullet")
                                         .foregroundColor(.primary)
                                         .font(.system(size: 24))
                                 }
@@ -232,6 +219,11 @@ struct NowPlayingSheet: View {
         }
         .presentationDragIndicator(.visible)
         .presentationBackground(.clear)
+        .sheet(isPresented: $isQueueListShowing, onDismiss: {
+            isQueueListShowing = false
+        }) {
+            QueueListView()
+        }
     }
 }
 
@@ -243,10 +235,26 @@ private func setWindowBackgroundColor(_ color: UIColor) {
     }
 }
 
-#Preview {
-    return VStack {
-        Spacer()
-        NowPlayingView()
+struct NowPlayingPreviewWrapper: View {
+    @EnvironmentObject private var playerVM: PlayerViewModel
+    
+    var body: some View {
+        VStack {
+            Spacer()
+        }
+        .sheet(isPresented: .constant(true)) {
+            if playerVM.nowPlaying != nil {
+                NowPlayingSheet()
+            } else {
+                ProgressView("Loading...")
+                    .progressViewStyle(CircularProgressViewStyle())
+                    .padding()
+            }
+        }
     }
-    .previewWithEnvironment()
+}
+
+#Preview {
+    NowPlayingPreviewWrapper()
+        .previewWithEnvironment()
 }
