@@ -113,7 +113,7 @@ class CategoryFeedViewModel: ObservableObject {
         isLoading = true
         
         let newClips = await feedService.loadQueue(category: category)
-        print("Loaded clips for \(category?.userFriendlyName ?? "FYP"): \(newClips.count)")
+        print("Loaded clips for \(category?.name ?? "FYP"): \(newClips.count)")
         
         clips = newClips
         nowPlayingIndex = 0
@@ -153,7 +153,7 @@ class CategoryFeedViewModel: ObservableObject {
         await MainActor.run { isLoading = true }
         
         let newClips = await feedService.loadQueue(category: category)
-        print("Loaded more clips for \(category?.userFriendlyName ?? "FYP"): \(newClips.count)")
+        print("Loaded more clips for \(category?.name ?? "FYP"): \(newClips.count)")
         
         await MainActor.run {
             clips.append(contentsOf: newClips)

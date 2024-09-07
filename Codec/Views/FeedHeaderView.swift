@@ -16,7 +16,7 @@ struct CategoryButton: View {
     @State private var isActive: Bool = false
     
     private var labelText: String {
-        return category?.userFriendlyName ?? category?.name ?? "For You"
+        return category?.name ?? "For You"
     }
     
     var body: some View {

@@ -10,7 +10,7 @@ struct TopicView: View {
     
     var groupedCategories: [String: [Category]] {
         Dictionary(grouping: categoryVM.allCategories) { category in
-            category.userFriendlyParentName ?? "Other"
+            category.name ?? "Other"
         }
     }
     
@@ -98,7 +98,7 @@ struct CategoryRow: View {
     
     var body: some View {
         HStack {
-            Text(category.userFriendlyName ?? category.name)
+            Text(category.name)
             Spacer()
             if isLoading {
                 ProgressView()
