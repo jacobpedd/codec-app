@@ -4,6 +4,7 @@ struct TopicView: View {
     @EnvironmentObject private var userVM: UserViewModel
     @EnvironmentObject private var categoryVM: CategoryViewModel
     @Environment(\.dismiss) private var dismiss
+    @GestureState private var dragOffset: CGFloat = 0
     
     // Minimum number of categories required
     private let minimumCategories = 5
@@ -68,24 +69,40 @@ struct TopicView: View {
             .toolbar {
                 if !userVM.isOnboarding {
                     ToolbarItem(placement: .navigationBarLeading) {
-                        Button(action: {
-                            if categoryVM.userCategories.count >= minimumCategories {
-                                categoryVM.isUserSelecting = false
-                                dismiss()
-                            }
-                        }) {
+                        Button(action: attemptDismiss) {
                             HStack {
                                 Image(systemName: "chevron.left")
                                 Text("Back")
                             }
                         }
-                        .disabled(categoryVM.userCategories.count < minimumCategories)
+                        .disabled(!canDismiss)
                     }
                 }
             }
         }
+        .interactiveDismissDisabled(!canDismiss)
+        .gesture(
+            DragGesture().updating($dragOffset) { value, state, _ in
+                state = value.translation.width
+            }.onEnded { value in
+                if value.translation.width > 100 && canDismiss {
+                    attemptDismiss()
+                }
+            }
+        )
         .onAppear() {
             categoryVM.isUserSelecting = true
+        }
+    }
+    
+    private var canDismiss: Bool {
+        categoryVM.userCategories.count >= minimumCategories
+    }
+    
+    private func attemptDismiss() {
+        if canDismiss {
+            categoryVM.isUserSelecting = false
+            dismiss()
         }
     }
 }

@@ -14,6 +14,7 @@ struct FeedFollowBlockView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var unfollowingId: Int?
     @State private var showSearchView = false
+    @GestureState private var dragOffset: CGFloat = 0
     var isInterested: Bool
 
     private let minimumFeeds = 3
@@ -79,26 +80,42 @@ struct FeedFollowBlockView: View {
             .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: {
-                        if profileVM.followedFeeds.filter({ $0.isInterested }).count >= minimumFeeds {
-                            profileVM.isUserSelecting = false
-                            dismiss()
-                        }
-                    }) {
+                    Button(action: attemptDismiss) {
                         HStack {
                             Image(systemName: "chevron.left")
                             Text("Back")
                         }
                     }
-                    .disabled(profileVM.followedFeeds.filter({ $0.isInterested }).count < minimumFeeds)
+                    .disabled(!canDismiss)
                 }
             }
             .sheet(isPresented: $showSearchView) {
                 SearchView(isInterested: isInterested)
             }
         }
+        .interactiveDismissDisabled(!canDismiss)
+        .gesture(
+            DragGesture().updating($dragOffset) { value, state, _ in
+                state = value.translation.width
+            }.onEnded { value in
+                if value.translation.width > 100 && canDismiss {
+                    attemptDismiss()
+                }
+            }
+        )
         .onAppear() {
             profileVM.isUserSelecting = true
+        }
+    }
+    
+    private var canDismiss: Bool {
+        profileVM.followedFeeds.filter({ $0.isInterested }).count >= minimumFeeds
+    }
+    
+    private func attemptDismiss() {
+        if canDismiss {
+            profileVM.isUserSelecting = false
+            dismiss()
         }
     }
     
