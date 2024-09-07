@@ -54,6 +54,7 @@ struct ArtworkFeed: View {
     
     @EnvironmentObject private var playerVM: PlayerViewModel
     @EnvironmentObject private var feedVM: FeedViewModel
+    @EnvironmentObject private var profileVM: ProfileViewModel
     
     @State private var scrollOffset: CGPoint = .zero
     @State private var currentPage: Int = 0

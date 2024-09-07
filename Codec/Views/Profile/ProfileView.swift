@@ -19,11 +19,11 @@ struct ProfileView: View {
                         .foregroundColor(.primary)
                 }
                 NavigationLink(destination: FeedFollowBlockView(isInterested: true)) {
-                    Label("Followed Feeds", systemImage: "plus.circle")
+                    Label("Followed Shows", systemImage: "plus.circle")
                         .foregroundColor(.primary)
                 }
                 NavigationLink(destination: FeedFollowBlockView(isInterested: false)) {
-                    Label("Blocked Feeds", systemImage: "xmark.shield")
+                    Label("Muted Shows", systemImage: "xmark.shield")
                         .foregroundColor(.primary)
                 }
 // TODO: History tab

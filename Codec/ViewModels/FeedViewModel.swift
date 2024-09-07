@@ -96,11 +96,7 @@ class CategoryFeedViewModel: ObservableObject {
     @Published private(set) var nowPlayingIndex: Int = 0 {
         didSet {
             onNowPlayingIndexChanged?(nowPlayingIndex)
-            if clips.count - nowPlayingIndex - 1 < 7 {
-                Task {
-                    await loadMoreClips()
-                }
-            }
+            checkForMoreClips()
         }
     }
     
@@ -139,6 +135,14 @@ class CategoryFeedViewModel: ObservableObject {
     
     func moveToIndex(index: Int) {
         nowPlayingIndex = index
+    }
+    
+    func checkForMoreClips() {
+        if clips.count - nowPlayingIndex - 1 < 7 {
+            Task {
+                await loadMoreClips()
+            }
+        }
     }
     
     func loadMoreClips() async {
@@ -183,5 +187,6 @@ class CategoryFeedViewModel: ObservableObject {
         
         // Track 0 duration view for deleted clip
         await feedService?.updateView(clipId: clipToDelete.id, duration: 0)
+        checkForMoreClips()
     }
 }
